@@ -48,3 +48,6 @@ htmlcov/
 
 # OS
 Thumbs.db
+
+# uv
+uv.lock
