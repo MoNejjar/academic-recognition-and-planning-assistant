@@ -15,7 +15,12 @@ from app.services.storage.data_cache import load_tum_modules_from_cache
 # TODO: Import routers
 # from app.routes import course_matching, reporting, chatbot
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:     [%(name)s] %(message)s",
+    force=True,
+)
+logger = logging.getLogger("app.main")
 
 
 @asynccontextmanager
@@ -27,8 +32,10 @@ async def lifespan(_: FastAPI):
     db = SessionLocal()
     try:
         inserted = load_tum_modules_from_cache(db)
-        if inserted:
+        if inserted and inserted > 0:
             logger.info("Loaded %s TUM modules from cache", inserted)
+        else:
+            logger.info("No TUM modules loaded from cache (inserted=%r)", inserted)
     except Exception:  # pragma: no cover - defensive logging only
         logger.exception("Failed to load TUM modules during startup")
     finally:
