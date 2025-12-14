@@ -42,5 +42,6 @@ def init_db() -> None:
 	"""Create database tables if they do not exist."""
 	# Import models for metadata registration
 	from app.models.document import Document  # noqa: F401
+	from app.models.tum_course import TUMCourse  # noqa: F401
 
 	Base.metadata.create_all(bind=engine)
