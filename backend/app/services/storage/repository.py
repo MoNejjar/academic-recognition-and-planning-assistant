@@ -60,13 +60,13 @@ class DocumentRepository:
         return True
 
 
+class TUMCoursesRepository:
+    """Database operations for TUM courses"""
+
+
 # Placeholders for future repositories
 class UserRepository:
     """Database operations for users"""
-
-
-class TUMCoursesRepository:
-    """Database operations for TUM courses"""
 
 
 class MatchResultRepository:
