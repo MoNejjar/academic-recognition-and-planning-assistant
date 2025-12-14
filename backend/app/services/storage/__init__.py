@@ -1,5 +1,4 @@
-"""
-Storage Service Package
+"""Storage service package for managing files and metadata."""
 
-Database and file storage management
-"""
+from app.services.storage.file_storage import FileStorage  # noqa: F401
+from app.services.storage.repository import DocumentRepository  # noqa: F401
