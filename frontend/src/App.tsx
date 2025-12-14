@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import HomePage from './pages/Home'
+import PDFUploadPage from './pages/CourseMatching/PDFUploadPage'
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* TODO: Add routes here */}
-        <Route path="/" element={<div>ARIP - Academic Recognition and Planning Assistant</div>} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/upload" element={<PDFUploadPage />} />
       </Routes>
     </Router>
   )
