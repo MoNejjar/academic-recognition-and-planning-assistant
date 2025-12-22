@@ -31,9 +31,12 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
 	
     # LLM settings
+    LLM_PROVIDER: str = "openai"
     LLM_API_KEY: Optional[str] = None
     LLM_MODEL: str = "gpt-4"
     LLM_BASE_URL: Optional[str] = None
+    LLM_RATE_LIMIT_RPM: int = 60
+    LLM_MAX_RETRIES: int = 3
 
     # Auth settings
     SECRET_KEY: str = "change-me-in-production"
