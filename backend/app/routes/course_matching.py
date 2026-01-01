@@ -19,7 +19,9 @@ from app.services.storage.repository import DocumentRepository
 from app.services.storage.file_storage import FileStorage
 from app.services.pdf_extraction.mapping_table_extractor import MappingTableExtractor
 from app.services.pdf_extraction.course_content_extractor import CourseContentExtractor
-from app.services.llm_service.client import OpenAIClient
+from app.services.llm_service.client import (
+    LLMProvider, create_llm_client, BaseLLMClient
+)
 
 router = APIRouter()
 
@@ -34,21 +36,47 @@ file_storage = FileStorage(upload_dir=settings.UPLOAD_DIR)
 # │ OpenAI      │ gpt-4o, gpt-4o-mini, gpt-4-turbo                             │
 # │ Gemini      │ gemini-2.5-flash, gemini-2.5-pro, gemini-3-flash-preview     │
 # │ Groq        │ ❌ No vision models available                                │
-# │ OpenRouter  │ Use underlying provider's vision model                       │
+# │ OpenRouter  │ openai/gpt-4o, anthropic/claude-3-opus                       │
 # │ Ollama      │ llava, bakllava, llava-llama3 (local)                        │
 # └─────────────┴──────────────────────────────────────────────────────────────┘
 
-def get_llm_client() -> OpenAIClient:
-    """Get configured LLM client for PDF extraction."""
-    if not settings.LLM_API_KEY:
+def get_llm_client() -> BaseLLMClient:
+    """
+    Get configured LLM client based on LLM_PROVIDER setting.
+    
+    Set in .env:
+        LLM_PROVIDER=openai  # or gemini, openrouter, ollama
+        LLM_API_KEY=your-key
+        LLM_MODEL=gpt-4o
+    """
+    # Map provider string to enum
+    provider_map = {
+        "openai": LLMProvider.OPENAI,
+        "gemini": LLMProvider.GEMINI,
+        "groq": LLMProvider.GROQ,
+        "openrouter": LLMProvider.OPENROUTER,
+        "ollama": LLMProvider.OLLAMA,
+    }
+    
+    provider = provider_map.get(settings.LLM_PROVIDER.lower())
+    if not provider:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unknown LLM_PROVIDER: {settings.LLM_PROVIDER}"
+        )
+    
+    # Ollama doesn't require API key
+    if provider != LLMProvider.OLLAMA and not settings.LLM_API_KEY:
         raise HTTPException(
             status_code=500,
             detail="LLM_API_KEY not configured"
         )
     
-    return OpenAIClient(
+    return create_llm_client(
+        provider=provider,
         api_key=settings.LLM_API_KEY,
-        model=settings.LLM_MODEL if "gpt-4o" in settings.LLM_MODEL or "gpt-4-turbo" in settings.LLM_MODEL else "gpt-4o"
+        model=settings.LLM_MODEL,
+        base_url=settings.LLM_BASE_URL
     )
 
 
