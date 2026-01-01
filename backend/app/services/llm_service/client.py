@@ -131,9 +131,58 @@ class OpenAIClient(BaseLLMClient):
             "model": self.model,
             "finish_reason": response.choices[0].finish_reason
         }
+    
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def chat_with_vision(
+        self,
+        prompt: str,
+        image_base64: str,
+        max_tokens: int = 4000,
+        temperature: float = 0.1,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Generate chat completion with vision/image input.
+        
+        Requires a vision-capable model like gpt-4o or gpt-4-turbo.
+        
+        Args:
+            prompt: Text prompt describing what to extract/analyze
+            image_base64: Base64-encoded image (PNG/JPEG)
+            max_tokens: Maximum tokens in response
+            temperature: Sampling temperature
+            
+        Returns:
+            Dict with 'message', 'tokens_used', 'model', 'finish_reason'
+        """
+        await self._apply_rate_limit()
+        
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}}
+            ]
+        }]
+        
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **kwargs
+        )
+        
+        return {
+            "message": response.choices[0].message.content,
+            "tokens_used": response.usage.total_tokens,
+            "model": self.model,
+            "finish_reason": response.choices[0].finish_reason
+        }
 
 
 class GroqClient(BaseLLMClient):
+
     """Groq API client with fast inference models"""
     
     SUPPORTED_MODELS = [
@@ -252,9 +301,60 @@ class GeminiClient(BaseLLMClient):
             "model": self.model,
             "finish_reason": "stop"
         }
+    
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def chat_with_vision(
+        self,
+        prompt: str,
+        image_base64: str,
+        max_tokens: int = 4000,
+        temperature: float = 0.1,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Generate completion with vision/image input.
+        
+        All Gemini models support vision capabilities.
+        
+        Args:
+            prompt: Text prompt describing what to extract/analyze
+            image_base64: Base64-encoded image (PNG/JPEG)
+            max_tokens: Maximum tokens in response
+            temperature: Sampling temperature
+            
+        Returns:
+            Dict with 'message', 'tokens_used', 'model', 'finish_reason'
+        """
+        import base64
+        from google.genai import types
+        await self._apply_rate_limit()
+        
+        # Decode base64 to bytes
+        image_bytes = base64.b64decode(image_base64)
+        
+        # Create image part
+        image_part = types.Part.from_bytes(data=image_bytes, mime_type="image/png")
+        
+        # Send prompt with image
+        response = await self.client.aio.models.generate_content(
+            model=self.model,
+            contents=[prompt, image_part],
+            config=types.GenerateContentConfig(
+                max_output_tokens=max_tokens,
+                temperature=temperature
+            )
+        )
+        
+        return {
+            "message": response.text,
+            "tokens_used": self.count_tokens(prompt) + self.count_tokens(response.text),
+            "model": self.model,
+            "finish_reason": "stop"
+        }
 
 
 class OpenRouterClient(BaseLLMClient):
+
     """OpenRouter API client - access to multiple models through one API"""
     
     def __init__(self, api_key: str, model: str = "openai/gpt-4", **kwargs):
