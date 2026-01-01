@@ -72,7 +72,7 @@ async def health_check():
 
 
 # Include routers
-app.include_router(course_matching.router, prefix="/api/course-matching", tags=["Table Extraction"])
+app.include_router(course_matching.router, prefix="/api/course-matching", tags=["PDF Extraction"])
 app.include_router(reporting.router, prefix="/api/reports", tags=["Reporting"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
 
