@@ -46,6 +46,11 @@ pdf = [
     "reportlab>=4.0.0",
     "weasyprint>=60.0",
 ]
+extraction = [
+    "pdfplumber>=0.10.0",
+    "pillow>=10.0.0",
+]
+
 
 [build-system]
 requires = ["hatchling"]
