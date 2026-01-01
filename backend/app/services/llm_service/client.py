@@ -397,6 +397,46 @@ class OpenRouterClient(BaseLLMClient):
             "finish_reason": response.choices[0].finish_reason
         }
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def chat_with_vision(
+        self, prompt: str, image_base64: str, max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Chat with vision-capable models via OpenRouter.
+        
+        Use vision models like: openai/gpt-4o, anthropic/claude-3-opus, google/gemini-pro-vision
+        
+        Args:
+            prompt: Text prompt describing what to extract/analyze
+            image_base64: Base64-encoded image (PNG/JPEG)
+            max_tokens: Maximum tokens in response
+            temperature: Sampling temperature
+        """
+        await self._apply_rate_limit()
+        
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_base64}"}}
+            ]
+        }]
+        
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **kwargs
+        )
+        
+        return {
+            "message": response.choices[0].message.content,
+            "tokens_used": response.usage.total_tokens if response.usage else 0,
+            "model": self.model,
+            "finish_reason": response.choices[0].finish_reason
+        }
+
 
 class OllamaClient(BaseLLMClient):
     """Ollama client for local LLM inference"""
@@ -467,6 +507,50 @@ class OllamaClient(BaseLLMClient):
         return {
             "message": data["message"]["content"],
             "tokens_used": total_tokens,
+            "model": self.model,
+            "finish_reason": "stop"
+        }
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def chat_with_vision(
+        self, prompt: str, image_base64: str, max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Chat with vision-capable Ollama models.
+        
+        Use vision models like: llava, bakllava, llava-llama3
+        
+        Args:
+            prompt: Text prompt describing what to extract/analyze
+            image_base64: Base64-encoded image (PNG/JPEG)
+            max_tokens: Maximum tokens in response
+            temperature: Sampling temperature
+        """
+        await self._apply_rate_limit()
+        
+        options = {"temperature": temperature}
+        if max_tokens:
+            options["num_predict"] = max_tokens
+        
+        # Ollama expects images as base64 in the message
+        response = await self.client.post(
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model,
+                "messages": [{
+                    "role": "user",
+                    "content": prompt,
+                    "images": [image_base64]
+                }],
+                "stream": False,
+                "options": options
+            }
+        )
+        data = response.json()
+        
+        return {
+            "message": data["message"]["content"],
+            "tokens_used": self.count_tokens(prompt) + self.count_tokens(data["message"]["content"]),
             "model": self.model,
             "finish_reason": "stop"
         }
