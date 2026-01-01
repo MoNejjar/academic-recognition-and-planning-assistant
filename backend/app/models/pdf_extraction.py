@@ -7,7 +7,7 @@ Pydantic models for PDF table extraction results.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -26,20 +26,16 @@ class CourseRecognitionRow(BaseModel):
     tum_module_title: str = Field(..., description="TUM module title")
     tum_ects: str = Field(..., description="TUM ECTS credits")
     
-    # Metadata
-    page_number: Optional[int] = Field(None, description="PDF page number where this row was found")
-    
     model_config = {
         "json_schema_extra": {
             "example": {
-                "source_course_no": "CSE1300",
-                "source_course_name": "Reasoning and Logic",
-                "source_credits": "5",
-                "source_grade": "9.5",
-                "tum_module_nr": "INHN0004",
-                "tum_module_title": "Discrete Structures",
-                "tum_ects": "8",
-                "page_number": 1
+                "source_course_no": "CSE1100 + CSE1305",
+                "source_course_name": "Object Oriented Programming + Algorithms and Data Structures",
+                "source_credits": "5+5=10",
+                "source_grade": "8, 9",
+                "tum_module_nr": "INHN0002",
+                "tum_module_title": "Fundamentals of Programming",
+                "tum_ects": "6"
             }
         }
     }
@@ -65,14 +61,22 @@ class ExtractionResult(BaseModel):
                 "total_pages": 3,
                 "rows": [
                     {
-                        "source_course_no": "CSE1300",
-                        "source_course_name": "Reasoning and Logic",
+                        "source_course_no": "CSE1100 + CSE1305",
+                        "source_course_name": "Object Oriented Programming + Algorithms and Data Structures",
+                        "source_credits": "5+5=10",
+                        "source_grade": "8, 9",
+                        "tum_module_nr": "INHN0002",
+                        "tum_module_title": "Fundamentals of Programming",
+                        "tum_ects": "6"
+                    },
+                    {
+                        "source_course_no": "CSE1405",
+                        "source_course_name": "Computer Networks",
                         "source_credits": "5",
-                        "source_grade": "9.5",
-                        "tum_module_nr": "INHN0004",
-                        "tum_module_title": "Discrete Structures",
-                        "tum_ects": "8",
-                        "page_number": 1
+                        "source_grade": "8",
+                        "tum_module_nr": "INHN0012",
+                        "tum_module_title": "Computer Networking and IT Security",
+                        "tum_ects": "6"
                     }
                 ],
                 "extracted_at": "2026-01-01T14:00:00Z"
@@ -91,4 +95,3 @@ class ExtractionError(BaseModel):
     """Error response for extraction failures."""
     
     detail: str = Field(..., description="Error message")
-    document_id: Optional[str] = Field(None, description="Document ID if available")

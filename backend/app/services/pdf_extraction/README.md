@@ -1,6 +1,16 @@
-# PDF Table Extraction Service
+# PDF Extraction Service
 
-Extracts course recognition tables from PDF documents using vision-capable LLMs.
+Extracts data from PDF documents using vision-capable LLMs.
+
+## Two Extraction Types
+
+### 1. Mapping Table Extraction (`/extract-mapping-table`)
+Extracts course recognition tables mapping source courses to TUM modules.
+
+### 2. Course Content Extraction (`/extract-course-content`)
+Extracts course information for AI matching with TUM modules.
+
+---
 
 ## How It Works
 
@@ -11,53 +21,29 @@ Extracts course recognition tables from PDF documents using vision-capable LLMs.
 └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-### Step-by-Step Process
+### Multi-Course Detection
 
-1. **PDF Upload**: User uploads a PDF via `/api/course-matching/upload-and-extract`
-
-2. **Page Processing**: Each page is processed:
-   - Converted to PNG image (300 DPI)
-   - Raw text extracted via pdfplumber (catches hidden/masked text)
-
-3. **LLM Vision Analysis**: For each page:
-   - Image + raw text sent to vision-capable LLM (GPT-4o, Gemini, etc.)
-   - LLM identifies table structure and extracts data
-
-4. **Early Termination**: Stops processing when:
-   - Tables found on page N
-   - No tables on page N+1
-   - Assumes tables are contiguous in document
-
-5. **JSON Output**: Returns structured data with 7 columns per row
-
-## Output Format
-
-Each extracted row contains:
-
-| Field | Description |
-|-------|-------------|
-| `source_course_no` | Course number from source university |
-| `source_course_name` | Course name from source university |
-| `source_credits` | Credit points from source |
-| `source_grade` | Original grade |
-| `tum_module_nr` | TUM module number |
-| `tum_module_title` | TUM module title |
-| `tum_ects` | TUM ECTS credits |
-
-## API Endpoint
+The LLM automatically detects how many courses are in the PDF:
 
 ```
-POST /api/course-matching/upload-and-extract
-Content-Type: multipart/form-data
+Single-course PDF  →  Returns: [{ course }]
+Multi-course PDF   →  Returns: [{ course1 }, { course2 }, ...]
+```
 
-file: <pdf_file>
+---
+
+## API Endpoints
+
+### Mapping Table Extraction
+
+```
+POST /api/course-matching/extract-mapping-table
 ```
 
 **Response:**
 ```json
 {
   "filename": "transcript.pdf",
-  "total_pages": 5,
   "rows": [
     {
       "source_course_no": "CSE1300",
@@ -66,36 +52,56 @@ file: <pdf_file>
       "source_grade": "9.5",
       "tum_module_nr": "INHN0004",
       "tum_module_title": "Discrete Structures",
-      "tum_ects": "8",
-      "page_number": 1
+      "tum_ects": "8"
     }
-  ],
-  "extracted_at": "2026-01-01T15:00:00Z"
+  ]
 }
 ```
+
+### Course Content Extraction
+
+```
+POST /api/course-matching/extract-course-content
+```
+
+**Response:**
+```json
+{
+  "filename": "syllabus.pdf",
+  "courses": [
+    {
+      "module_number": "CSE1300",
+      "module_name": "Reasoning and Logic",
+      "module_content": "This course covers propositional logic... Learning outcomes: ..."
+    }
+  ]
+}
+```
+
+---
 
 ## Configuration
 
 Set in `.env`:
-
 ```env
-LLM_PROVIDER=openai
 LLM_API_KEY=your-api-key
-LLM_MODEL=gpt-4o  # Must be vision-capable!
+LLM_MODEL=gpt-4o  # Must be vision-capable
 ```
 
 ### Vision-Capable Models
 
-| Provider | Supported Models |
-|----------|-----------------|
+| Provider | Models |
+|----------|--------|
 | OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo |
 | Gemini | gemini-2.5-flash, gemini-2.5-pro |
-| Ollama | llava, bakllava, llava-llama3 |
+| Ollama | llava, bakllava |
+
+---
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `extractor.py` | Main `PDFTableExtractor` class |
-| `prompts.py` | LLM prompt template |
-| `__init__.py` | Package exports |
+| `mapping_table_extractor.py` | Mapping table extraction (recognition tables) |
+| `course_content_extractor.py` | Course content extraction (for matching) |
+| `prompts.py` | LLM prompt templates |

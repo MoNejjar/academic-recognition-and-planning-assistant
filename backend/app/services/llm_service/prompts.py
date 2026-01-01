@@ -1,7 +1,8 @@
 """
-LLM Prompts
+LLM Prompts for Course Matching (Future)
 
-System prompts and prompt templates for various LLM tasks
+Prompts for comparing courses and calculating match scores.
+NOT for PDF extraction - those prompts are in pdf_extraction/prompts.py
 """
 
 # Course Matching Prompts
