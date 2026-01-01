@@ -31,9 +31,13 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
 	
     # LLM settings
-    LLM_PROVIDER: str = "openai"
+    # NOTE: For PDF table extraction, use a VISION-CAPABLE model:
+    #   OpenAI: gpt-4o, gpt-4o-mini, gpt-4-turbo
+    #   Gemini: gemini-2.5-flash, gemini-2.5-pro, gemini-3-flash-preview, gemini-3-pro-preview
+    # Non-vision models (gpt-4, gpt-3.5-turbo, llama, etc.) will NOT work for extraction.
+    LLM_PROVIDER: str = "openai"  # Options: openai, gemini, groq, openrouter, ollama
     LLM_API_KEY: Optional[str] = None
-    LLM_MODEL: str = "gpt-4"
+    LLM_MODEL: str = "gpt-4o"  # Default to vision-capable model
     LLM_BASE_URL: Optional[str] = None
     LLM_RATE_LIMIT_RPM: int = 60
     LLM_MAX_RETRIES: int = 3

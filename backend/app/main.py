@@ -12,8 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import SessionLocal, init_db
 from app.services.storage.data_cache import load_tum_modules_from_cache
 
-# TODO: Import routers
-# from app.routes import course_matching, reporting, chatbot
+# Import routers
+from app.routes import course_matching, reporting, chatbot
 
 logging.basicConfig(
     level=logging.INFO,
@@ -71,7 +71,8 @@ async def health_check():
     return {"status": "healthy"}
 
 
-# TODO: Include routers
-# app.include_router(course_matching.router, prefix="/api/course-matching", tags=["Course Matching"])
-# app.include_router(reporting.router, prefix="/api/reports", tags=["Reporting"])
-# app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
+# Include routers
+app.include_router(course_matching.router, prefix="/api/course-matching", tags=["Table Extraction"])
+app.include_router(reporting.router, prefix="/api/reports", tags=["Reporting"])
+app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
+
