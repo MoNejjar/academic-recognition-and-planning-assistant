@@ -94,7 +94,8 @@ LLM_MODEL=gpt-4o  # Must be vision-capable
 |----------|--------|
 | OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo |
 | Gemini | gemini-2.5-flash, gemini-2.5-pro |
-| Ollama | llava, bakllava |
+| OpenRouter | openai/gpt-4o, anthropic/claude-3-opus |
+| Ollama | llava, bakllava, llava-llama3 |
 
 ---
 
