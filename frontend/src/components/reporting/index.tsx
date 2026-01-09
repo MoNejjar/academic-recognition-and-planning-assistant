@@ -37,8 +37,6 @@
  */
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Download, BarChart3, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -69,8 +67,8 @@ export interface ReportDataSummary {
  * -------------------------------------------- */
 export const MatchScoreChart: React.FC<{ data: MatchScoreData[] }> = ({ data }) => {
   return (
-    <Card className="p-4 rounded-2xl shadow">
-      <CardContent>
+    <div className="p-4 rounded-2xl shadow bg-white">
+      <div className="p-4">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5" /> Match Score Overview
         </h2>
@@ -83,8 +81,8 @@ export const MatchScoreChart: React.FC<{ data: MatchScoreData[] }> = ({ data }) 
             <Bar dataKey="score" />
           </BarChart>
         </ResponsiveContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
@@ -93,14 +91,14 @@ export const MatchScoreChart: React.FC<{ data: MatchScoreData[] }> = ({ data }) 
  * -------------------------------------------- */
 export const ReportPreview: React.FC<{ html: string }> = ({ html }) => {
   return (
-    <Card className="p-4 rounded-2xl shadow max-h-[500px] overflow-auto bg-white">
-      <CardContent>
+    <div className="p-4 rounded-2xl shadow max-h-[500px] overflow-auto bg-white">
+      <div className="p-4">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <FileText className="w-5 h-5" /> Report Preview
         </h2>
         <div className="prose" dangerouslySetInnerHTML={{ __html: html }} />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
@@ -110,9 +108,12 @@ export const ReportPreview: React.FC<{ html: string }> = ({ html }) => {
 export const PDFExportButton: React.FC<{ onExport: () => void }> = ({ onExport }) => {
   return (
     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-      <Button onClick={onExport} className="rounded-2xl shadow flex items-center gap-2">
+      <button 
+        onClick={onExport} 
+        className="rounded-2xl shadow flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer"
+      >
         <Download className="w-4 h-4" /> Export PDF
-      </Button>
+      </button>
     </motion.div>
   );
 };
@@ -129,8 +130,8 @@ export const DataSummaryPanel: React.FC<{ summary: ReportDataSummary }> = ({ sum
   ];
 
   return (
-    <Card className="p-4 rounded-2xl shadow bg-gray-50">
-      <CardContent>
+    <div className="p-4 rounded-2xl shadow bg-gray-50">
+      <div className="p-4">
         <h2 className="text-xl font-semibold mb-4">Summary</h2>
         <div className="grid grid-cols-2 gap-4">
           {items.map((item) => (
@@ -140,7 +141,7 @@ export const DataSummaryPanel: React.FC<{ summary: ReportDataSummary }> = ({ sum
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
