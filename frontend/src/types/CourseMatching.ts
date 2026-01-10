@@ -1,11 +1,11 @@
-import type { Course } from "./Courses"
+import type { Course } from "./courses"
 
 export type StudentInfo = {
   firstName: string;
   lastName: string;
   address: string;
   phone: string;
-  email: string;
+  email: string
   registrationNumber: string;
   currentDegree: string;
   aimedDegree: string;

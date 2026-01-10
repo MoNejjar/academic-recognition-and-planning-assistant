@@ -3,7 +3,7 @@ ARIP - Academic Recognition and Planning Assistant
 FastAPI Backend Application Entry Point
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
 # TODO: Import routers
@@ -24,6 +24,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/upload")
+async def upload_pdf(file: UploadFile = File(...)):
+    return {"filename": file.filename}
 
 @app.get("/")
 async def root():
