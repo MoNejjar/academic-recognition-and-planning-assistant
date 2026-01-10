@@ -21,3 +21,4 @@ export async function uploadPDF(file: File): Promise<UploadResponse> {
     throw new Error(error?.response?.data?.detail || "Upload failed");
   }
 }
+
