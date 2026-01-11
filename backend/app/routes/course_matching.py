@@ -72,12 +72,16 @@ def get_llm_client() -> BaseLLMClient:
             detail="LLM_API_KEY not configured"
         )
     
-    return create_llm_client(
-        provider=provider,
-        api_key=settings.LLM_API_KEY,
-        model=settings.LLM_MODEL,
-        base_url=settings.LLM_BASE_URL
-    )
+    # Build kwargs - only pass base_url for Ollama
+    kwargs = {
+        "provider": provider,
+        "api_key": settings.LLM_API_KEY,
+        "model": settings.LLM_MODEL,
+    }
+    if provider == LLMProvider.OLLAMA and settings.LLM_BASE_URL:
+        kwargs["base_url"] = settings.LLM_BASE_URL
+    
+    return create_llm_client(**kwargs)
 
 
 @router.post("/extract-mapping-table", response_model=ExtractionResult)
