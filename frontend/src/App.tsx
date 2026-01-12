@@ -7,6 +7,7 @@ import FormPage from "./pages/CourseMatching/FormPage";
 import ReviewPage from "./pages/CourseMatching/ReviewPage";
 import SubmitPage from "./pages/CourseMatching/SubmitPage";
 import CoursePage from "./pages/CourseMatching/CoursePage";
+import ReportsPage from "./pages/Reports";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/submit" element={<SubmitPage />} />
           <Route path="/course" element={<CoursePage />} />
+          <Route path="/reports" element={<ReportsPage />} />
         </Route>
 
         {/* Fallback optionnel */}
