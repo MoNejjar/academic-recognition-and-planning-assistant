@@ -1,43 +1,17 @@
 import { createContext, useContext, useState } from "react";
-import { CourseMatchingState } from "../types/CourseMatching";
+import { AppState } from "../types";
 
 
-const initialState: CourseMatchingState = {
-  studentInfo: {
-    firstName: "",
-    lastName: "",
-    address: "",
-    phone: "",
-    email: "",
-    registrationNumber: "",
-    currentDegree: "",
-    aimedDegree: "",
-    semester: "",
-  },
-  previousStudies: {
-    university: "",
-    country: "",
-    degreeProgram: "",
-    diploma: "",
-    numberOfSemesters: "",
-    creditWorkload: "",
-    maxGrade: "",
-    minPassingGrade: "",
-  },
-
-  
-  uploadedFiles: [],
-  modules: [],
-
-  
-
+const initialState: AppState = {
+  tumFile: null,
+  courses: [],
 };
 
 
-const CourseMatchingContext = createContext<any>(null);
+const CourseMatchingContext = createContext<{ state: AppState; setState: React.Dispatch<React.SetStateAction<AppState>> } | null>(null);
 
 export function CourseMatchingProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<CourseMatchingState>(initialState);
+  const [state, setState] = useState<AppState>(initialState);
 
   return (
     <CourseMatchingContext.Provider value={{ state, setState }}>
@@ -47,5 +21,9 @@ export function CourseMatchingProvider({ children }: { children: React.ReactNode
 }
 
 export function useCourseMatching() {
-  return useContext(CourseMatchingContext);
+  const context = useContext(CourseMatchingContext);
+  if (!context) {
+    throw new Error("useCourseMatching must be used within CourseMatchingProvider");
+  }
+  return context;
 }

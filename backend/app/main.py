@@ -3,9 +3,12 @@ ARIP - Academic Recognition and Planning Assistant
 FastAPI Backend Application Entry Point
 """
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.routes.student import router as student_router
+from app.routes.staff import router as staff_router
+from typing import List
+from pydantic import BaseModel
 # TODO: Import routers
 # from app.routes import course_matching, reporting, chatbot
 
@@ -14,6 +17,9 @@ app = FastAPI(
     description="Academic Recognition and Planning Assistant API",
     version="0.1.0",
 )
+router = APIRouter()
+app.include_router(student_router, prefix="/api/student")
+app.include_router(staff_router, prefix="/api/staff")
 
 # CORS middleware
 app.add_middleware(

@@ -1,32 +1,72 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
-import SideMenuLayout from "./layout/SideMenuLayout";
-
-import UploadPage from "./pages/CourseMatching/PDFUploadPage";
-import FormPage from "./pages/CourseMatching/FormPage";
-import ReviewPage from "./pages/CourseMatching/ReviewPage";
-import SubmitPage from "./pages/CourseMatching/SubmitPage";
-import CoursePage from "./pages/CourseMatching/CoursePage";
+import SideMenu from "./components/SideMenu";
+import ReviewPage from "./pages/ReviewPage";
+import HomePage from "./pages/HomePage";
+import { useState } from "react";
+import { Course } from "./types";
 
 export default function App() {
+  const [tumFile, setTumFile] = useState<File | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+
+  const handleCoursesLoaded = (file: File | null, loadedCourses: Course[]) => {
+    setTumFile(file);
+    setCourses(loadedCourses);
+  };
+
+  const handleSubmit = () => {
+    // Prepare data to send to staff
+    const submissionData = {
+      tumFile: tumFile?.name,
+      courses: courses.map((course) => ({
+        id: course.id,
+        title: course.title,
+        sourceUniversity: course.sourceUniversity,
+        credits: course.credits,
+        description: course.description,
+        initialParsedData: course.initialParsedData,
+        catalogues: course.catalogues.map((cat) => ({
+          id: cat.id,
+          name: cat.name,
+          type: cat.type,
+          fileName: cat.file?.name,
+          manualText: cat.manualText,
+          parsedLLM: cat.parsedLLM,
+        })),
+      })),
+    };
+
+    console.log("Data to submit to TUM staff:", submissionData);
+    
+    // TODO: Send to your backend API
+    // await axios.post(`${API_URL}/submit`, submissionData);
+    
+    alert("Data successfully sent to TUM staff!");
+  };
+
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Redirection racine */}
-        <Route path="/" element={<Navigate to="/upload" replace />} />
-
-        {/* Layout avec menu */}
-        <Route element={<SideMenuLayout />}>
-          <Route path="/upload" element={<UploadPage />} />
-          <Route path="/form" element={<FormPage />} />
-          <Route path="/review" element={<ReviewPage />} />
-          <Route path="/submit" element={<SubmitPage />} />
-          <Route path="/course" element={<CoursePage />} />
-        </Route>
-
-        {/* Fallback optionnel */}
-        <Route path="*" element={<Navigate to="/upload" replace />} />
-      </Routes>
+      <SideMenu />
+      <div style={{ marginLeft: "240px" }}>
+        <Routes>
+          <Route 
+            path="/" 
+            element={<HomePage onCoursesLoaded={handleCoursesLoaded} />} 
+          />
+          <Route
+            path="/review"
+            element={
+              <ReviewPage
+                tumFile={tumFile}
+                courses={courses}
+                setCourses={setCourses}
+                onSubmit={handleSubmit}
+              />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
