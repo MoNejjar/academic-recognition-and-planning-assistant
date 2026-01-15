@@ -17,24 +17,31 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://arip:arip@db:5432/arip
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
       - LLM_API_KEY=${LLM_API_KEY}
       - SECRET_KEY=${SECRET_KEY}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: on-failure
     volumes:
       - ./backend/uploads:/app/uploads
 
   db:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=arip
-      - POSTGRES_PASSWORD=arip
-      - POSTGRES_DB=arip
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
 
 volumes:
   postgres_data:

@@ -16,6 +16,7 @@ app = FastAPI(
     title="ARIP API",
     description="Academic Recognition and Planning Assistant API",
     version="0.1.0",
+    lifespan=lifespan,
 )
 router = APIRouter()
 app.include_router(student_router, prefix="/api/student")
@@ -44,7 +45,8 @@ async def health_check():
     return {"status": "healthy"}
 
 
-# TODO: Include routers
-# app.include_router(course_matching.router, prefix="/api/course-matching", tags=["Course Matching"])
-# app.include_router(reporting.router, prefix="/api/reports", tags=["Reporting"])
-# app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
+# Include routers
+app.include_router(course_matching.router, prefix="/api/course-matching", tags=["PDF Extraction"])
+app.include_router(reporting.router, prefix="/api/reports", tags=["Reporting"])
+app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
+
