@@ -31,9 +31,16 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
 	
     # LLM settings
+    # Defaults to OpenAI gpt-4o, but can be overridden in .env:
+    #   LLM_PROVIDER=gemini, openrouter, ollama, groq
+    #   LLM_MODEL=gemini-2.5-flash, llava, etc.
+    # For PDF extraction, use vision-capable models (see pdf_extraction/README.md)
+    LLM_PROVIDER: str = "openai"  # Options: openai, gemini, groq, openrouter, ollama
     LLM_API_KEY: Optional[str] = None
-    LLM_MODEL: str = "gpt-4"
-    LLM_BASE_URL: Optional[str] = None
+    LLM_MODEL: str = "gpt-4o"  # Default to vision-capable model
+    LLM_BASE_URL: Optional[str] = None  # For Ollama: http://localhost:11434
+    LLM_RATE_LIMIT_RPM: int = 60
+    LLM_MAX_RETRIES: int = 3
 
     # Auth settings
     SECRET_KEY: str = "change-me-in-production"
