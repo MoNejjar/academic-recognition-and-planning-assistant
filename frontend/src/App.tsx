@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import SideMenu from "./components/SideMenu";
 import ReviewPage from "./pages/ReviewPage";
 import HomePage from "./pages/HomePage";
+import HealthCheck from "./components/HealthCheck";
 import { useState } from "react";
 import { Course } from "./types";
+import { ErrorBoundary } from "./utils/debug";
 
 export default function App() {
   const [tumFile, setTumFile] = useState<File | null>(null);
@@ -15,7 +17,7 @@ export default function App() {
   };
 
   const handleSubmit = () => {
-    // Prepare data to send to staff
+    // Préparer les données à envoyer au staff
     const submissionData = {
       tumFile: tumFile?.name,
       courses: courses.map((course) => ({
@@ -45,28 +47,31 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
-      <SideMenu />
-      <div style={{ marginLeft: "240px" }}>
-        <Routes>
-          <Route 
-            path="/" 
-            element={<HomePage onCoursesLoaded={handleCoursesLoaded} />} 
-          />
-          <Route
-            path="/review"
-            element={
-              <ReviewPage
-                tumFile={tumFile}
-                courses={courses}
-                setCourses={setCourses}
-                onSubmit={handleSubmit}
-              />
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <SideMenu />
+        <div style={{ marginLeft: "240px" }}>
+          <Routes>
+            <Route 
+              path="/" 
+              element={<HomePage onCoursesLoaded={handleCoursesLoaded} />} 
+            />
+            <Route
+              path="/review"
+              element={
+                <ReviewPage
+                  tumFile={tumFile}
+                  courses={courses}
+                  setCourses={setCourses}
+                  onSubmit={handleSubmit}
+                />
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+        <HealthCheck />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

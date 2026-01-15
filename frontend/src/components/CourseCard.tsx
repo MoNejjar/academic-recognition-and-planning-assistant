@@ -33,7 +33,7 @@ export default function CourseCard({
   };
 
   const addManualCatalogue = () => {
-    const text = prompt("Enter the manual catalogue text:");
+    const text = prompt("Enter manual catalogue text:");
     if (!text?.trim()) return;
     const catalogue: Catalogue = {
       id: crypto.randomUUID(),
@@ -72,7 +72,7 @@ export default function CourseCard({
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Course header */}
+      {/* En-tête du cours */}
       <div
         style={{
           display: "flex",
@@ -94,7 +94,7 @@ export default function CourseCard({
               borderRadius: 4,
               marginBottom: 8,
             }}
-            placeholder="Course title"
+            placeholder="Titre du cours"
           />
           <div style={{ display: "flex", gap: 8 }}>
             <input
@@ -107,7 +107,7 @@ export default function CourseCard({
                 borderRadius: 4,
                 fontSize: 14,
               }}
-              placeholder="Source university"
+              placeholder="Université source"
             />
             <input
               value={course.credits || ""}
@@ -135,11 +135,11 @@ export default function CourseCard({
             fontSize: 13,
           }}
         >
-          🗑️ Delete
+          🗑️ Supprimer
         </button>
       </div>
 
-      {/* Initial parsed data */}
+      {/* Données initiales parsées */}
       {course.initialParsedData && (
         <div style={{ marginBottom: 12 }}>
           <button
@@ -154,7 +154,7 @@ export default function CourseCard({
               textDecoration: "underline",
             }}
           >
-            {showInitialData ? "▼" : "▶"} Parsed data from TUM file
+            {showInitialData ? "▼" : "▶"} Données parsées du fichier TUM
           </button>
           {showInitialData && (
             <div
@@ -173,6 +173,27 @@ export default function CourseCard({
                 <strong style={{ fontSize: 13 }}>Language:</strong>{" "}
                 {course.initialParsedData.language || "Not specified"}
               </div>
+              <div style={{ marginBottom: 8 }}>
+                <strong style={{ fontSize: 13 }}>Module:</strong>{" "}
+                {course.initialParsedData.module_number || "Not specified"}
+              </div>
+              {course.initialParsedData.content && (
+                <div style={{ marginBottom: 8 }}>
+                  <strong style={{ fontSize: 13 }}>Content:</strong>
+                  <div style={{ 
+                    fontSize: 12, 
+                    color: "#555", 
+                    maxHeight: 100, 
+                    overflow: "auto",
+                    background: "#fff",
+                    padding: 8,
+                    borderRadius: 4,
+                    marginTop: 4
+                  }}>
+                    {course.initialParsedData.content}
+                  </div>
+                </div>
+              )}
               <details style={{ fontSize: 12, marginTop: 8 }}>
                 <summary style={{ cursor: "pointer", color: "#666" }}>
                   View all raw data
@@ -283,7 +304,7 @@ export default function CourseCard({
                   }}
                 >
                   <strong style={{ fontSize: 13, color: "#4CAF50" }}>
-                    ✓ Parsing result
+                    ✓ Résultat du parsing
                   </strong>
                   <button
                     onClick={() => clearCatalogueParsing(cat.id)}
@@ -297,7 +318,7 @@ export default function CourseCard({
                       fontSize: 11,
                     }}
                   >
-                    Clear
+                    Effacer
                   </button>
                 </div>
                 <div
@@ -308,16 +329,46 @@ export default function CourseCard({
                     border: "1px solid #4CAF50",
                   }}
                 >
-                  <div style={{ marginBottom: 6, fontSize: 13 }}>
-                    <strong>Summary:</strong> {cat.parsedLLM.summary || "N/A"}
-                  </div>
-                  <div style={{ marginBottom: 6, fontSize: 13 }}>
-                    <strong>ECTS:</strong> {cat.parsedLLM.ects || "N/A"}
-                  </div>
-                  <div style={{ fontSize: 13 }}>
-                    <strong>Topics:</strong>{" "}
-                    {cat.parsedLLM.topics?.join(", ") || "N/A"}
-                  </div>
+                  {cat.parsedLLM.summary && (
+                    <div style={{ marginBottom: 6, fontSize: 13 }}>
+                      <strong>Summary:</strong> {cat.parsedLLM.summary}
+                    </div>
+                  )}
+                  {cat.parsedLLM.ects && (
+                    <div style={{ marginBottom: 6, fontSize: 13 }}>
+                      <strong>ECTS:</strong> {cat.parsedLLM.ects}
+                    </div>
+                  )}
+                  {cat.parsedLLM.topics && cat.parsedLLM.topics.length > 0 && (
+                    <div style={{ marginBottom: 6, fontSize: 13 }}>
+                      <strong>Topics:</strong> {cat.parsedLLM.topics.join(", ")}
+                    </div>
+                  )}
+                  {cat.parsedLLM.courses && cat.parsedLLM.courses.length > 0 && (
+                    <div style={{ marginBottom: 6, fontSize: 13 }}>
+                      <strong>Detected courses:</strong> {cat.parsedLLM.courses.length}
+                      <details style={{ marginTop: 4, fontSize: 12 }}>
+                        <summary style={{ cursor: "pointer", color: "#666" }}>
+                          View courses
+                        </summary>
+                        <div style={{ marginTop: 4, paddingLeft: 8 }}>
+                          {cat.parsedLLM.courses.map((c: any, idx: number) => (
+                            <div key={idx} style={{ marginBottom: 8, paddingBottom: 8, borderBottom: "1px solid #eee" }}>
+                              <div><strong>{c.module_name}</strong></div>
+                              {c.module_number && <div style={{ fontSize: 11, color: "#666" }}>Module: {c.module_number}</div>}
+                              {c.ects && <div style={{ fontSize: 11, color: "#666" }}>ECTS: {c.ects}</div>}
+                              {c.language && <div style={{ fontSize: 11, color: "#666" }}>Language: {c.language}</div>}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                  {cat.parsedLLM.error && (
+                    <div style={{ color: "#f44336", fontSize: 13, marginBottom: 6 }}>
+                      <strong>⚠️ Error:</strong> {cat.parsedLLM.error}
+                    </div>
+                  )}
                   <details style={{ marginTop: 8, fontSize: 12 }}>
                     <summary style={{ cursor: "pointer", color: "#666" }}>
                       Edit data (JSON)

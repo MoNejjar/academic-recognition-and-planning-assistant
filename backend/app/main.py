@@ -11,6 +11,7 @@ from app.routes.student import router as student_router
 from app.routes.staff import router as staff_router
 from typing import List
 from pydantic import BaseModel
+from app.routes import course_matching, reporting, chatbot
 
 from app.core.database import SessionLocal, init_db
 from app.services.storage.data_cache import load_tum_modules_from_cache

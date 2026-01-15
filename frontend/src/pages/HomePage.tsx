@@ -22,29 +22,36 @@ export default function HomePage({ onCoursesLoaded }: Props) {
     try {
       const parsedData = await parseCourses(tumFile);
       
+      // Check if we received data
+      if (!Array.isArray(parsedData) || parsedData.length === 0) {
+        setError("No courses detected in the file.");
+        return;
+      }
+      
       // Convert parsed data to Course objects
       const courses: Course[] = parsedData.map((item: any) => ({
         id: item.id || crypto.randomUUID(),
         title: item.title || "Untitled",
         sourceUniversity: item.sourceUniversity || "",
-        credits: item.parsedLLM?.ects?.toString(),
-        description: item.parsedLLM?.language,
+        credits: item.parsedLLM?.ects?.toString() || "",
+        description: item.parsedLLM?.content || "",
         initialParsedData: item.parsedLLM,
         catalogues: [],
       }));
 
       onCoursesLoaded(tumFile, courses);
       navigate("/review");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error during parsing:", err);
-      setError("Unable to parse the file. Please try again.");
+      const errorMessage = err.response?.data?.detail || err.message || "Unable to parse file.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSkipAndManual = () => {
-    // User wants to do everything manually
+    // User wants to enter everything manually
     onCoursesLoaded(null as any, []);
     navigate("/review");
   };

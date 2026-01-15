@@ -72,7 +72,7 @@ export default function ReviewPage({ tumFile, courses, setCourses, onSubmit }: P
       );
     } catch (err) {
       console.error("Error parsing catalogues:", err);
-      alert("Error during parsing. Please try again.");
+      alert("Parsing error. Please try again.");
     } finally {
       setLoadingCatalogueForCourse(null);
     }
@@ -80,7 +80,7 @@ export default function ReviewPage({ tumFile, courses, setCourses, onSubmit }: P
 
   return (
     <div style={{ padding: 24, fontFamily: "sans-serif", maxWidth: 1200, margin: "0 auto" }}>
-      {/* Header */}
+      {/* En-tête */}
       <div
         style={{
           marginBottom: 24,
@@ -118,7 +118,7 @@ export default function ReviewPage({ tumFile, courses, setCourses, onSubmit }: P
               fontWeight: 500,
             }}
           >
-            ➕ Add a course
+            ➕ Add course
           </button>
           <button
             onClick={onSubmit}
@@ -171,13 +171,13 @@ export default function ReviewPage({ tumFile, courses, setCourses, onSubmit }: P
         </div>
       )}
 
-      {/* Course list */}
+      {/* List of courses */}
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {courses.map((course) => (
           <CourseCard
             key={course.id}
             course={course}
-            onUpdate={(updatedCourse : Course) => updateCourse(course.id, updatedCourse)}
+            onUpdate={(updatedCourse) => updateCourse(course.id, updatedCourse)}
             onDelete={() => deleteCourse(course.id)}
             onParseCatalogues={() => handleParseCatalogues(course.id)}
             isLoadingCatalogues={loadingCatalogueForCourse === course.id}
