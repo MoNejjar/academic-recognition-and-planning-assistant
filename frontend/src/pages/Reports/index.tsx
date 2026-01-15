@@ -7,7 +7,6 @@ import {
   MatchScoreData,
   ReportDataSummary,
 } from "../../components/reporting";
-import tumLogo from "../../assets/tum-logo.svg";
 
 export default function ReportsPage() {
   const [matchData, setMatchData] = useState<MatchScoreData[]>([]);
@@ -74,11 +73,7 @@ export default function ReportsPage() {
 
   return (
     <div style={styles.container}>
-      {/* HEADER */}
-      <header style={styles.header}>
-        <img src={tumLogo} alt="TUM Logo" style={styles.logo} />
-        <h1 style={styles.title}>Course Matching Reports</h1>
-      </header>
+      <h1 style={styles.title}>Course Matching Reports</h1>
 
       {/* MAIN CONTENT */}
       <div style={styles.content}>
@@ -116,32 +111,16 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column" as const,
-    minHeight: "100vh",
-    backgroundColor: "#f5f5f5",
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    padding: "10px 20px",
-    backgroundColor: "#0051a2",
-    color: "#fff",
-    gap: "10px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-  },
-  logo: {
-    height: "40px",
+    gap: "20px",
   },
   title: {
-    fontSize: "20px",
-    margin: 0,
+    fontSize: "24px",
     fontWeight: "bold" as const,
+    margin: "0 0 20px 0",
+    color: "#0051a2",
   },
   content: {
     flex: 1,
-    padding: "20px",
-    maxWidth: "1200px",
-    margin: "0 auto",
-    width: "100%",
   },
   grid: {
     display: "flex",

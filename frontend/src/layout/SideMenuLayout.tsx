@@ -21,8 +21,10 @@ export default function SideMenuLayout() {
           </NavLink>
           <NavLink to="/submit" style={styles.link}>
             Submit
-          </NavLink>  
-          
+          </NavLink>
+          <NavLink to="/reports" style={styles.link}>
+            Reports
+          </NavLink>
         </nav>
       </aside>
 
