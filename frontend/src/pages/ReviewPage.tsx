@@ -17,8 +17,17 @@ export default function ReviewPage({ tumFile, courses, setCourses, onSubmit }: P
   const addManualCourse = () => {
     const newCourse: Course = {
       id: crypto.randomUUID(),
-      title: "New course",
-      sourceUniversity: "",
+      university: {
+        title: "New course",
+        moduleNumber: "",
+        creditPoints: undefined,
+        originalGrade: "",
+      },
+      tum: {
+        title: "",
+        moduleNumber: "",
+        ects: undefined,
+      },
       catalogues: [],
     };
     setCourses((prev) => [...prev, newCourse]);

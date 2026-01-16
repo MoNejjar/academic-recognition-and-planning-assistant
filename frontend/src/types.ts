@@ -14,22 +14,35 @@ export type Catalogue = {
   parsedLLM?: any;
 };
 
+// University course (external/home university)
+export type UniversityCourse = {
+  moduleNumber?: string;
+  title: string;
+  creditPoints?: number;
+  originalGrade?: string;
+};
+
+// TUM equivalent course
+export type TUMCourse = {
+  moduleNumber?: string;
+  title: string;
+  ects?: number;
+};
+
 export type Course = {
   id: string;
-  title: string;
-  sourceUniversity: string;
-  credits?: string;
-  description?: string;
-  // Résultat brut du parsing initial du fichier TUM
+  // Original university course info
+  university: UniversityCourse;
+  // TUM equivalent
+  tum: TUMCourse;
+  // Raw parsed data from LLM
   initialParsedData?: any;
-  // Catalogues pour matcher ce cours
+  // Catalogues for matching this course
   catalogues: Catalogue[];
 };
 
-// État global de l'application
+// App state
 export type AppState = {
-  // Le fichier TUM initial uploadé
   tumFile: File | null;
-  // Les cours parsés depuis le fichier TUM (modifiables par l'utilisateur)
   courses: Course[];
 };

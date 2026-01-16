@@ -169,14 +169,26 @@ async def parse_courses(file: UploadFile = File(...), db: Session = Depends(get_
         courses = []
         for course in result.courses:
             courses.append({
-                "id": str(course.module_number or course.module_name or len(courses) + 1),
-                "title": course.module_name or "Untitled",
-                "sourceUniversity": "External University",
+                "id": str(course.university_module_number or len(courses) + 1),
+                "university_module_number": course.university_module_number,
+                "university_title": course.university_title or "Untitled",
+                "university_credit_points": course.university_credit_points,
+                "university_grade": course.university_grade,
+                "tum_module_number": course.tum_module_number,
+                "tum_title": course.tum_title,
+                "tum_ects": course.tum_ects,
                 "parsedLLM": {
-                    "ects": course.ects,
-                    "language": course.language,
-                    "content": course.module_content,
-                    "module_number": course.module_number,
+                    "university": {
+                        "module_number": course.university_module_number,
+                        "title": course.university_title,
+                        "credit_points": course.university_credit_points,
+                        "grade": course.university_grade,
+                    },
+                    "tum": {
+                        "module_number": course.tum_module_number,
+                        "title": course.tum_title,
+                        "ects": course.tum_ects,
+                    }
                 },
                 "catalogues": []
             })

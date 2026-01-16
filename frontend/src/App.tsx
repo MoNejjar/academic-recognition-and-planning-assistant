@@ -17,15 +17,22 @@ export default function App() {
   };
 
   const handleSubmit = () => {
-    // Préparer les données à envoyer au staff
+    // Prepare data to send to staff
     const submissionData = {
       tumFile: tumFile?.name,
       courses: courses.map((course) => ({
         id: course.id,
-        title: course.title,
-        sourceUniversity: course.sourceUniversity,
-        credits: course.credits,
-        description: course.description,
+        university: {
+          moduleNumber: course.university.moduleNumber,
+          title: course.university.title,
+          creditPoints: course.university.creditPoints,
+          originalGrade: course.university.originalGrade,
+        },
+        tum: {
+          moduleNumber: course.tum.moduleNumber,
+          title: course.tum.title,
+          ects: course.tum.ects,
+        },
         initialParsedData: course.initialParsedData,
         catalogues: course.catalogues.map((cat) => ({
           id: cat.id,

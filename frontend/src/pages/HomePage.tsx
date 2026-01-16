@@ -31,11 +31,18 @@ export default function HomePage({ onCoursesLoaded }: Props) {
       // Convert parsed data to Course objects
       const courses: Course[] = parsedData.map((item: any) => ({
         id: item.id || crypto.randomUUID(),
-        title: item.title || "Untitled",
-        sourceUniversity: item.sourceUniversity || "",
-        credits: item.parsedLLM?.ects?.toString() || "",
-        description: item.parsedLLM?.content || "",
-        initialParsedData: item.parsedLLM,
+        university: {
+          moduleNumber: item.university_module_number || item.parsedLLM?.module_number,
+          title: item.university_title || item.title || "Untitled",
+          creditPoints: item.university_credit_points || item.parsedLLM?.ects,
+          originalGrade: item.university_grade,
+        },
+        tum: {
+          moduleNumber: item.tum_module_number,
+          title: item.tum_title || "",
+          ects: item.tum_ects || item.parsedLLM?.ects,
+        },
+        initialParsedData: item.parsedLLM || item,
         catalogues: [],
       }));
 
@@ -99,7 +106,7 @@ export default function HomePage({ onCoursesLoaded }: Props) {
           marginRight: 8,
         }}
       >
-        {loading ? "Parsing in progress..." : "Parse file"}
+        {loading ? "⏳ Parsing in progress... (this may take up to 3 minutes)" : "Parse file"}
       </button>
 
       <button
