@@ -7,7 +7,7 @@ const API_URL = "http://127.0.0.1:8000/api/student";
 // Configure axios avec des timeouts et intercepteurs
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 60000, // 60 secondes pour le parsing LLM
+  timeout: 300000, // 60 secondes pour le parsing LLM
   headers: {
     "Content-Type": "multipart/form-data",
   },

@@ -1,7 +1,9 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from typing import List
 from sqlalchemy.orm import Session
-
+import logging
+import asyncio
+import time
 from app.core.config import settings
 from app.core.database import get_db
 from app.services.storage.file_storage import FileStorage
@@ -10,6 +12,8 @@ from app.services.pdf_extraction.course_content_extractor import CourseContentEx
 from app.services.llm_service.client import (
     LLMProvider, create_llm_client, BaseLLMClient
 )
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter()
 
@@ -26,6 +30,11 @@ def get_llm_client() -> BaseLLMClient:
         LLM_API_KEY=your-key
         LLM_MODEL=gpt-4o
     """
+    logger.info("🔧 Initializing LLM client...")
+    logger.info(f"   Provider: {settings.LLM_PROVIDER}")
+    logger.info(f"   Model: {settings.LLM_MODEL}")
+    logger.info(f"   API Key: {'✅ Set (' + str(len(settings.LLM_API_KEY)) + ' chars)' if settings.LLM_API_KEY else '❌ NOT SET'}")
+    
     # Map provider string to enum
     provider_map = {
         "openai": LLMProvider.OPENAI,
@@ -61,7 +70,9 @@ def get_llm_client() -> BaseLLMClient:
     else:
         kwargs["api_key"] = settings.LLM_API_KEY
 
-    return create_llm_client(**kwargs)
+    client = create_llm_client(**kwargs)
+    logger.info("✅ LLM client created successfully")
+    return client
 
 
 @router.post("/courses/parse")
@@ -76,6 +87,8 @@ async def parse_courses(file: UploadFile = File(...), db: Session = Depends(get_
     - Language
     - Course content/description
     """
+    logger.info(f"📄 Starting parse for: {file.filename}")
+    
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
     
@@ -88,6 +101,7 @@ async def parse_courses(file: UploadFile = File(...), db: Session = Depends(get_
         )
     
     # Save file
+    logger.info(f"💾 Saving file: {file.filename}")
     relative_path = file_storage.save_file(
         file_content=content, 
         filename=file.filename, 
@@ -95,6 +109,7 @@ async def parse_courses(file: UploadFile = File(...), db: Session = Depends(get_
     )
     
     # Create database record
+    logger.info(f"💿 Creating database record for: {file.filename}")
     doc_repo = DocumentRepository(db)
     doc_repo.create_document(
         original_filename=file.filename,
@@ -105,17 +120,58 @@ async def parse_courses(file: UploadFile = File(...), db: Session = Depends(get_
     )
     
     try:
+        # Test LLM connection first
+        logger.info("🔍 Testing LLM connection...")
         llm_client = get_llm_client()
-        extractor = CourseContentExtractor(llm_client)
-        result = await extractor.extract_from_bytes(pdf_bytes=content, filename=file.filename)
+        test_start = time.time()
+        try:
+            # Use the correct method - check your BaseLLMClient interface
+            # Common methods: chat(), complete(), or invoke()
+            test_response = await asyncio.wait_for(
+                llm_client.chat([{"role": "user", "content": "Say 'OK'"}]),
+                timeout=15.0
+            )
+            test_duration = time.time() - test_start
+            logger.info(f"✅ LLM test successful in {test_duration:.2f}s")
+        except asyncio.TimeoutError:
+
+            logger.error("⏱️ LLM test timed out after 15s")
+            raise HTTPException(status_code=504, detail="LLM connection test timed out. Check your API key and provider status.")
+        except Exception as e:
+            logger.error(f"❌ LLM test failed: {str(e)}")
+            logger.error(f"   Error type: {type(e).__name__}")
+            if hasattr(e, 'response'):
+                logger.error(f"   Response: {e.response}")
+            raise HTTPException(status_code=500, detail=f"LLM test failed: {str(e)}")
+        # Now extract with timeout
+        logger.info("📊 Starting PDF extraction...")
+        extraction_start = time.time()
         
+        extractor = CourseContentExtractor(llm_client)
+        result = await asyncio.wait_for(
+            extractor.extract_from_bytes(pdf_bytes=content, filename=file.filename),
+            timeout=120.0
+        )
+        
+        extraction_duration = time.time() - extraction_start
+        logger.info(f"✅ Extraction completed in {extraction_duration:.2f}s")
+        logger.info(f"📋 Extracted courses: {len(result.courses)}")
+        
+        if len(result.courses) == 0:
+            logger.warning(f"⚠️ No courses found in {file.filename}")
+            logger.warning(f"   Result object: {result}")
+            raise HTTPException(
+                status_code=422, 
+                detail=f"No courses detected in the file. The PDF may not contain recognizable course information."
+            )
         # Transform to frontend format
+        logger.info(f"🔄 Transforming {len(result.courses)} courses to frontend format")
         courses = []
         for course in result.courses:
             courses.append({
                 "id": str(course.module_number or course.module_name or len(courses) + 1),
                 "title": course.module_name or "Untitled",
-                "sourceUniversity": "External University",  # Could be parsed or added later
+                "sourceUniversity": "External University",
                 "parsedLLM": {
                     "ects": course.ects,
                     "language": course.language,
@@ -125,8 +181,16 @@ async def parse_courses(file: UploadFile = File(...), db: Session = Depends(get_
                 "catalogues": []
             })
         
+        logger.info(f"✅ Parse completed successfully for: {file.filename}")
         return courses
+        
+    except asyncio.TimeoutError:
+        logger.error(f"⏱️ Timeout parsing {file.filename} after 120s")
+        raise HTTPException(status_code=504, detail="Parsing timed out after 120s. The PDF may be too large or complex.")
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.exception(f"❌ Parse failed for {file.filename}")
         raise HTTPException(status_code=500, detail=f"Parsing failed: {str(e)}")
 
 
