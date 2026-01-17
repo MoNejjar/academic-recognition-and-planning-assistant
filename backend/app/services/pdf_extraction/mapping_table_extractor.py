@@ -296,15 +296,21 @@ class MappingTableExtractor:
         """
         values: List[str] = []
         
-        if isinstance(item, list) and len(item) == 7:
-            values = [str(v).replace('\n', ' ').strip() for v in item]
+        # Handle both 7 and 8 value arrays (matching_type is optional)
+        # Handle 7, 8, or 9 value arrays (matching_type and group_id are optional)
+        if isinstance(item, list) and len(item) >= 7:
+            values = [str(v).replace('\n', ' ').strip() for v in item[:9]]
         elif isinstance(item, dict):
             dict_values = list(item.values())
-            if len(dict_values) == 7:
-                values = [str(v).replace('\n', ' ').strip() for v in dict_values]
+            if len(dict_values) >= 7:
+                values = [str(v).replace('\n', ' ').strip() for v in dict_values[:9]]
         
-        if len(values) != 7:
+        if len(values) < 7:
             return None
+        
+        # Default matching_type to "1:1" and group_id to "none" if not provided
+        matching_type = values[7] if len(values) > 7 else "1:1"
+        group_id = values[8] if len(values) > 8 else "none"
         
         return CourseRecognitionRow(
             source_course_no=values[0],
@@ -313,5 +319,7 @@ class MappingTableExtractor:
             source_grade=values[3],
             tum_module_nr=values[4],
             tum_module_title=values[5],
-            tum_ects=values[6]
+            tum_ects=values[6],
+            matching_type=matching_type,
+            group_id=group_id
         )

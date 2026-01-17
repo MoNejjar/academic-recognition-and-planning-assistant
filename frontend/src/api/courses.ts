@@ -1,19 +1,19 @@
 import axios, { AxiosError } from "axios";
-import { Catalogue } from "../types";
+import { MappingExtractionResult, CourseContentResult } from "../types";
 import { logApiError } from "../utils/debug";
 
-const API_URL = "http://127.0.0.1:8000/api/student";
+const API_BASE = "http://127.0.0.1:8000/api";
 
-// Configure axios avec des timeouts et intercepteurs
+// Configure axios with timeouts
 const apiClient = axios.create({
-  baseURL: API_URL,
-  timeout: 300000, // 60 secondes pour le parsing LLM
+  baseURL: API_BASE,
+  timeout: 300000, // 5 minutes for LLM parsing
   headers: {
     "Content-Type": "multipart/form-data",
   },
 });
 
-// Intercepteur pour logger les erreurs
+// Error logging interceptor
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
@@ -22,77 +22,88 @@ apiClient.interceptors.response.use(
   }
 );
 
-export async function parseCourses(file: File) {
+// ============================================
+// STEP 1: Mapping Table Extraction
+// ============================================
+
+/**
+ * Extract mapping table from PDF.
+ * Returns rows with source course → TUM module mappings.
+ */
+export async function extractMappingTable(file: File): Promise<MappingExtractionResult> {
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    console.log("📤 Sending file for parsing:", file.name);
-    const res = await apiClient.post("/courses/parse", formData);
-    console.log("✅ Parsing successful:", res.data);
+    console.log("📤 Extracting mapping table from:", file.name);
+    const res = await apiClient.post("/course-matching/extract-mapping-table", formData);
+    console.log("✅ Mapping extraction successful:", res.data);
     return res.data;
   } catch (error: any) {
-    console.error("❌ Error parsing courses:");
-    
+    console.error("❌ Error extracting mapping table:");
+
     if (error.code === "ECONNABORTED") {
-      throw new Error("Parsing took too long. Server not responding.");
+      throw new Error("Extraction took too long. Server not responding.");
     }
-    
+
     if (error.response?.status === 400) {
-      throw new Error(error.response.data.detail || "Invalid file");
+      throw new Error(error.response.data.detail || "Invalid PDF file");
     }
-    
+
     if (error.response?.status === 500) {
       throw new Error(
-        error.response.data.detail || 
-        "Server error during parsing. Check that LLM is properly configured."
+        error.response.data.detail ||
+        "Server error during extraction. Check LLM configuration."
       );
     }
-    
+
     if (!error.response) {
       throw new Error("Cannot reach server. Check it's running on http://127.0.0.1:8000");
     }
-    
+
     throw error;
   }
 }
 
-export async function parseCatalogue(catalogues: Catalogue[]) {
+// ============================================
+// STEP 2: Catalogue Content Extraction
+// ============================================
+
+/**
+ * Extract course content from catalogue PDFs.
+ * Returns all courses found in the catalogues.
+ */
+export async function extractCatalogueContent(file: File): Promise<CourseContentResult> {
   const formData = new FormData();
-  
-  catalogues.forEach((cat) => {
-    if (cat.file) {
-      formData.append("files", cat.file);
-    }
-  });
+  formData.append("file", file);
 
   try {
-    console.log("📤 Sending", catalogues.length, "catalogue(s) for parsing");
-    const res = await apiClient.post("/courses/parse-catalogue", formData);
-    console.log("✅ Catalogue parsing successful:", res.data);
+    console.log("📤 Extracting catalogue content from:", file.name);
+    const res = await apiClient.post("/course-matching/extract-course-content", formData);
+    console.log("✅ Catalogue extraction successful:", res.data);
     return res.data;
   } catch (error: any) {
-    console.error("❌ Error parsing catalogues:");
-    
+    console.error("❌ Error extracting catalogue:");
+
     if (error.code === "ECONNABORTED") {
-      throw new Error("Parsing took too long. Server not responding.");
+      throw new Error("Extraction took too long. Server not responding.");
     }
-    
+
     if (error.response?.status === 400) {
-      throw new Error(error.response.data.detail || "Invalid file(s)");
+      throw new Error(error.response.data.detail || "Invalid PDF file");
     }
-    
+
     if (error.response?.status === 500) {
       throw new Error(
-        error.response.data.detail || 
-        "Server error during catalogue parsing."
+        error.response.data.detail ||
+        "Server error during catalogue extraction."
       );
     }
-    
+
     if (!error.response) {
       throw new Error("Cannot reach server. Check it's running.");
     }
-    
+
     throw error;
   }
 }

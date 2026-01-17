@@ -1,56 +1,52 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import SideMenu from "./components/SideMenu";
-import ReviewPage from "./pages/ReviewPage";
-import HomePage from "./pages/HomePage";
+import MappingUploadPage from "./pages/MappingUploadPage";
+import CatalogueUploadPage from "./pages/CatalogueUploadPage";
+import FinalReviewPage from "./pages/FinalReviewPage";
 import HealthCheck from "./components/HealthCheck";
 import { useState } from "react";
-import { Course } from "./types";
+import { MappingRow } from "./types";
 import { ErrorBoundary } from "./utils/debug";
 
 export default function App() {
-  const [tumFile, setTumFile] = useState<File | null>(null);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [mappingFile, setMappingFile] = useState<File | null>(null);
+  const [mappingRows, setMappingRows] = useState<MappingRow[]>([]);
 
-  const handleCoursesLoaded = (file: File | null, loadedCourses: Course[]) => {
-    setTumFile(file);
-    setCourses(loadedCourses);
+  const handleMappingsConfirmed = (file: File, rows: MappingRow[]) => {
+    setMappingFile(file);
+    setMappingRows(rows);
+  };
+
+  const handleContentConfirmed = (updatedRows: MappingRow[]) => {
+    setMappingRows(updatedRows);
   };
 
   const handleSubmit = () => {
-    // Prepare data to send to staff
+    // Prepare data for submission
     const submissionData = {
-      tumFile: tumFile?.name,
-      courses: courses.map((course) => ({
-        id: course.id,
-        university: {
-          moduleNumber: course.university.moduleNumber,
-          title: course.university.title,
-          creditPoints: course.university.creditPoints,
-          originalGrade: course.university.originalGrade,
-        },
-        tum: {
-          moduleNumber: course.tum.moduleNumber,
-          title: course.tum.title,
-          ects: course.tum.ects,
-        },
-        initialParsedData: course.initialParsedData,
-        catalogues: course.catalogues.map((cat) => ({
-          id: cat.id,
-          name: cat.name,
-          type: cat.type,
-          fileName: cat.file?.name,
-          manualText: cat.manualText,
-          parsedLLM: cat.parsedLLM,
-        })),
+      mappingFile: mappingFile?.name,
+      mappings: mappingRows.map((row) => ({
+        source_course_no: row.source_course_no,
+        source_course_name: row.source_course_name,
+        source_credits: row.source_credits,
+        source_grade: row.source_grade,
+        tum_module_nr: row.tum_module_nr,
+        tum_module_title: row.tum_module_title,
+        tum_ects: row.tum_ects,
+        catalogue_content: row.catalogue_content,
       })),
     };
 
-    console.log("Data to submit to TUM staff:", submissionData);
-    
-    // TODO: Send to your backend API
+    console.log("📤 Submitting to TUM staff:", submissionData);
+
+    // TODO: Send to backend API
     // await axios.post(`${API_URL}/submit`, submissionData);
-    
+
     alert("Data successfully sent to TUM staff!");
+
+    // Reset state
+    setMappingFile(null);
+    setMappingRows([]);
   };
 
   return (
@@ -59,21 +55,49 @@ export default function App() {
         <SideMenu />
         <div style={{ marginLeft: "240px" }}>
           <Routes>
-            <Route 
-              path="/" 
-              element={<HomePage onCoursesLoaded={handleCoursesLoaded} />} 
-            />
+            {/* Step 1: Upload mapping table */}
             <Route
-              path="/review"
+              path="/"
               element={
-                <ReviewPage
-                  tumFile={tumFile}
-                  courses={courses}
-                  setCourses={setCourses}
-                  onSubmit={handleSubmit}
+                <MappingUploadPage
+                  onMappingsConfirmed={handleMappingsConfirmed}
+                  existingRows={mappingRows}
+                  existingFile={mappingFile}
                 />
               }
             />
+
+            {/* Step 2: Upload catalogues */}
+            <Route
+              path="/catalogue"
+              element={
+                mappingRows.length > 0 ? (
+                  <CatalogueUploadPage
+                    mappingRows={mappingRows}
+                    onContentConfirmed={handleContentConfirmed}
+                  />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+
+            {/* Step 3: Final review */}
+            <Route
+              path="/review"
+              element={
+                mappingRows.length > 0 ? (
+                  <FinalReviewPage
+                    mappingFile={mappingFile}
+                    mappingRows={mappingRows}
+                    onSubmit={handleSubmit}
+                  />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

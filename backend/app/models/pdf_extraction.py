@@ -26,16 +26,24 @@ class CourseRecognitionRow(BaseModel):
     tum_module_title: str = Field(..., description="TUM module title")
     tum_ects: str = Field(..., description="TUM ECTS credits")
     
+    # Matching type: 1:1, n:1 (multiple source -> one TUM), 1:n (one source -> multiple TUM)
+    matching_type: str = Field(default="1:1", description="Matching type: 1:1, n:1, or 1:n")
+    
+    # Group ID to link related rows together (for n:1 or 1:n mappings)
+    group_id: str = Field(default="none", description="Group ID to link related rows. 'none' for 1:1 mappings")
+    
     model_config = {
         "json_schema_extra": {
             "example": {
-                "source_course_no": "CSE1100 + CSE1305",
-                "source_course_name": "Object Oriented Programming + Algorithms and Data Structures",
-                "source_credits": "5+5=10",
-                "source_grade": "8, 9",
+                "source_course_no": "CSE1100",
+                "source_course_name": "Object Oriented Programming",
+                "source_credits": "5",
+                "source_grade": "8",
                 "tum_module_nr": "INHN0002",
                 "tum_module_title": "Fundamentals of Programming",
-                "tum_ects": "6"
+                "tum_ects": "6",
+                "matching_type": "n:1",
+                "group_id": "group1"
             }
         }
     }

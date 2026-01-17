@@ -7,17 +7,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, UploadFile, File, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes.student import router as student_router
-from app.routes.staff import router as staff_router
-from typing import List
-from pydantic import BaseModel
 from app.routes import course_matching, reporting, chatbot
 
 from app.core.database import SessionLocal, init_db
 from app.services.storage.data_cache import load_tum_modules_from_cache
 
-# TODO: Import routers
-# from app.routes import course_matching, reporting, chatbot
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:     [%(name)s] %(message)s",
@@ -25,12 +19,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("app.main")
 
-
-
+# Initialize database and load cached TUM modules on startup.
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """Initialize database and load cached TUM modules on startup."""
-
     init_db()
 
     db = SessionLocal()
@@ -54,8 +45,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 router = APIRouter()
-app.include_router(student_router, prefix="/api/student")
-app.include_router(staff_router, prefix="/api/staff")
 
 # CORS middleware
 app.add_middleware(
@@ -65,10 +54,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.post("/upload")
-async def upload_pdf(file: UploadFile = File(...)):
-    return {"filename": file.filename}
 
 @app.get("/")
 async def root():

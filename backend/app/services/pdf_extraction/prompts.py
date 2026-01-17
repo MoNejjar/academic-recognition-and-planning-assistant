@@ -30,28 +30,38 @@ RAW PDF TEXT DATA:
 
 Look for tables mapping source university courses to TUM courses.
 
-For each row, extract these 7 values IN ORDER as a simple array:
-1. Course No./Module Nr (source university)
-2. Course Name/Titel (source university)  
-3. Credit Points (source university)
-4. Original Grade (source university)
-5. Module Nr (TUM)
-6. Titel (TUM)
-7. ECTS (TUM)
+CRITICAL: When you find combined courses (multiple source courses → one TUM module, or one source → multiple TUM modules), 
+you MUST split them into SEPARATE rows, each with the same group_id to link them together.
+
+For each row, extract these 9 values IN ORDER as a simple array:
+1. Course No./Module Nr (source university) - ONE course per row
+2. Course Name/Titel (source university) - ONE course name per row
+3. Credit Points (source university) - credits for THIS course only
+4. Original Grade (source university) - grade for THIS course only
+5. Module Nr (TUM) - ONE TUM module per row
+6. Titel (TUM) - ONE TUM module name per row
+7. ECTS (TUM) - ECTS for THIS TUM module only
+8. Matching Type:
+   - "1:1" = single source course maps to single TUM module
+   - "n:1" = this is ONE OF multiple source courses mapping to the SAME TUM module
+   - "1:n" = this source course maps to ONE OF multiple TUM modules
+9. Group ID - a unique string to link related rows together (e.g., "group1", "group2"). 
+   Use the same group_id for all rows that belong together. Use "none" for 1:1 mappings.
+
+EXAMPLE: If PDF shows "CSE1500 + CSE1505 → INHN0011", extract as TWO separate rows:
+[
+  ["CSE1500", "Web and Database Technology", "5", "7.5", "INHN0011", "Fundamentals of Databases", "6", "n:1", "group1"],
+  ["CSE1505", "Information and Data Management", "5", "9", "INHN0011", "Fundamentals of Databases", "6", "n:1", "group1"],
+  ["CSE1300", "Reasoning and Logic", "5", "9.5", "INHN0004", "Discrete Structures", "8", "1:1", "none"]
+]
 
 IMPORTANT:
+- SPLIT combined courses into separate rows, don't keep + or / in course codes
 - Use the RAW TEXT DATA to get complete text that may be cut off in the image
-- For combined courses like "CSE1500 + CSE1505", look in the raw text for FULL course codes
-- The raw text may have the complete course names that appear truncated in the image
-- Return as array of arrays: [["val1","val2",...],["val1","val2",...]]
+- Each row must have ONE source course and ONE TUM module
+- Related rows share the same group_id
+- Return as array of arrays
 - Extract ALL data rows (not headers)
-- Keep combined values with + or / or , etc...
-
-Example output:
-[
-  ["CSE1300", "Reasoning and Logic", "5", "9.5", "INHN0004", "Discrete Structures", "8"],
-  ["CSE1500 + CSE1505", "Web and Database Technology + Information and Data Management", "5+5=10", "7.5, 9", "INHN0011", "Fundamentals of Databases", "6"]
-]
 
 If no table: []
 ONLY return JSON array, no markdown, no explanations."""
