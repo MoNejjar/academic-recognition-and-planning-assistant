@@ -20,22 +20,28 @@ from app.utils.rate_limiter import RateLimitExceeded, get_chat_rate_limiter
 
 logger = logging.getLogger(__name__)
 
-# Mapping von Dateinamen zu lesbaren Quellennamen
-SOURCE_DISPLAY_NAMES: dict[str, str] = {
-    "GesNot05.pdf": "Bayerische Formel (Notenumrechnung)",
-    "Informatik_MA_FPSO_Lesb._Fassung_19082024.pdf": "FPSO Master Informatik",
-    "OLA_Guide_CIT_Informatics.pdf": "OLA Guide CIT Informatics",
-    "Structure_MasterInfo_fromOct2018.pdf": "Programmstruktur Master Informatik",
-    "TUM_CIT_Informatics_Outgoing_Application_for_recognition.pdf": "Anrechnungsantrag CIT Informatik",
-    "WS25_26_MasterInformatik_Vorstellung.pdf": "Master Informatik Vorstellung WS25/26",
-    "Example_1_TU_Delft_Netherlands.pdf": "Beispiel: TU Delft (Niederlande)",
-    "Overview.rtf": "Credit Recognition Overview",
+# Mapping von Dateinamen zu Metadaten (display name)
+SOURCE_METADATA: dict[str, dict[str, str]] = {
+    "GesNot05.pdf": {"name": "Bayerische Formel (Notenumrechnung)"},
+    "Informatik_MA_FPSO_Lesb._Fassung_19082024.pdf": {"name": "FPSO Master Informatik"},
+    "OLA_Guide_CIT_Informatics.pdf": {"name": "OLA Guide CIT Informatics"},
+    "Structure_MasterInfo_fromOct2018.pdf": {"name": "Programmstruktur Master Informatik"},
+    "TUM_CIT_Informatics_Outgoing_Application_for_recognition.pdf": {"name": "Anrechnungsantrag CIT Informatik"},
+    "WS25_26_MasterInformatik_Vorstellung.pdf": {"name": "Master Informatik Vorstellung WS25/26"},
+    "Example_1_TU_Delft_Netherlands.pdf": {"name": "Beispiel: TU Delft (Niederlande)"},
+    "Overview.rtf": {"name": "Credit Recognition Overview"},
 }
 
 
 def get_source_display_name(filename: str) -> str:
     """Gibt den lesbaren Namen für eine Quelldatei zurück."""
-    return SOURCE_DISPLAY_NAMES.get(filename, filename)
+    meta = SOURCE_METADATA.get(filename)
+    return meta["name"] if meta else filename
+
+
+def get_document_path(filename: str) -> str:
+    """Returns the API path to view this document."""
+    return f"/api/chatbot/view/{filename}"
 
 
 SYSTEM_PROMPT = """You are an academic advisor assistant for TUM Master's students in Informatics.
@@ -58,7 +64,7 @@ Formatting:
 
 Rules:
 - LANGUAGE: Respond in English by default. If the question is asked in another language, respond EXCLUSIVELY in that language. Never mix languages! No English terms in German answers and vice versa.
-- Cite the source for important information (e.g., "According to OLA Guide, page 2...")
+- Cite the source by name only (e.g., "According to OLA Guide, page 2..."). NEVER generate URLs or hyperlinks - sources with links will be displayed separately.
 - Be honest if you cannot find something in the sources
 - For complex questions: First give an overview, then details
 
@@ -69,7 +75,7 @@ Topics you know about:
 - Grade conversion (Bavarian Formula)
 - Program structure Master Informatics"""
 
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Llama 4, 500K tokens/day
 
 
 class StreamChunk(TypedDict, total=False):
@@ -111,7 +117,8 @@ class ChatService:
             SourceReference(
                 document=get_source_display_name(r.document_name),
                 page=r.page_number,
-                chunk_text=r.text,  # Send full text for source viewer
+                chunk_text=r.text,
+                url=get_document_path(r.document_name),
             )
             for r in results
         ]

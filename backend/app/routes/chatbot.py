@@ -1,11 +1,13 @@
 """Chatbot routes with streaming SSE support."""
 
+import html as html_module
 import json
 import os
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -102,3 +104,75 @@ async def chatbot_health() -> dict[str, str | bool | int]:
         "rag_initialized": is_initialized,
         "document_count": doc_count,
     }
+
+
+# Document serving
+RAG_SOURCES_DIR = Path(__file__).resolve().parents[2] / "data" / "rag_sources"
+ALLOWED_EXTENSIONS = {".pdf", ".rtf"}
+
+
+def _validate_document_path(filename: str) -> Path:
+    """Validate filename and return the resolved file path."""
+    # Prevent path traversal
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    # Only allow specific file extensions
+    suffix = Path(filename).suffix.lower()
+    if suffix not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+
+    file_path = (RAG_SOURCES_DIR / filename).resolve()
+
+    # Verify resolved path is still within allowed directory
+    if not file_path.is_relative_to(RAG_SOURCES_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    return file_path
+
+
+@router.get("/documents/{filename}")
+async def get_document(filename: str):
+    """Serve PDF/RTF documents from the RAG sources directory."""
+    file_path = _validate_document_path(filename)
+
+    media_types = {".pdf": "application/pdf", ".rtf": "application/rtf"}
+    media_type = media_types.get(file_path.suffix.lower(), "application/octet-stream")
+
+    return FileResponse(
+        path=file_path,
+        media_type=media_type,
+        headers={"Content-Disposition": "inline"},
+    )
+
+
+@router.get("/view/{filename}")
+async def view_document(filename: str):
+    """Serve an HTML page that displays the PDF in an embedded viewer."""
+    file_path = _validate_document_path(filename)
+
+    # For RTF files, just serve directly
+    if file_path.suffix.lower() == ".rtf":
+        return FileResponse(path=file_path, media_type="application/rtf")
+
+    # Escape filename for safe HTML embedding
+    safe_filename = html_module.escape(filename)
+
+    # HTML page with embedded PDF viewer
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>{safe_filename}</title>
+    <style>
+        body {{ margin: 0; padding: 0; height: 100vh; }}
+        embed {{ width: 100%; height: 100%; }}
+    </style>
+</head>
+<body>
+    <embed src="/api/chatbot/documents/{safe_filename}" type="application/pdf" />
+</body>
+</html>"""
+    return HTMLResponse(content=html)

@@ -13,6 +13,7 @@ class SourceReference(BaseModel):
     document: str
     page: int | None = None
     chunk_text: str
+    url: str | None = None
 
 
 class ChatMessage(BaseModel):

@@ -5,7 +5,14 @@
  * Note: Chat streaming is handled directly in useChat hook for better state management.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/**
+ * Get the full URL for a document path returned by the API.
+ */
+export function getDocumentUrl(path: string): string {
+  return `${API_BASE_URL}${path}`;
+}
 
 /**
  * Check chatbot health including RAG status.
