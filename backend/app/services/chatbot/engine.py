@@ -1,20 +1,16 @@
-"""Chatbot Engine - RAG + Groq streaming."""
+"""Chatbot Engine - RAG + LLM streaming."""
 
 import asyncio
 import logging
-import os
 from typing import AsyncGenerator, TypedDict
-
-from dotenv import load_dotenv
-
-if os.environ.get("ENVIRONMENT") != "production":
-    load_dotenv()
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.chatbot import ChatMessage, ChunkType, Role, SourceReference
 from app.repositories.chat import ChatRepository
 from app.services.chatbot.guardrails import check_guardrails
+from app.services.llm_service.client import create_sync_streaming_client, get_default_model
 from app.services.rag.vector_store import SearchResult, VectorStoreError, get_vector_store
 from app.utils.rate_limiter import RateLimitExceeded, get_chat_rate_limiter
 
@@ -75,8 +71,6 @@ Topics you know about:
 - Grade conversion (Bavarian Formula)
 - Program structure Master Informatics"""
 
-GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"  # Llama 4, 500K tokens/day
-
 
 class StreamChunk(TypedDict, total=False):
     type: ChunkType
@@ -86,21 +80,27 @@ class StreamChunk(TypedDict, total=False):
 
 
 class ChatService:
+    """Chat service with RAG and streaming LLM support."""
+
     def __init__(self, db: Session):
         self.repo = ChatRepository(db)
         self.vector_store = get_vector_store()
         self.rate_limiter = get_chat_rate_limiter()
-        self._groq = None
+        self._client = None
 
-    @property
-    def groq(self):
-        if self._groq is None:
-            api_key = os.environ.get("GROQ_API_KEY")
-            if not api_key:
-                raise RuntimeError("GROQ_API_KEY environment variable not set")
-            from groq import Groq
-            self._groq = Groq(api_key=api_key)
-        return self._groq
+        # Get provider and model from settings
+        self.provider = settings.LLM_PROVIDER
+        self.model = settings.CHATBOT_MODEL or get_default_model(self.provider, "chat")
+
+    def _get_streaming_client(self):
+        """Get or create the streaming LLM client from LLM service."""
+        if self._client is None:
+            self._client = create_sync_streaming_client(
+                provider=self.provider,
+                api_key=settings.LLM_API_KEY,
+                base_url=settings.LLM_BASE_URL,
+            )
+        return self._client
 
     def _build_context(self, results: list[SearchResult]) -> str:
         if not results:
@@ -122,6 +122,29 @@ class ChatService:
             )
             for r in results
         ]
+
+    def _error_chunk_for_exception(self, error_type: str) -> StreamChunk:
+        """Map LLM provider exception types to user-friendly error messages."""
+        error_messages = {
+            "AuthenticationError": "Authentication failed. Please check your API key.",
+            "RateLimitError": "AI service rate limit exceeded. Please wait a moment.",
+            "APIConnectionError": "Could not connect to AI service. Please try again later.",
+            "ConnectionError": "Could not connect to AI service. Please try again later.",
+            "Timeout": "Request timed out. Please try again.",
+            "TimeoutError": "Request timed out. Please try again.",
+        }
+
+        for key, message in error_messages.items():
+            if key in error_type:
+                if key == "RateLimitError":
+                    return StreamChunk(type="error", content=message, retry_after=60.0)
+                return StreamChunk(type="error", content=message)
+
+        # Generic fallback - don't expose internal details
+        return StreamChunk(
+            type="error",
+            content="Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+        )
 
     async def stream_chat(
         self, message: str, chat_id: str | None = None, client_ip: str = "unknown"
@@ -163,23 +186,25 @@ class ChatService:
             messages.append({"role": "user", "content": message})
             self.repo.add_message(session_id, "user", message)
 
-            # Stream from Groq (run sync client in thread pool to avoid blocking)
+            # Stream from LLM (run sync client in thread pool to avoid blocking)
             full_response = ""
-            groq_messages = [
+            llm_messages = [
                 {"role": "system", "content": SYSTEM_PROMPT.format(context=self._build_context(context_results))},
                 *messages,
             ]
 
+            client = self._get_streaming_client()
+
             def create_stream():
-                return self.groq.chat.completions.create(
-                    model=GROQ_MODEL,
-                    messages=groq_messages,
+                return client.chat.completions.create(
+                    model=self.model,
+                    messages=llm_messages,
                     max_tokens=2048,
                     temperature=0.3,
                     stream=True,
                 )
 
-            # Run sync Groq call in thread pool to avoid blocking event loop
+            # Run sync call in thread pool to avoid blocking event loop
             stream = await asyncio.to_thread(create_stream)
 
             # Process stream chunks (sync iteration in thread)
@@ -201,10 +226,22 @@ class ChatService:
             self.repo.add_message(session_id, "assistant", full_response, sources)
             yield StreamChunk(type="done", chat_id=session_id)
 
+        except ValueError as e:
+            # Configuration errors (wrong provider, missing API key, missing SDK)
+            logger.error(
+                "Configuration error in stream_chat: %s (provider=%s, model=%s)",
+                e, self.provider, self.model
+            )
+            yield StreamChunk(type="error", content=f"Chatbot configuration error: {e}")
+
         except Exception as e:
-            logger.exception("Error in stream_chat")
-            # Sanitize error message - don't expose internal details to users
-            yield StreamChunk(type="error", content="Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.")
+            error_type = type(e).__name__
+            session_info = locals().get("session_id", "unknown")
+            logger.exception(
+                "Error in stream_chat: %s (provider=%s, model=%s, session=%s, error_type=%s)",
+                e, self.provider, self.model, session_info, error_type
+            )
+            yield self._error_chunk_for_exception(error_type)
 
     def get_history(self, chat_id: str) -> list[ChatMessage]:
         return self.repo.get_history(chat_id)

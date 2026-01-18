@@ -588,3 +588,80 @@ def create_llm_client(provider: LLMProvider, api_key: Optional[str], model: str,
 class LLMClient(OpenAIClient):
     """Default LLM client (OpenAI) for backward compatibility"""
     pass
+
+
+# Provider-specific default models
+PROVIDER_DEFAULTS = {
+    "openai": {"vision": "gpt-4o", "chat": "gpt-4o-mini"},
+    "groq": {"vision": "llama-3.2-90b-vision-preview", "chat": "meta-llama/llama-4-scout-17b-16e-instruct"},
+    "openrouter": {"vision": "openai/gpt-4o", "chat": "meta-llama/llama-4-scout-17b-16e-instruct"},
+    "ollama": {"vision": "llava", "chat": "llama3"},
+    "gemini": {"vision": "gemini-2.0-flash", "chat": "gemini-2.0-flash"},
+}
+
+
+def get_default_model(provider: str, use_case: str = "chat") -> str:
+    """Get default model for a provider and use case.
+
+    Args:
+        provider: LLM provider name
+        use_case: 'chat' for chatbot, 'vision' for PDF extraction
+
+    Returns:
+        Default model name for the provider
+    """
+    defaults = PROVIDER_DEFAULTS.get(provider.lower(), PROVIDER_DEFAULTS["openai"])
+    return defaults.get(use_case, defaults["chat"])
+
+
+def create_sync_streaming_client(provider: str, api_key: Optional[str], base_url: Optional[str] = None):
+    """
+    Create a sync client for streaming chat completions.
+
+    Used by the chatbot for SSE streaming responses.
+    Returns an OpenAI-compatible sync client.
+
+    Args:
+        provider: Provider name (groq, openai, openrouter, ollama)
+        api_key: API key for the provider
+        base_url: Optional base URL (required for ollama)
+
+    Returns:
+        Sync client with chat.completions.create(stream=True) support
+
+    Raises:
+        ValueError: If provider is unsupported, API key is missing, or SDK not installed
+    """
+    provider = provider.lower()
+
+    if provider == "gemini":
+        raise ValueError(
+            "Gemini does not support OpenAI-compatible streaming. "
+            "For chatbot, use: groq, openai, openrouter, or ollama"
+        )
+
+    if not api_key and provider != "ollama":
+        raise ValueError(f"API key required for provider: {provider}. Set LLM_API_KEY in your .env file.")
+
+    if provider == "groq":
+        try:
+            from groq import Groq
+        except ImportError:
+            raise ValueError("The 'groq' package is required. Install with: pip install groq") from None
+        return Groq(api_key=api_key)
+
+    # All other supported providers use the OpenAI client
+    try:
+        from openai import OpenAI
+    except ImportError:
+        raise ValueError("The 'openai' package is required. Install with: pip install openai") from None
+
+    if provider == "openai":
+        return OpenAI(api_key=api_key)
+    if provider == "openrouter":
+        return OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
+    if provider == "ollama":
+        url = base_url or "http://localhost:11434/v1"
+        return OpenAI(api_key="ollama", base_url=url)
+
+    raise ValueError(f"Unsupported provider: {provider}. Use: groq, openai, openrouter, ollama")

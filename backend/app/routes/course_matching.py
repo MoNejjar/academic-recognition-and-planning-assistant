@@ -20,7 +20,7 @@ from app.services.storage.file_storage import FileStorage
 from app.services.pdf_extraction.mapping_table_extractor import MappingTableExtractor
 from app.services.pdf_extraction.course_content_extractor import CourseContentExtractor
 from app.services.llm_service.client import (
-    LLMProvider, create_llm_client, BaseLLMClient
+    LLMProvider, create_llm_client, BaseLLMClient, get_default_model
 )
 
 router = APIRouter()
@@ -73,10 +73,11 @@ def get_llm_client() -> BaseLLMClient:
         )
     
     # Build kwargs - only pass base_url for Ollama
+    model = settings.LLM_MODEL or get_default_model(settings.LLM_PROVIDER, "vision")
     kwargs = {
         "provider": provider,
         "api_key": settings.LLM_API_KEY,
-        "model": settings.LLM_MODEL,
+        "model": model,
     }
     if provider == LLMProvider.OLLAMA and settings.LLM_BASE_URL:
         kwargs["base_url"] = settings.LLM_BASE_URL

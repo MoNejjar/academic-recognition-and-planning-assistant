@@ -38,8 +38,8 @@ export default function FloatingChat() {
         position: 'fixed',
         bottom: 90, // Above the toggle button
         right: 24,
-        width: Math.min(420, width * 0.35),
-        height: Math.min(height - 110, height * 0.75), // 75% of viewport height max
+        width: Math.min(560, width * 0.45),
+        height: Math.min(height - 130, height * 0.6), // 60% of viewport height max
         zIndex: 1000,
         borderRadius: 16,
         overflow: 'hidden',
