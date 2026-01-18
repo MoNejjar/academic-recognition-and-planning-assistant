@@ -2,8 +2,10 @@
 
 import logging
 import re
-from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
+
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -12,17 +14,21 @@ CHUNK_SIZE = 2000
 CHUNK_OVERLAP = 200
 
 
-@dataclass
-class DocumentChunk:
+class DocumentChunk(BaseModel):
+    """A chunk of text from a document."""
+
     text: str
     document_name: str
     page_number: int | None
     chunk_index: int
 
-    @property
+    @cached_property
     def id(self) -> str:
         page = f"_p{self.page_number}" if self.page_number else ""
         return f"{self.document_name}{page}_c{self.chunk_index}"
+
+    class Config:
+        frozen = True
 
 
 def load_all_documents(sources_path: Path | None = None) -> list[DocumentChunk]:

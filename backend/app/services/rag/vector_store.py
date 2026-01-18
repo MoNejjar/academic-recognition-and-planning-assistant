@@ -1,15 +1,30 @@
 """Vector store using ChromaDB for semantic search."""
 
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from pydantic import BaseModel
 
 from app.services.rag.document_loader import DocumentChunk, load_all_documents
 
 
 class VectorStoreError(Exception):
     """Raised when vector store operations fail."""
+
+
+class SearchResult(BaseModel):
+    """Result from a semantic search query."""
+
+    text: str
+    document_name: str
+    page_number: int | None
+    chunk_id: str
+    score: float
+
+    class Config:
+        frozen = True
+
 
 if TYPE_CHECKING:
     import chromadb
@@ -18,15 +33,6 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_CHROMA_PATH = Path(__file__).resolve().parents[3] / "data" / "chroma_db"
 COLLECTION_NAME = "tum_anrechnung"
-
-
-@dataclass
-class SearchResult:
-    text: str
-    document_name: str
-    page_number: int | None
-    chunk_id: str
-    score: float
 
 
 class VectorStore:
