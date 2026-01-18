@@ -5,6 +5,7 @@ import MappingUploadPage from "./pages/MappingUploadPage";
 import CatalogueUploadPage from "./pages/CatalogueUploadPage";
 import FinalReviewPage from "./pages/FinalReviewPage";
 import HealthCheck from "./components/HealthCheck";
+import FloatingChat from "./components/chatbot/FloatingChat";
 import { useState } from "react";
 import { TUMModuleMapping, PersonalData, emptyPersonalData } from "./types";
 import { ErrorBoundary } from "./utils/debug";
@@ -132,6 +133,7 @@ export default function App() {
             </Routes>
           </div>
           <HealthCheck />
+          <FloatingChat />
         </div>
       </BrowserRouter>
     </ErrorBoundary>

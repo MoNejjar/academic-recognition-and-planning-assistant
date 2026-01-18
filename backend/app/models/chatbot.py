@@ -1,31 +1,34 @@
-"""
-Chatbot Models
+"""Chatbot Pydantic models."""
 
-Pydantic models for chatbot requests and responses
-"""
-
-from pydantic import BaseModel
-from typing import Optional, List
 from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+Role = Literal["user", "assistant", "system"]
+ChunkType = Literal["text", "sources", "done", "error"]
+
+
+class SourceReference(BaseModel):
+    document: str
+    page: int | None = None
+    chunk_text: str
 
 
 class ChatMessage(BaseModel):
-    """A chat message"""
-    role: str  # 'user' or 'assistant'
+    role: Role
     content: str
-    timestamp: Optional[datetime] = None
+    timestamp: datetime | None = None
+    sources: list[SourceReference] | None = None
 
 
 class ChatRequest(BaseModel):
-    """Request to send a chat message"""
-    message: str
-    context_ids: Optional[List[str]] = None
+    message: str = Field(min_length=1, max_length=4000)
+    chat_id: str | None = None
 
 
-class ChatResponse(BaseModel):
-    """Response from chatbot"""
-    message: str
-    sources: Optional[List[str]] = None
-
-
-# TODO: Add more models as needed
+class ChatHistoryResponse(BaseModel):
+    chat_id: str
+    messages: list[ChatMessage]
+    created_at: datetime
+    updated_at: datetime

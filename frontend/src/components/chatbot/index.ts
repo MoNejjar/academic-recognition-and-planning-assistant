@@ -1,14 +1,10 @@
-/* 
+/*
  * Chatbot Components
- * 
- * This module handles the chatbot interface:
- * - Chatbot widget (bottom right of page)
- * - Message display
- * - User input handling
- * - Context-based responses
+ *
+ * This module provides the chatbot interface for the TUM credit recognition assistant.
  */
 
-// TODO: Implement ChatbotWidget component
-// TODO: Implement ChatMessage component
-// TODO: Implement ChatInput component
-// TODO: Implement ChatHistory component
+export { default as ChatWidget } from './ChatWidget';
+export { default as ChatMessage } from './ChatMessage';
+export { default as ChatInput } from './ChatInput';
+export { default as SourcesDisplay } from './SourcesDisplay';
