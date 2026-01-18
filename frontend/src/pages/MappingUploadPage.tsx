@@ -405,7 +405,7 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingRows, e
                     <div style={styles.loadingOverlay}>
                         <div style={styles.loadingSpinner}>🔄</div>
                         <div style={styles.loadingTitle}>Extracting mappings from PDF...</div>
-                        <div style={styles.loadingText}>This may take a minute or two depending on the file size.</div>
+                        <div style={styles.loadingText}>This may take some time depending on the file size.</div>
                         <div style={styles.loadingText}>Please wait, don't close this page.</div>
                     </div>
                 )}
@@ -452,6 +452,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     },
     header: {
         marginBottom: 32,
+        textAlign: "center" as const,
     },
     title: {
         fontSize: 32,

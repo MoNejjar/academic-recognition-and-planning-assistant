@@ -65,29 +65,44 @@ class ExtractionResult(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "filename": "transcript.pdf",
-                "total_pages": 3,
+                "filename": "recognition_table.pdf",
+                "total_pages": 2,
                 "rows": [
                     {
-                        "source_course_no": "CSE1100 + CSE1305",
-                        "source_course_name": "Object Oriented Programming + Algorithms and Data Structures",
-                        "source_credits": "5+5=10",
-                        "source_grade": "8, 9",
+                        "source_course_no": "BVNSD 1.2",
+                        "source_course_name": "Problem Solving Techniques and C Programming",
+                        "source_credits": "4",
+                        "source_grade": "9.29",
                         "tum_module_nr": "INHN0002",
                         "tum_module_title": "Fundamentals of Programming",
-                        "tum_ects": "6"
+                        "tum_ects": "6",
+                        "matching_type": "1:1",
+                        "group_id": "none"
                     },
                     {
-                        "source_course_no": "CSE1405",
-                        "source_course_name": "Computer Networks",
-                        "source_credits": "5",
-                        "source_grade": "8",
-                        "tum_module_nr": "INHN0012",
-                        "tum_module_title": "Computer Networking and IT Security",
-                        "tum_ects": "6"
+                        "source_course_no": "BVNSD 2.1",
+                        "source_course_name": "Data Structures Using C",
+                        "source_credits": "4",
+                        "source_grade": "9.0",
+                        "tum_module_nr": "INHN0008",
+                        "tum_module_title": "Fundamentals of Algorithms and Data Structures",
+                        "tum_ects": "6",
+                        "matching_type": "n:1",
+                        "group_id": "group1"
+                    },
+                    {
+                        "source_course_no": "BVNSD 2.2",
+                        "source_course_name": "Lab on Data Structures and C Programming",
+                        "source_credits": "4",
+                        "source_grade": "9.11",
+                        "tum_module_nr": "INHN0008",
+                        "tum_module_title": "Fundamentals of Algorithms and Data Structures",
+                        "tum_ects": "6",
+                        "matching_type": "n:1",
+                        "group_id": "group1"
                     }
                 ],
-                "extracted_at": "2026-01-01T14:00:00Z"
+                "extracted_at": "2026-01-18T01:00:00Z"
             }
         }
     }

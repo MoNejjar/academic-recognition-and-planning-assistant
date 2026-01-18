@@ -16,6 +16,7 @@ export default function CatalogueUploadPage({ mappingRows, onContentConfirmed }:
     const [matchedRows, setMatchedRows] = useState<MappingRow[]>([]);
     const [showReview, setShowReview] = useState(false);
     const [dragActive, setDragActive] = useState(false);
+    const [editedRows, setEditedRows] = useState<Set<string>>(new Set());
     const navigate = useNavigate();
 
     // Match extracted courses to mapping rows
@@ -79,6 +80,7 @@ export default function CatalogueUploadPage({ mappingRows, onContentConfirmed }:
 
     const handleContentChange = (id: string, content: string) => {
         setMatchedRows((prev) => prev.map((row) => (row.id === id ? { ...row, catalogue_content: content } : row)));
+        setEditedRows((prev) => new Set(prev).add(id));
     };
 
     const handleConfirm = () => {
@@ -111,19 +113,11 @@ export default function CatalogueUploadPage({ mappingRows, onContentConfirmed }:
 
     // Review View
     if (showReview) {
-        const matchedCount = matchedRows.filter((r) => r.catalogue_content).length;
         return (
             <div style={styles.container}>
                 <div style={styles.header}>
                     <h1 style={styles.title}>Review Extracted Content</h1>
                     <p style={styles.subtitle}>Review and edit the matched course content. You can modify any field.</p>
-                </div>
-
-                <div style={styles.statsCard}>
-                    <div style={styles.stat}>
-                        <div style={{ ...styles.statValue, color: "#f59e0b" }}>{matchedRows.length - matchedCount}</div>
-                        <div style={styles.statLabel}>Need Manual Entry</div>
-                    </div>
                 </div>
 
                 {/* Warning about auto-match accuracy */}
@@ -145,7 +139,11 @@ export default function CatalogueUploadPage({ mappingRows, onContentConfirmed }:
 
                             <div style={{ marginTop: 12 }}>
                                 <label style={styles.label}>
-                                    {row.catalogue_content ? "✅ Extracted Content (editable)" : "⚠️ No match found - enter manually"}
+                                    {row.catalogue_content && !editedRows.has(row.id)
+                                        ? "✅ Extracted Content (editable)"
+                                        : row.catalogue_content
+                                            ? "📝 Content"
+                                            : "⚠️ No match found - enter manually"}
                                 </label>
                                 <textarea
                                     value={row.catalogue_content}
@@ -273,7 +271,7 @@ export default function CatalogueUploadPage({ mappingRows, onContentConfirmed }:
                     <div style={styles.loadingOverlay}>
                         <div style={styles.loadingSpinner}>🔄</div>
                         <div style={styles.loadingTitle}>Extracting content from PDFs...</div>
-                        <div style={styles.loadingText}>This may take a minute or two depending on the file size.</div>
+                        <div style={styles.loadingText}>This may take some time depending on the file size.</div>
                         <div style={styles.loadingText}>Please wait, don't close this page.</div>
                     </div>
                 )}
@@ -303,7 +301,7 @@ export default function CatalogueUploadPage({ mappingRows, onContentConfirmed }:
 
 const styles: { [key: string]: React.CSSProperties } = {
     container: { padding: 40, maxWidth: 1000, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
-    header: { marginBottom: 32 },
+    header: { marginBottom: 32, textAlign: "center" as const },
     title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
     subtitle: { fontSize: 16, color: "#6b7280" },
     card: { background: "#fff", borderRadius: 16, padding: 32, boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", border: "1px solid #e5e7eb", marginBottom: 24 },
