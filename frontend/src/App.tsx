@@ -1,16 +1,22 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import SideMenu from "./components/SideMenu";
+import PersonalDataPage from "./pages/PersonalDataPage";
 import MappingUploadPage from "./pages/MappingUploadPage";
 import CatalogueUploadPage from "./pages/CatalogueUploadPage";
 import FinalReviewPage from "./pages/FinalReviewPage";
 import HealthCheck from "./components/HealthCheck";
 import { useState } from "react";
-import { MappingRow } from "./types";
+import { MappingRow, PersonalData, emptyPersonalData } from "./types";
 import { ErrorBoundary } from "./utils/debug";
 
 export default function App() {
+  const [personalData, setPersonalData] = useState<PersonalData>(emptyPersonalData);
   const [mappingFile, setMappingFile] = useState<File | null>(null);
   const [mappingRows, setMappingRows] = useState<MappingRow[]>([]);
+
+  const handlePersonalDataConfirmed = (data: PersonalData) => {
+    setPersonalData(data);
+  };
 
   const handleMappingsConfirmed = (file: File, rows: MappingRow[]) => {
     setMappingFile(file);
@@ -24,6 +30,7 @@ export default function App() {
   const handleSubmit = () => {
     // Prepare data for submission
     const submissionData = {
+      personalData,
       mappingFile: mappingFile?.name,
       mappings: mappingRows.map((row) => ({
         source_course_no: row.source_course_no,
@@ -45,6 +52,7 @@ export default function App() {
     alert("Data successfully sent to TUM staff!");
 
     // Reset state
+    setPersonalData(emptyPersonalData);
     setMappingFile(null);
     setMappingRows([]);
   };
@@ -55,15 +63,30 @@ export default function App() {
         <SideMenu />
         <div style={{ marginLeft: "240px" }}>
           <Routes>
-            {/* Step 1: Upload mapping table */}
+            {/* Step 0: Personal Data Form */}
             <Route
               path="/"
               element={
-                <MappingUploadPage
-                  onMappingsConfirmed={handleMappingsConfirmed}
-                  existingRows={mappingRows}
-                  existingFile={mappingFile}
+                <PersonalDataPage
+                  onDataConfirmed={handlePersonalDataConfirmed}
+                  existingData={personalData}
                 />
+              }
+            />
+
+            {/* Step 1: Upload mapping table */}
+            <Route
+              path="/mapping"
+              element={
+                personalData.firstName ? (
+                  <MappingUploadPage
+                    onMappingsConfirmed={handleMappingsConfirmed}
+                    existingRows={mappingRows}
+                    existingFile={mappingFile}
+                  />
+                ) : (
+                  <Navigate to="/" replace />
+                )
               }
             />
 
@@ -77,7 +100,7 @@ export default function App() {
                     onContentConfirmed={handleContentConfirmed}
                   />
                 ) : (
-                  <Navigate to="/" replace />
+                  <Navigate to="/mapping" replace />
                 )
               }
             />
@@ -88,12 +111,14 @@ export default function App() {
               element={
                 mappingRows.length > 0 ? (
                   <FinalReviewPage
+                    personalData={personalData}
+                    onPersonalDataChange={setPersonalData}
                     mappingFile={mappingFile}
                     mappingRows={mappingRows}
                     onSubmit={handleSubmit}
                   />
                 ) : (
-                  <Navigate to="/" replace />
+                  <Navigate to="/mapping" replace />
                 )
               }
             />

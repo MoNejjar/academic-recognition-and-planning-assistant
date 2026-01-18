@@ -1,17 +1,43 @@
 import { useState } from "react";
-import { MappingRow } from "../types";
+import { MappingRow, PersonalData } from "../types";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
+    personalData: PersonalData;
+    onPersonalDataChange: (data: PersonalData) => void;
     mappingFile: File | null;
     mappingRows: MappingRow[];
     onSubmit: () => void;
 };
 
-export default function FinalReviewPage({ mappingFile, mappingRows, onSubmit }: Props) {
+// Field configuration for display
+const personalDataFields: { key: keyof PersonalData; label: string }[] = [
+    { key: "firstName", label: "First Name" },
+    { key: "surname", label: "Surname" },
+    { key: "streetAndHouseNumber", label: "Street & House No." },
+    { key: "zipLocationCountry", label: "ZIP, Location, Country" },
+    { key: "phoneNumber", label: "Phone Number" },
+    { key: "tumEmail", label: "TUM Email" },
+    { key: "courseAtTUM", label: "Course at TUM" },
+    { key: "aimedDegree", label: "Aimed Degree" },
+    { key: "registrationNumberAtTUM", label: "Registration No. at TUM" },
+    { key: "semesterAtTUM", label: "Semester at TUM" },
+    { key: "nameOfPreviousUniversity", label: "Previous University" },
+    { key: "countryOfPreviousUniversity", label: "Country of Prev. University" },
+    { key: "previousDegreeProgram", label: "Previous Degree Program" },
+    { key: "diploma", label: "Diploma" },
+    { key: "numberOfSemestersInPreviousCourse", label: "Semesters in Prev. Course" },
+    { key: "workloadOfOneCredit", label: "Workload per Credit" },
+    { key: "maximumGradeAtFormerUniversity", label: "Max Grade (Former Uni)" },
+    { key: "minimumPassingGradeAtFormerUniversity", label: "Min Passing Grade" },
+];
+
+export default function FinalReviewPage({ personalData, onPersonalDataChange, mappingFile, mappingRows, onSubmit }: Props) {
     const navigate = useNavigate();
     const [expandedContent, setExpandedContent] = useState<string | null>(null);
     const [expandedCourse, setExpandedCourse] = useState<string>("");
+    const [editingPersonalData, setEditingPersonalData] = useState(false);
+    const [tempPersonalData, setTempPersonalData] = useState<PersonalData>(personalData);
 
     const handleSubmit = () => {
         if (mappingRows.length === 0) {
@@ -25,6 +51,22 @@ export default function FinalReviewPage({ mappingFile, mappingRows, onSubmit }: 
         setExpandedCourse(courseNo);
         setExpandedContent(content);
     };
+
+    const handleEditPersonalData = () => {
+        setTempPersonalData(personalData);
+        setEditingPersonalData(true);
+    };
+
+    const handleSavePersonalData = () => {
+        if (!tempPersonalData.firstName.trim() || !tempPersonalData.surname.trim()) {
+            alert("First name and surname are required.");
+            return;
+        }
+        onPersonalDataChange(tempPersonalData);
+        setEditingPersonalData(false);
+    };
+
+    const displayValue = (value: string) => value.trim() || "—";
 
     return (
         <div style={styles.container}>
@@ -43,9 +85,56 @@ export default function FinalReviewPage({ mappingFile, mappingRows, onSubmit }: 
                 </div>
             )}
 
+            {/* Edit Personal Data Modal */}
+            {editingPersonalData && (
+                <div style={styles.modalOverlay} onClick={() => setEditingPersonalData(false)}>
+                    <div style={{ ...styles.modal, maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
+                        <div style={styles.modalHeader}>
+                            <h3 style={{ margin: 0 }}>✏️ Edit Personal Data</h3>
+                            <button onClick={() => setEditingPersonalData(false)} style={styles.closeBtn}>✕</button>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                            {personalDataFields.map(({ key, label }) => (
+                                <div key={key} style={{ marginBottom: 8 }}>
+                                    <label style={{ display: "block", fontSize: 12, color: "#6b7280", marginBottom: 4 }}>{label}</label>
+                                    <input
+                                        type="text"
+                                        value={tempPersonalData[key]}
+                                        onChange={(e) => setTempPersonalData({ ...tempPersonalData, [key]: e.target.value })}
+                                        style={styles.input}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ marginTop: 24, display: "flex", gap: 12, justifyContent: "flex-end" }}>
+                            <button onClick={() => setEditingPersonalData(false)} style={styles.secondaryBtn}>Cancel</button>
+                            <button onClick={handleSavePersonalData} style={styles.editBtn}>Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div style={styles.header}>
                 <h1 style={styles.title}>Final Review</h1>
-                <p style={styles.subtitle}>Review all your course mappings before submitting</p>
+                <p style={styles.subtitle}>Review all your information before submitting</p>
+            </div>
+
+            {/* Personal Data Section */}
+            <div style={styles.card}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                    <h2 style={styles.sectionTitle}>👤 Personal Data</h2>
+                    <button onClick={handleEditPersonalData} style={styles.editBtn}>✏️ Edit</button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+                    {personalDataFields.map(({ key, label }) => (
+                        <div key={key}>
+                            <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 2 }}>{label}</div>
+                            <div style={{ fontSize: 14, fontWeight: 500, color: personalData[key] ? "#111827" : "#9ca3af" }}>
+                                {displayValue(personalData[key])}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {mappingFile && (
@@ -54,15 +143,16 @@ export default function FinalReviewPage({ mappingFile, mappingRows, onSubmit }: 
                 </div>
             )}
 
-
-            {mappingRows.length === 0 ? (
-                <div style={styles.emptyState}>
-                    <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
-                    <p>No mappings to display.</p>
-                    <button onClick={() => navigate("/")} style={styles.secondaryBtn}>← Start Over</button>
-                </div>
-            ) : (
-                <div style={styles.card}>
+            {/* Mappings Table */}
+            <div style={styles.card}>
+                <h2 style={styles.sectionTitle}>📋 Course Mappings</h2>
+                {mappingRows.length === 0 ? (
+                    <div style={styles.emptyState}>
+                        <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
+                        <p>No mappings to display.</p>
+                        <button onClick={() => navigate("/mapping")} style={styles.secondaryBtn}>← Go to Mapping</button>
+                    </div>
+                ) : (
                     <div style={{ overflowX: "auto" }}>
                         <table style={styles.table}>
                             <thead>
@@ -108,8 +198,8 @@ export default function FinalReviewPage({ mappingFile, mappingRows, onSubmit }: 
                             </tbody>
                         </table>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             <div style={styles.actions}>
                 <button onClick={() => navigate("/catalogue")} style={styles.secondaryBtn}>← Back</button>
@@ -124,14 +214,11 @@ export default function FinalReviewPage({ mappingFile, mappingRows, onSubmit }: 
 
 const styles: { [key: string]: React.CSSProperties } = {
     container: { padding: 40, maxWidth: 1200, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
-    header: { marginBottom: 32 },
+    header: { marginBottom: 32, textAlign: "center" as const },
     title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
     subtitle: { fontSize: 16, color: "#6b7280" },
+    sectionTitle: { fontSize: 18, fontWeight: 600, color: "#374151", margin: 0 },
     fileInfo: { padding: 12, background: "#f3f4f6", borderRadius: 8, marginBottom: 24, color: "#374151", fontSize: 14 },
-    statsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 32 },
-    statCard: { padding: 24, background: "#fff", borderRadius: 12, textAlign: "center" as const, boxShadow: "0 1px 3px rgb(0 0 0 / 0.1)", border: "1px solid #e5e7eb" },
-    statValue: { fontSize: 36, fontWeight: 700, color: "#3b82f6" },
-    statLabel: { fontSize: 14, color: "#6b7280", marginTop: 4 },
     card: { background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", border: "1px solid #e5e7eb", marginBottom: 24 },
     emptyState: { textAlign: "center" as const, padding: 64, background: "#f9fafb", borderRadius: 12, color: "#6b7280" },
     table: { width: "100%", borderCollapse: "collapse" as const, fontSize: 14 },
@@ -141,7 +228,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     actions: { display: "flex", gap: 12, marginTop: 32, flexWrap: "wrap" as const },
     secondaryBtn: { padding: "12px 24px", background: "#fff", color: "#374151", border: "1px solid #d1d5db", borderRadius: 8, cursor: "pointer", fontSize: 15, fontWeight: 500 },
     submitBtn: { padding: "14px 32px", background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 16, fontWeight: 600, boxShadow: "0 4px 6px -1px rgb(34 197 94 / 0.4)" },
+    editBtn: { padding: "8px 16px", background: "linear-gradient(135deg, #8b5cf6, #7c3aed)", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 14, fontWeight: 500 },
     viewBtn: { padding: "6px 12px", background: "#dbeafe", color: "#1d4ed8", border: "1px solid #93c5fd", borderRadius: 6, cursor: "pointer", fontSize: 13, fontWeight: 500 },
+    input: { width: "100%", padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 14, boxSizing: "border-box" as const },
     modalOverlay: { position: "fixed" as const, top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 },
     modal: { background: "#fff", borderRadius: 16, padding: 32, maxWidth: 900, width: "95%", maxHeight: "85vh", overflowY: "auto" as const, overflowX: "hidden" as const, boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.25)" },
     modalHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #e5e7eb" },

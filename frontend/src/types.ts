@@ -1,9 +1,54 @@
-// Student information
-export type StudentInfo = {
+// ============================================
+// STEP 0: Personal Data Form
+// ============================================
+
+// Personal and university information
+export interface PersonalData {
+  // Personal data
   firstName: string;
-  lastName: string;
-  email: string;
-  homeUniversity: string;
+  surname: string;
+  streetAndHouseNumber: string;
+  zipLocationCountry: string;
+  phoneNumber: string;
+  tumEmail: string;
+
+  // TUM Course info
+  courseAtTUM: string;
+  aimedDegree: string;
+  registrationNumberAtTUM: string;
+  semesterAtTUM: string;
+
+  // Previous University info
+  nameOfPreviousUniversity: string;
+  countryOfPreviousUniversity: string;
+  previousDegreeProgram: string;
+  diploma: string;
+  numberOfSemestersInPreviousCourse: string;
+  workloadOfOneCredit: string;
+  maximumGradeAtFormerUniversity: string;
+  minimumPassingGradeAtFormerUniversity: string;
+}
+
+// Default empty personal data
+export const emptyPersonalData: PersonalData = {
+  firstName: "",
+  surname: "",
+  streetAndHouseNumber: "",
+  zipLocationCountry: "",
+  phoneNumber: "",
+  tumEmail: "",
+  courseAtTUM: "",
+  aimedDegree: "",
+  registrationNumberAtTUM: "",
+  semesterAtTUM: "",
+  nameOfPreviousUniversity: "",
+  countryOfPreviousUniversity: "",
+  previousDegreeProgram: "",
+  diploma: "",
+  numberOfSemestersInPreviousCourse: "",
+  workloadOfOneCredit: "",
+  maximumGradeAtFormerUniversity: "",
+  minimumPassingGradeAtFormerUniversity: "",
 };
 
 // ============================================

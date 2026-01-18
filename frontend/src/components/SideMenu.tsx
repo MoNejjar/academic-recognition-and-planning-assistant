@@ -7,10 +7,11 @@ export default function SideMenu() {
   const isActive = (path: string) => location.pathname === path;
 
   const getStepNumber = (path: string) => {
-    if (path === "/") return 1;
+    if (path === "/") return 0;
+    if (path === "/mapping") return 1;
     if (path === "/catalogue") return 2;
     if (path === "/review") return 3;
-    return 0;
+    return -1;
   };
 
   const currentStep = getStepNumber(location.pathname);
@@ -93,18 +94,24 @@ export default function SideMenu() {
       <nav>
         <Link to="/" style={linkStyle("/")}>
           <span style={stepCircleStyle("/")}>
-            {currentStep > 1 ? "✓" : "1"}
+            {currentStep > 0 ? "✓" : "1"}
+          </span>
+          Personal Data
+        </Link>
+        <Link to="/mapping" style={linkStyle("/mapping")}>
+          <span style={stepCircleStyle("/mapping")}>
+            {currentStep > 1 ? "✓" : "2"}
           </span>
           Mapping Table
         </Link>
         <Link to="/catalogue" style={linkStyle("/catalogue")}>
           <span style={stepCircleStyle("/catalogue")}>
-            {currentStep > 2 ? "✓" : "2"}
+            {currentStep > 2 ? "✓" : "3"}
           </span>
           Catalogues
         </Link>
         <Link to="/review" style={linkStyle("/review")}>
-          <span style={stepCircleStyle("/review")}>3</span>
+          <span style={stepCircleStyle("/review")}>4</span>
           Review & Submit
         </Link>
       </nav>
