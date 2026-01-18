@@ -29,6 +29,26 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingRows, e
         }
     }, [existingRows, existingFile]);
 
+    // Regroup rows so that rows with the same group_id are adjacent
+    const regroupRows = (rows: MappingRow[]): MappingRow[] => {
+        const grouped: MappingRow[] = [];
+        const addedGroupIds = new Set<string>();
+
+        for (const row of rows) {
+            if (row.group_id === "none") {
+                // 1:1 mappings go in order
+                grouped.push(row);
+            } else if (!addedGroupIds.has(row.group_id)) {
+                // Find all rows with this group_id and add them together
+                const groupRows = rows.filter(r => r.group_id === row.group_id);
+                grouped.push(...groupRows);
+                addedGroupIds.add(row.group_id);
+            }
+            // else: already added as part of the group
+        }
+        return grouped;
+    };
+
     const handleExtract = async () => {
         if (!file) return;
         setLoading(true);
@@ -44,7 +64,9 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingRows, e
                 ...row,
                 confirmed: true,
             }));
-            setExtractedRows(rows);
+            // Regroup so grouped rows are adjacent
+            const regroupedRows = regroupRows(rows);
+            setExtractedRows(regroupedRows);
             setShowReview(true);
         } catch (err: any) {
             setError(err.message || "Extraction failed.");
