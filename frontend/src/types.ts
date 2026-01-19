@@ -72,6 +72,8 @@ export interface TUMModuleMapping {
   tum_ects: string;
   source_courses: SourceCourse[];
   catalogue_content: string;
+  tum_content: string;  // TUM module content from cache
+  tum_outcome: string;  // TUM module outcome from cache
 }
 
 // Result from mapping table extraction API
@@ -99,6 +101,8 @@ export const createEmptyTUMModule = (): TUMModuleMapping => ({
   tum_ects: "",
   source_courses: [createEmptySourceCourse()],
   catalogue_content: "",
+  tum_content: "",
+  tum_outcome: "",
 });
 
 // ============================================
@@ -129,3 +133,17 @@ export type AppState = {
   tumModules: TUMModuleMapping[];
   step: 'personal' | 'mapping' | 'catalogue' | 'review';
 };
+
+// ============================================
+// TUM Module Lookup (from cache)
+// ============================================
+
+export interface TUMModuleLookup {
+  found: boolean;
+  module_code: string | null;
+  module_title: string | null;
+  module_credits: string | null;
+  module_content: string | null;
+  module_outcome: string | null;
+  message: string | null;
+}

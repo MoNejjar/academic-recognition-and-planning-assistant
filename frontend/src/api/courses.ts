@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { MappingExtractionResult, CourseContentResult } from "../types";
+import { MappingExtractionResult, CourseContentResult, TUMModuleLookup } from "../types";
 import { logApiError } from "../utils/debug";
 
 const API_BASE = "http://127.0.0.1:8000/api";
@@ -105,5 +105,33 @@ export async function extractCatalogueContent(file: File): Promise<CourseContent
     }
 
     throw error;
+  }
+}
+
+// ============================================
+// TUM Module Lookup
+// ============================================
+
+/**
+ * Look up a TUM module by its code.
+ * Returns content and learning outcomes if found.
+ */
+export async function lookupTUMModule(moduleCode: string): Promise<TUMModuleLookup> {
+  try {
+    const res = await apiClient.get(`/course-matching/tum-module/${encodeURIComponent(moduleCode)}`, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return res.data;
+  } catch (error: any) {
+    console.error("❌ Error looking up TUM module:", error);
+    return {
+      found: false,
+      module_code: moduleCode,
+      module_title: null,
+      module_credits: null,
+      module_content: null,
+      module_outcome: null,
+      message: "Error looking up module. Check if backend is running.",
+    };
   }
 }
