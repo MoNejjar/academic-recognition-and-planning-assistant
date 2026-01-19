@@ -4,7 +4,7 @@ import { extractMappingTable } from "../api/courses";
 import { TUMModuleMapping, SourceCourse, createEmptySourceCourse, createEmptyTUMModule } from "../types";
 
 type Props = {
-    onMappingsConfirmed: (file: File, modules: TUMModuleMapping[]) => void;
+    onMappingsConfirmed: (file: File | null, modules: TUMModuleMapping[]) => void;
     existingModules?: TUMModuleMapping[];
     existingFile?: File | null;
 };
@@ -124,7 +124,33 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
     };
 
     const handleConfirm = () => {
-        if (!file || tumModules.length === 0) return;
+        if (tumModules.length === 0) return;
+
+        // Validation
+        const invalidModules = tumModules.filter(
+            mod => !mod.tum_module_nr.trim() || !mod.tum_module_title.trim() || !mod.tum_ects.trim()
+        );
+
+        if (invalidModules.length > 0) {
+            alert("Please fill in all TUM module fields (Module No., Title, ECTS).");
+            return;
+        }
+
+        const invalidSourceCourses = tumModules.some(mod =>
+            mod.source_courses.length === 0 ||
+            mod.source_courses.some(sc =>
+                !sc.source_course_no.trim() ||
+                !sc.source_course_name.trim() ||
+                !sc.source_credits.trim() ||
+                !sc.source_grade.trim()
+            )
+        );
+
+        if (invalidSourceCourses) {
+            alert("Please ensure every TUM module has at least one source course, and all source course fields are filled.");
+            return;
+        }
+
         onMappingsConfirmed(file, tumModules);
         navigate("/catalogue");
     };

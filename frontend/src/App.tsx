@@ -18,7 +18,7 @@ export default function App() {
     setPersonalData(data);
   };
 
-  const handleMappingsConfirmed = (file: File, modules: TUMModuleMapping[]) => {
+  const handleMappingsConfirmed = (file: File | null, modules: TUMModuleMapping[]) => {
     setMappingFile(file);
     setTumModules(modules);
   };
