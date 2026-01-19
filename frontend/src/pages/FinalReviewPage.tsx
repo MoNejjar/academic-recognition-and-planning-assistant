@@ -170,14 +170,6 @@ export default function FinalReviewPage({ personalData, onPersonalDataChange, ma
                                         <div style={styles.moduleNr}>{mod.tum_module_nr}</div>
                                         <div style={styles.moduleTitle}>{mod.tum_module_title} ({mod.tum_ects} ECTS)</div>
                                     </div>
-                                    {mod.catalogue_content && (
-                                        <button
-                                            onClick={() => handleViewContent(mod.tum_module_nr, mod.catalogue_content)}
-                                            style={styles.viewBtn}
-                                        >
-                                            📖 View Content
-                                        </button>
-                                    )}
                                 </div>
 
                                 <div style={styles.sourceCoursesList}>
@@ -188,6 +180,14 @@ export default function FinalReviewPage({ personalData, onPersonalDataChange, ma
                                             <span style={styles.sourceName}>{sc.source_course_name}</span>
                                             <span style={styles.sourceCredits}>{sc.source_credits} CP</span>
                                             <span style={styles.sourceGrade}>Grade: {sc.source_grade}</span>
+                                            {sc.source_content && (
+                                                <button
+                                                    onClick={() => handleViewContent(`${sc.source_course_no} - ${sc.source_course_name}`, sc.source_content!)}
+                                                    style={{ ...styles.viewBtn, marginLeft: 12, padding: "4px 8px", fontSize: 11 }}
+                                                >
+                                                    📖 Content
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

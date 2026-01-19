@@ -36,12 +36,14 @@ export default function App() {
         tum_module_nr: mod.tum_module_nr,
         tum_module_title: mod.tum_module_title,
         tum_ects: mod.tum_ects,
-        catalogue_content: mod.catalogue_content,
+        tum_content: mod.tum_content,
+        tum_outcome: mod.tum_outcome,
         source_courses: mod.source_courses.map((sc) => ({
           source_course_no: sc.source_course_no,
           source_course_name: sc.source_course_name,
           source_credits: sc.source_credits,
           source_grade: sc.source_grade,
+          source_content: sc.source_content,
         })),
       })),
     };

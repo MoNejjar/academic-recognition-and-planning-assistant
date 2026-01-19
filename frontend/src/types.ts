@@ -62,6 +62,7 @@ export interface SourceCourse {
   source_course_name: string;
   source_credits: string;
   source_grade: string;
+  source_content?: string; // Content for this specific course
 }
 
 // A TUM module with its equivalent source courses
@@ -71,7 +72,6 @@ export interface TUMModuleMapping {
   tum_module_title: string;
   tum_ects: string;
   source_courses: SourceCourse[];
-  catalogue_content: string;
   tum_content: string;  // TUM module content from cache
   tum_outcome: string;  // TUM module outcome from cache
 }
@@ -100,7 +100,6 @@ export const createEmptyTUMModule = (): TUMModuleMapping => ({
   tum_module_title: "",
   tum_ects: "",
   source_courses: [createEmptySourceCourse()],
-  catalogue_content: "",
   tum_content: "",
   tum_outcome: "",
 });

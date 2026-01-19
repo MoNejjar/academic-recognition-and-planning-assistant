@@ -84,7 +84,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 
             return {
                 ...mod,
-                catalogue_content: matchedContent || mod.catalogue_content,
+                // catalogue_content removed in favor of source_content in sources
             };
         });
     };
@@ -124,16 +124,30 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
         }
     };
 
-    const handleContentChange = (moduleId: string, content: string) => {
+    const handleSourceContentChange = (tumModuleId: string, sourceCourseId: string, content: string) => {
         setUpdatedModules((prev) =>
-            prev.map((mod) => (mod.id === moduleId ? { ...mod, catalogue_content: content } : mod))
+            prev.map((mod) => {
+                if (mod.id === tumModuleId) {
+                    return {
+                        ...mod,
+                        source_courses: mod.source_courses.map((sc) =>
+                            sc.id === sourceCourseId ? { ...sc, source_content: content } : sc
+                        ),
+                    };
+                }
+                return mod;
+            })
         );
     };
 
     const handleConfirm = () => {
-        const emptyContent = updatedModules.filter((mod) => !mod.catalogue_content.trim());
-        if (emptyContent.length > 0) {
-            alert(`Please fill in content for all TUM modules. ${emptyContent.length} module(s) are missing content.`);
+        // Validation: Ensure every source course has content
+        const missingContentCourses = updatedModules.flatMap(mod =>
+            mod.source_courses.filter(sc => !sc.source_content || !sc.source_content.trim())
+        );
+
+        if (missingContentCourses.length > 0) {
+            alert(`Please fill in content for all source courses. ${missingContentCourses.length} course(s) are missing content.`);
             return;
         }
         onContentConfirmed(updatedModules);
@@ -142,7 +156,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 
     const handleSkipToManual = () => {
         const modulesToUse = updatedModules.length > 0 ? updatedModules : tumModules;
-        setUpdatedModules(modulesToUse.map((mod) => ({ ...mod, catalogue_content: mod.catalogue_content || "" })));
+        setUpdatedModules(modulesToUse);
         setShowReview(true);
     };
 
@@ -198,50 +212,28 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                                 </div>
                             </div>
 
-                            <div style={styles.sourceCoursesList}>
+                            <div style={{ marginTop: 24 }}>
+                                <label style={{ ...styles.label, fontSize: 13, color: "#374151", marginBottom: 12 }}>
+                                    📝 Source Course Content {mod.source_courses.length > 1 ? "(One per source course)" : ""}
+                                </label>
+
                                 {mod.source_courses.map((sc) => (
-                                    <div key={sc.id} style={styles.sourceTag}>
-                                        {sc.source_course_no} - {sc.source_course_name}
+                                    <div key={sc.id} style={{ marginBottom: 16, paddingLeft: 12, borderLeft: "3px solid #e5e7eb" }}>
+                                        <div style={{ fontSize: 13, fontWeight: 600, color: "#4b5563", marginBottom: 6 }}>
+                                            {sc.source_course_no} - {sc.source_course_name}
+                                        </div>
+                                        <textarea
+                                            value={sc.source_content || ""}
+                                            onChange={(e) => handleSourceContentChange(mod.id, sc.id, e.target.value)}
+                                            placeholder={`Enter content/outcomes for ${sc.source_course_name}...`}
+                                            style={{
+                                                ...styles.textarea,
+                                                minHeight: 100,
+                                                borderColor: sc.source_content ? "#d1d5db" : "#fbbf24",
+                                            }}
+                                        />
                                     </div>
                                 ))}
-                            </div>
-
-                            {/* TUM Module Content Reference */}
-                            {(mod.tum_content || mod.tum_outcome) ? (
-                                <div style={styles.tumContentBox}>
-                                    <div style={styles.tumContentHeader}>📖 TUM Module Reference (for comparison)</div>
-                                    {mod.tum_content && (
-                                        <div style={styles.tumContentSection}>
-                                            <strong>Content:</strong>
-                                            <div style={styles.tumContentText}>{mod.tum_content.replace(/<br>/g, '\n')}</div>
-                                        </div>
-                                    )}
-                                    {mod.tum_outcome && (
-                                        <div style={styles.tumContentSection}>
-                                            <strong>Learning Outcomes:</strong>
-                                            <div style={styles.tumContentText}>{mod.tum_outcome.replace(/<br>/g, '\n')}</div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div style={styles.tumContentNotFound}>
-                                    ⚠️ TUM module "{mod.tum_module_nr}" not found. Check for typos or check in TUM Online.
-                                </div>
-                            )}
-
-                            <div style={{ marginTop: 16 }}>
-                                <label style={styles.label}>
-                                    📝 Source Course Content (from your previous university)
-                                </label>
-                                <textarea
-                                    value={mod.catalogue_content}
-                                    onChange={(e) => handleContentChange(mod.id, e.target.value)}
-                                    placeholder="Enter course description, learning outcomes, topics from your source university..."
-                                    style={{
-                                        ...styles.textarea,
-                                        borderColor: mod.catalogue_content ? "#d1d5db" : "#fbbf24",
-                                    }}
-                                />
                             </div>
                         </div>
                     ))}
