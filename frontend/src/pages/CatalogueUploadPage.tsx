@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { extractCatalogueContent } from "../api/courses";
+import { extractCatalogueContent, lookupTUMModule } from "../api/courses";
 import { TUMModuleMapping, CourseContent } from "../types";
 
 type Props = {
@@ -15,13 +15,56 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
     const [updatedModules, setUpdatedModules] = useState<TUMModuleMapping[]>([]);
     const [showReview, setShowReview] = useState(false);
     const [dragActive, setDragActive] = useState(false);
-    const [editedModules, setEditedModules] = useState<Set<string>>(new Set());
+    const [loadingTumContent, setLoadingTumContent] = useState(false);
+    const [tumLookupDone, setTumLookupDone] = useState(false);
+    const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
     const navigate = useNavigate();
+
+    const toggleModuleExpand = (moduleId: string) => {
+        setExpandedModules(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(moduleId)) {
+                newSet.delete(moduleId);
+            } else {
+                newSet.add(moduleId);
+            }
+            return newSet;
+        });
+    };
+
+    // Fetch TUM module content on mount
+    useEffect(() => {
+        const fetchTUMContent = async () => {
+            if (tumLookupDone) return;
+            setLoadingTumContent(true);
+
+            const enrichedModules = await Promise.all(
+                tumModules.map(async (mod) => {
+                    if (mod.tum_module_nr && !mod.tum_content) {
+                        const lookup = await lookupTUMModule(mod.tum_module_nr);
+                        if (lookup.found) {
+                            return {
+                                ...mod,
+                                tum_content: lookup.module_content || "",
+                                tum_outcome: lookup.module_outcome || "",
+                            };
+                        }
+                    }
+                    return mod;
+                })
+            );
+
+            setUpdatedModules(enrichedModules);
+            setLoadingTumContent(false);
+            setTumLookupDone(true);
+        };
+
+        fetchTUMContent();
+    }, [tumModules, tumLookupDone]);
 
     // Match extracted courses to source courses in modules
     const matchCourses = (extracted: CourseContent[], modules: TUMModuleMapping[]): TUMModuleMapping[] => {
         return modules.map((mod) => {
-            // Try to match catalogue content based on source course numbers/names
             let matchedContent = "";
 
             for (const sc of mod.source_courses) {
@@ -71,7 +114,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                 }
             }
 
-            const matched = matchCourses(allExtracted, tumModules);
+            const matched = matchCourses(allExtracted, updatedModules.length > 0 ? updatedModules : tumModules);
             setUpdatedModules(matched);
             setShowReview(true);
         } catch (err: any) {
@@ -85,7 +128,6 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
         setUpdatedModules((prev) =>
             prev.map((mod) => (mod.id === moduleId ? { ...mod, catalogue_content: content } : mod))
         );
-        setEditedModules((prev) => new Set(prev).add(moduleId));
     };
 
     const handleConfirm = () => {
@@ -99,7 +141,8 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
     };
 
     const handleSkipToManual = () => {
-        setUpdatedModules(tumModules.map((mod) => ({ ...mod, catalogue_content: mod.catalogue_content || "" })));
+        const modulesToUse = updatedModules.length > 0 ? updatedModules : tumModules;
+        setUpdatedModules(modulesToUse.map((mod) => ({ ...mod, catalogue_content: mod.catalogue_content || "" })));
         setShowReview(true);
     };
 
@@ -124,6 +167,9 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
             handleFilesUpload(e.target.files);
         }
     };
+
+    // Get current modules for display
+    const modulesToDisplay = updatedModules.length > 0 ? updatedModules : tumModules;
 
     // Review View
     if (showReview) {
@@ -160,18 +206,37 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                                 ))}
                             </div>
 
+                            {/* TUM Module Content Reference */}
+                            {(mod.tum_content || mod.tum_outcome) ? (
+                                <div style={styles.tumContentBox}>
+                                    <div style={styles.tumContentHeader}>📖 TUM Module Reference (for comparison)</div>
+                                    {mod.tum_content && (
+                                        <div style={styles.tumContentSection}>
+                                            <strong>Content:</strong>
+                                            <div style={styles.tumContentText}>{mod.tum_content.replace(/<br>/g, '\n')}</div>
+                                        </div>
+                                    )}
+                                    {mod.tum_outcome && (
+                                        <div style={styles.tumContentSection}>
+                                            <strong>Learning Outcomes:</strong>
+                                            <div style={styles.tumContentText}>{mod.tum_outcome.replace(/<br>/g, '\n')}</div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div style={styles.tumContentNotFound}>
+                                    ⚠️ TUM module "{mod.tum_module_nr}" not found. Check for typos or check in TUM Online.
+                                </div>
+                            )}
+
                             <div style={{ marginTop: 16 }}>
                                 <label style={styles.label}>
-                                    {mod.catalogue_content && !editedModules.has(mod.id)
-                                        ? "✅ Extracted Content (editable)"
-                                        : mod.catalogue_content
-                                            ? "📝 Content"
-                                            : "⚠️ No match found - enter manually"}
+                                    📝 Source Course Content (from your previous university)
                                 </label>
                                 <textarea
                                     value={mod.catalogue_content}
                                     onChange={(e) => handleContentChange(mod.id, e.target.value)}
-                                    placeholder="Enter course description, learning outcomes, topics..."
+                                    placeholder="Enter course description, learning outcomes, topics from your source university..."
                                     style={{
                                         ...styles.textarea,
                                         borderColor: mod.catalogue_content ? "#d1d5db" : "#fbbf24",
@@ -197,7 +262,6 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
     // Upload View
     return (
         <div style={styles.container}>
-
             <div style={styles.header}>
                 <h1 style={styles.title}>Upload Course Catalogues</h1>
                 <p style={styles.subtitle}>
@@ -210,6 +274,58 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
             <div style={styles.statsRow}>
                 <div style={styles.statBadge}>📚 {tumModules.length} TUM Modules to match</div>
             </div>
+
+            {/* TUM Content Preview Section */}
+            {loadingTumContent ? (
+                <div style={styles.loadingStatus}>🔄 Loading TUM module content...</div>
+            ) : (
+                <div style={styles.tumPreviewSection}>
+                    <h3 style={styles.previewTitle}>📖 TUM Module Content Reference</h3>
+                    <p style={styles.previewSubtitle}>Click on a module to see its content and learning outcomes.</p>
+                    <div style={styles.tumPreviewList}>
+                        {modulesToDisplay.map((mod) => {
+                            const isExpanded = expandedModules.has(mod.id);
+                            const hasContent = mod.tum_content || mod.tum_outcome;
+                            return (
+                                <div key={mod.id} style={styles.tumPreviewCard}>
+                                    <div
+                                        style={{
+                                            ...styles.tumPreviewHeader,
+                                            cursor: hasContent ? "pointer" : "default",
+                                        }}
+                                        onClick={() => hasContent && toggleModuleExpand(mod.id)}
+                                    >
+                                        <span style={{ flex: 1 }}>
+                                            <strong>{mod.tum_module_nr}</strong> - {mod.tum_module_title} ({mod.tum_ects} ECTS)
+                                        </span>
+                                        {hasContent ? (
+                                            <span style={styles.expandIcon}>{isExpanded ? "▼" : "▶"}</span>
+                                        ) : (
+                                            <span style={styles.notFoundBadge}>Module not found, Check for typos or check in TUM Online</span>
+                                        )}
+                                    </div>
+                                    {isExpanded && hasContent && (
+                                        <div style={styles.tumPreviewContent}>
+                                            {mod.tum_content && (
+                                                <div style={styles.tumPreviewText}>
+                                                    <strong>Content:</strong>
+                                                    <div style={styles.tumContentExpanded}>{mod.tum_content.replace(/<br>/g, '\n')}</div>
+                                                </div>
+                                            )}
+                                            {mod.tum_outcome && (
+                                                <div style={styles.tumPreviewText}>
+                                                    <strong>Learning Outcomes:</strong>
+                                                    <div style={styles.tumContentExpanded}>{mod.tum_outcome.replace(/<br>/g, '\n')}</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             <div
                 style={{
@@ -284,6 +400,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     statsRow: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 24 },
     statBadge: { padding: "8px 16px", background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, fontSize: 14, fontWeight: 500 },
 
+    // TUM Content Preview
+    tumPreviewSection: { marginBottom: 32, padding: 20, background: "#f0f9ff", borderRadius: 12, border: "1px solid #bae6fd" },
+    previewTitle: { fontSize: 16, fontWeight: 600, color: "#0369a1", margin: 0, marginBottom: 4 },
+    previewSubtitle: { fontSize: 13, color: "#0284c7", marginBottom: 16 },
+    tumPreviewList: { display: "flex", flexDirection: "column" as const, gap: 8, maxHeight: 500, overflowY: "auto" as const, paddingRight: 8 },
+    tumPreviewCard: { background: "#fff", borderRadius: 8, border: "1px solid #e0f2fe", overflow: "visible" as const, flexShrink: 0 },
+    tumPreviewHeader: { display: "flex", alignItems: "center", padding: "12px 16px", fontSize: 14, color: "#0369a1", background: "#f8fafc", borderRadius: "8px 8px 0 0" },
+    tumPreviewContent: { padding: "12px 16px", fontSize: 12, color: "#475569", background: "#fff", borderTop: "1px solid #e0f2fe", borderRadius: "0 0 8px 8px" },
+    tumPreviewText: { marginBottom: 12 },
+    tumContentExpanded: { marginTop: 6, whiteSpace: "pre-wrap" as const, lineHeight: 1.5, maxHeight: 150, overflowY: "auto" as const, padding: 8, background: "#f8fafc", borderRadius: 4, fontSize: 12 },
+    expandIcon: { fontSize: 12, color: "#0284c7", marginLeft: 8 },
+    notFoundBadge: { fontSize: 11, color: "#9ca3af", padding: "2px 8px", background: "#f3f4f6", borderRadius: 4 },
+    tumPreviewNotFound: { fontSize: 12, color: "#9ca3af", fontStyle: "italic" as const },
+
     modulesList: { display: "flex", flexDirection: "column" as const, gap: 20, marginBottom: 32 },
     moduleCard: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, boxShadow: "0 2px 4px rgb(0 0 0 / 0.05)" },
     moduleHeader: { display: "flex", alignItems: "center", gap: 12, marginBottom: 12 },
@@ -294,6 +424,13 @@ const styles: { [key: string]: React.CSSProperties } = {
 
     sourceCoursesList: { display: "flex", flexWrap: "wrap" as const, gap: 8 },
     sourceTag: { padding: "4px 10px", background: "#f3f4f6", borderRadius: 4, fontSize: 12, color: "#4b5563" },
+
+    // TUM Content Display
+    tumContentBox: { marginTop: 16, padding: 16, background: "#f0f9ff", borderRadius: 8, border: "1px solid #bae6fd" },
+    tumContentHeader: { fontSize: 13, fontWeight: 600, color: "#0369a1", marginBottom: 12 },
+    tumContentSection: { marginBottom: 12 },
+    tumContentText: { fontSize: 12, color: "#475569", marginTop: 4, whiteSpace: "pre-wrap" as const, maxHeight: 150, overflowY: "auto" as const },
+    tumContentNotFound: { marginTop: 12, padding: 12, background: "#fffbeb", borderRadius: 6, fontSize: 12, color: "#92400e" },
 
     label: { display: "block", fontSize: 12, fontWeight: 500, color: "#6b7280", marginBottom: 6 },
     textarea: { width: "100%", minHeight: 120, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, fontSize: 14, resize: "vertical" as const, boxSizing: "border-box" as const },
