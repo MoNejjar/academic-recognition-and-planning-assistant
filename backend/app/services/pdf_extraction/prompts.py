@@ -2,7 +2,7 @@
 Prompt templates for PDF extraction.
 
 Contains prompts for:
-- Table extraction (course recognition tables)
+- Table extraction (course recognition tables) - TUM module-centric
 - Course content extraction (descriptions, outcomes, objectives)
 """
 
@@ -10,6 +10,8 @@ Contains prompts for:
 def get_mapping_table_prompt(raw_text: str) -> str:
     """
     Generate the extraction prompt with embedded raw text data.
+    
+    Returns TUM module-centric structure: each TUM module with its source courses.
     
     Args:
         raw_text: Raw text extracted from the PDF page via pdfplumber
@@ -28,42 +30,39 @@ RAW PDF TEXT DATA:
 {raw_text}
 ---
 
-Look for tables mapping source university courses to TUM courses.
+TASK: Extract mappings as TUM MODULE-CENTRIC structure.
+Group all source courses by their TUM module number.
 
-CRITICAL: When you find combined courses (multiple source courses → one TUM module, or one source → multiple TUM modules), 
-you MUST split them into SEPARATE rows, each with the same group_id to link them together.
-
-For each row, extract these 9 values IN ORDER as a simple array:
-1. Course No./Module Nr (source university) - ONE course per row
-2. Course Name/Titel (source university) - ONE course name per row
-3. Credit Points (source university) - credits for THIS course only
-4. Original Grade (source university) - grade for THIS course only
-5. Module Nr (TUM) - ONE TUM module per row
-6. Titel (TUM) - ONE TUM module name per row
-7. ECTS (TUM) - ECTS for THIS TUM module only
-8. Matching Type:
-   - "1:1" = single source course maps to single TUM module
-   - "n:1" = this is ONE OF multiple source courses mapping to the SAME TUM module
-   - "1:n" = this source course maps to ONE OF multiple TUM modules
-9. Group ID - a unique string to link related rows together (e.g., "group1", "group2"). 
-   Use the same group_id for all rows that belong together. Use "none" for 1:1 mappings.
-
-EXAMPLE: If PDF shows "CSE1500 + CSE1505 → INHN0011", extract as TWO separate rows:
+OUTPUT FORMAT - JSON array of TUM modules, each with source courses:
 [
-  ["CSE1500", "Web and Database Technology", "5", "7.5", "INHN0011", "Fundamentals of Databases", "6", "n:1", "group1"],
-  ["CSE1505", "Information and Data Management", "5", "9", "INHN0011", "Fundamentals of Databases", "6", "n:1", "group1"],
-  ["CSE1300", "Reasoning and Logic", "5", "9.5", "INHN0004", "Discrete Structures", "8", "1:1", "none"]
+  {{
+    "tum_module_nr": "INHN0001",
+    "tum_module_title": "Introduction to Informatics",
+    "tum_ects": "6",
+    "source_courses": [
+      {{ "source_course_no": "BIE-PA1", "source_course_name": "Programming 1", "source_credits": "7", "source_grade": "1.5" }},
+      {{ "source_course_no": "BIE-PA2", "source_course_name": "Programming 2", "source_credits": "7", "source_grade": "1" }}
+    ]
+  }},
+  {{
+    "tum_module_nr": "INHN0011",
+    "tum_module_title": "Fundamentals of Databases",
+    "tum_ects": "6",
+    "source_courses": [
+      {{ "source_course_no": "BIE-DBS", "source_course_name": "Database Systems", "source_credits": "5", "source_grade": "1" }}
+    ]
+  }}
 ]
 
-IMPORTANT:
-- SPLIT combined courses into separate rows, don't keep + or / in course codes
-- Use the RAW TEXT DATA to get complete text that may be cut off in the image
-- Each row must have ONE source course and ONE TUM module
-- Related rows share the same group_id
-- Return as array of arrays
-- Extract ALL data rows (not headers)
+CRITICAL RULES:
+1. GROUP by TUM module number - same TUM module = same object, even if appears multiple times
+2. TUM modules with SAME MODULE NUMBER are the SAME module (ignore minor title typos)
+3. Each source course appears ONCE under its TUM module
+4. Multiple source courses can map to ONE TUM module (put all in source_courses array)
+5. Use RAW TEXT for complete text that may be cut off in image
+6. Extract ALL mappings from the table
 
-If no table: []
+If no table found: []
 ONLY return JSON array, no markdown, no explanations."""
 
 
@@ -118,4 +117,3 @@ Example output:
 
 If no courses found: []
 ONLY return JSON array, no markdown, no explanations."""
-

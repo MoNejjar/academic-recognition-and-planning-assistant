@@ -52,38 +52,54 @@ export const emptyPersonalData: PersonalData = {
 };
 
 // ============================================
-// STEP 1: Mapping Table Extraction
+// STEP 1: Mapping Table Extraction (TUM Module-Centric)
 // ============================================
 
-// A row from the mapping table (source course → TUM module)
-export interface MappingRow {
+// A source course from external university
+export interface SourceCourse {
   id: string;
-  // Source university course
   source_course_no: string;
   source_course_name: string;
   source_credits: string;
   source_grade: string;
-  // TUM module
+}
+
+// A TUM module with its equivalent source courses
+export interface TUMModuleMapping {
+  id: string;
   tum_module_nr: string;
   tum_module_title: string;
   tum_ects: string;
-  // Matching type: 1:1, n:1 (multiple source -> one TUM), 1:n (one source -> multiple TUM)
-  matching_type: string;
-  // Group ID to link related rows (for n:1 or 1:n mappings)
-  group_id: string;
-  // Added after catalogue extraction
-  catalogue_content?: string;
-  // Status flags
-  confirmed: boolean;
+  source_courses: SourceCourse[];
+  catalogue_content: string;
 }
 
 // Result from mapping table extraction API
 export interface MappingExtractionResult {
   filename: string;
   total_pages: number;
-  rows: Omit<MappingRow, 'id' | 'confirmed' | 'catalogue_content'>[];
+  tum_modules: Omit<TUMModuleMapping, 'id' | 'catalogue_content'>[];
   extracted_at: string;
 }
+
+// Helper to create empty source course
+export const createEmptySourceCourse = (): SourceCourse => ({
+  id: crypto.randomUUID(),
+  source_course_no: "",
+  source_course_name: "",
+  source_credits: "",
+  source_grade: "",
+});
+
+// Helper to create empty TUM module
+export const createEmptyTUMModule = (): TUMModuleMapping => ({
+  id: crypto.randomUUID(),
+  tum_module_nr: "",
+  tum_module_title: "",
+  tum_ects: "",
+  source_courses: [createEmptySourceCourse()],
+  catalogue_content: "",
+});
 
 // ============================================
 // STEP 2: Catalogue Content Extraction
@@ -104,32 +120,12 @@ export interface CourseContentResult {
 }
 
 // ============================================
-// Legacy types (for backwards compatibility)
+// App State
 // ============================================
 
-export type Catalogue = {
-  id: string;
-  name: string;
-  type: "pdf" | "manual";
-  file?: File;
-  manualText?: string;
-  parsedLLM?: any;
-};
-
-export type Course = {
-  id: string;
-  title: string;
-  sourceUniversity: string;
-  credits?: string;
-  description?: string;
-  initialParsedData?: any;
-  catalogues: Catalogue[];
-};
-
-// App state
 export type AppState = {
+  personalData: PersonalData;
   mappingFile: File | null;
-  mappingRows: MappingRow[];
-  catalogueFile: File | null;
-  step: 'mapping' | 'catalogue' | 'review';
+  tumModules: TUMModuleMapping[];
+  step: 'personal' | 'mapping' | 'catalogue' | 'review';
 };

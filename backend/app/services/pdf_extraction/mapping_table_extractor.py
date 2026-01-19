@@ -4,6 +4,8 @@ Mapping Table Extractor
 Extracts course recognition tables from PDF documents using vision-capable LLMs.
 Combines visual analysis with raw text extraction for maximum accuracy.
 
+Returns TUM module-centric structure: each TUM module with its source courses.
+
 ⚠️ REQUIRES VISION-CAPABLE LLM (uses chat_with_vision)
    Supported: gpt-4o, gpt-4o-mini, gpt-4-turbo, gemini-2.5-flash, gemini-2.5-pro
 """
@@ -19,7 +21,7 @@ from typing import Any, Dict, List, Optional
 
 import pdfplumber
 
-from app.models.pdf_extraction import CourseRecognitionRow, ExtractionResult
+from app.models.pdf_extraction import SourceCourse, TUMModuleMapping, ExtractionResult
 from app.services.pdf_extraction.prompts import get_mapping_table_prompt
 
 
@@ -29,6 +31,8 @@ class MappingTableExtractor:
     
     Uses a vision-capable LLM to analyze PDF pages as images while also
     providing raw text data for complete accuracy.
+    
+    Returns TUM module-centric structure.
     """
     
     def __init__(self, llm_client: Any):
@@ -49,27 +53,26 @@ class MappingTableExtractor:
             pdf_path: Path to the PDF file
             
         Returns:
-            ExtractionResult containing all extracted rows
+            ExtractionResult with TUM modules and their source courses
         """
         pdf_path = Path(pdf_path)
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
         
-        all_rows: List[CourseRecognitionRow] = []
+        all_modules: Dict[str, TUMModuleMapping] = {}
         
         with pdfplumber.open(pdf_path) as pdf:
             for page_num, page in enumerate(pdf.pages, start=1):
                 try:
-                    rows = await self._extract_from_page(page, page_num)
-                    all_rows.extend(rows)
+                    page_modules = await self._extract_from_page(page, page_num)
+                    self._merge_modules(all_modules, page_modules)
                 except Exception as e:
-                    # Log error but continue with other pages
                     print(f"Error extracting from page {page_num}: {e}")
         
         return ExtractionResult(
             filename=pdf_path.name,
             total_pages=len(pdf.pages) if hasattr(pdf, 'pages') else 0,
-            rows=all_rows
+            tum_modules=list(all_modules.values())
         )
     
     async def extract_from_bytes(self, pdf_bytes: bytes, filename: str = "document.pdf") -> ExtractionResult:
@@ -77,49 +80,59 @@ class MappingTableExtractor:
         Extract course recognition tables from PDF bytes.
         
         Stops extraction when a page following a table-containing page has no tables.
-        This optimizes processing by assuming tables are contiguous in the document.
         
         Args:
             pdf_bytes: PDF file content as bytes
             filename: Original filename for reference
             
         Returns:
-            ExtractionResult containing all extracted rows
+            ExtractionResult with TUM modules and their source courses
         """
-        all_rows: List[CourseRecognitionRow] = []
+        all_modules: Dict[str, TUMModuleMapping] = {}
         total_pages = 0
-        found_table = False  # Track if we've found any table
+        found_table = False
         
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
             total_pages = len(pdf.pages)
             for page_num, page in enumerate(pdf.pages, start=1):
                 try:
-                    rows = await self._extract_from_page(page, page_num)
+                    page_modules = await self._extract_from_page(page, page_num)
                     
-                    if rows:
-                        # Found table(s) on this page
-                        all_rows.extend(rows)
+                    if page_modules:
+                        self._merge_modules(all_modules, page_modules)
                         found_table = True
                     elif found_table:
-                        # Previously found tables, but this page has none
                         # Stop processing - tables section has ended
                         break
-                    # else: Haven't found tables yet, keep looking
-                    
+                        
                 except Exception as e:
                     print(f"Error extracting from page {page_num}: {e}")
-                    # If we already found tables and hit an error, stop
                     if found_table:
                         break
         
         return ExtractionResult(
             filename=filename,
             total_pages=total_pages,
-            rows=all_rows
+            tum_modules=list(all_modules.values())
         )
-
     
-    async def _extract_from_page(self, page: Any, page_num: int) -> List[CourseRecognitionRow]:
+    def _merge_modules(self, all_modules: Dict[str, TUMModuleMapping], new_modules: List[TUMModuleMapping]):
+        """Merge new modules into existing, grouping by TUM module number."""
+        for module in new_modules:
+            key = module.tum_module_nr.strip().upper()
+            if key in all_modules:
+                # Add source courses to existing module
+                existing_sources = {
+                    (s.source_course_no, s.source_course_name) 
+                    for s in all_modules[key].source_courses
+                }
+                for sc in module.source_courses:
+                    if (sc.source_course_no, sc.source_course_name) not in existing_sources:
+                        all_modules[key].source_courses.append(sc)
+            else:
+                all_modules[key] = module
+    
+    async def _extract_from_page(self, page: Any, page_num: int) -> List[TUMModuleMapping]:
         """
         Extract tables from a single PDF page.
         
@@ -128,7 +141,7 @@ class MappingTableExtractor:
             page_num: Page number for reference
             
         Returns:
-            List of extracted course recognition rows
+            List of TUM module mappings
         """
         # Convert page to image
         image_bytes = self._page_to_image(page)
@@ -144,9 +157,9 @@ class MappingTableExtractor:
         response = await self._call_llm_with_vision(prompt, image_b64)
         
         # Parse response
-        rows = self._parse_response(response, page_num)
+        modules = self._parse_response(response)
         
-        return rows
+        return modules
     
     def _page_to_image(self, page: Any, resolution: int = 300) -> bytes:
         """Convert PDF page to PNG image bytes."""
@@ -158,8 +171,6 @@ class MappingTableExtractor:
     def _extract_raw_text(self, page: Any) -> str:
         """
         Extract all text from PDF page including potentially masked text.
-        
-        Combines multiple extraction methods for completeness.
         """
         text_parts = []
         
@@ -168,7 +179,7 @@ class MappingTableExtractor:
         if text:
             text_parts.append(text)
         
-        # Also get text from tables (structured differently)
+        # Also get text from tables
         tables = page.extract_tables()
         if tables:
             for table in tables:
@@ -203,15 +214,7 @@ class MappingTableExtractor:
     async def _call_llm_with_vision(self, prompt: str, image_b64: str) -> Optional[str]:
         """
         Call the LLM with vision capabilities.
-        
-        Args:
-            prompt: The extraction prompt
-            image_b64: Base64-encoded PNG image
-            
-        Returns:
-            LLM response text or None on error
         """
-        # Use chat_with_vision method if available
         if hasattr(self.llm_client, 'chat_with_vision'):
             response = await self.llm_client.chat_with_vision(
                 prompt=prompt,
@@ -237,16 +240,15 @@ class MappingTableExtractor:
         )
         return response.get('message') or response.get('text')
     
-    def _parse_response(self, response: Optional[str], page_num: int) -> List[CourseRecognitionRow]:
+    def _parse_response(self, response: Optional[str]) -> List[TUMModuleMapping]:
         """
-        Parse LLM response to extract course recognition rows.
+        Parse LLM response to extract TUM module mappings.
         
         Args:
-            response: Raw LLM response
-            page_num: Page number for reference
+            response: Raw LLM response (JSON array of TUM modules)
             
         Returns:
-            List of parsed CourseRecognitionRow objects
+            List of TUMModuleMapping objects
         """
         if not response:
             return []
@@ -258,15 +260,15 @@ class MappingTableExtractor:
             response = re.sub(r'^```\w*\n?', '', response)
             response = re.sub(r'\n?```$', '', response)
         
-        rows: List[CourseRecognitionRow] = []
+        modules: List[TUMModuleMapping] = []
         
         try:
             data = json.loads(response)
             if isinstance(data, list):
                 for item in data:
-                    row = self._convert_to_row(item, page_num)
-                    if row:
-                        rows.append(row)
+                    module = self._convert_to_module(item)
+                    if module:
+                        modules.append(module)
         except json.JSONDecodeError:
             # Try to find JSON array in response
             match = re.search(r'\[[\s\S]*\]', response)
@@ -275,51 +277,53 @@ class MappingTableExtractor:
                     data = json.loads(match.group())
                     if isinstance(data, list):
                         for item in data:
-                            row = self._convert_to_row(item, page_num)
-                            if row:
-                                rows.append(row)
+                            module = self._convert_to_module(item)
+                            if module:
+                                modules.append(module)
                 except json.JSONDecodeError:
                     pass
         
-        return rows
+        return modules
     
-    def _convert_to_row(self, item: Any, page_num: int) -> Optional[CourseRecognitionRow]:
+    def _convert_to_module(self, item: Any) -> Optional[TUMModuleMapping]:
         """
-        Convert a parsed item to a CourseRecognitionRow.
+        Convert a parsed JSON item to a TUMModuleMapping.
         
         Args:
-            item: Parsed JSON item (list or dict)
-            page_num: Page number for reference
+            item: Parsed JSON object with TUM module and source courses
             
         Returns:
-            CourseRecognitionRow or None if invalid
+            TUMModuleMapping or None if invalid
         """
-        values: List[str] = []
-        
-        # Handle both 7 and 8 value arrays (matching_type is optional)
-        # Handle 7, 8, or 9 value arrays (matching_type and group_id are optional)
-        if isinstance(item, list) and len(item) >= 7:
-            values = [str(v).replace('\n', ' ').strip() for v in item[:9]]
-        elif isinstance(item, dict):
-            dict_values = list(item.values())
-            if len(dict_values) >= 7:
-                values = [str(v).replace('\n', ' ').strip() for v in dict_values[:9]]
-        
-        if len(values) < 7:
+        if not isinstance(item, dict):
             return None
         
-        # Default matching_type to "1:1" and group_id to "none" if not provided
-        matching_type = values[7] if len(values) > 7 else "1:1"
-        group_id = values[8] if len(values) > 8 else "none"
+        # Extract TUM module info
+        tum_nr = str(item.get('tum_module_nr', '')).strip()
+        tum_title = str(item.get('tum_module_title', '')).strip()
+        tum_ects = str(item.get('tum_ects', '')).strip()
         
-        return CourseRecognitionRow(
-            source_course_no=values[0],
-            source_course_name=values[1],
-            source_credits=values[2],
-            source_grade=values[3],
-            tum_module_nr=values[4],
-            tum_module_title=values[5],
-            tum_ects=values[6],
-            matching_type=matching_type,
-            group_id=group_id
+        if not tum_nr:
+            return None
+        
+        # Extract source courses
+        source_courses: List[SourceCourse] = []
+        raw_sources = item.get('source_courses', [])
+        
+        if isinstance(raw_sources, list):
+            for sc in raw_sources:
+                if isinstance(sc, dict):
+                    source_courses.append(SourceCourse(
+                        source_course_no=str(sc.get('source_course_no', '')).strip(),
+                        source_course_name=str(sc.get('source_course_name', '')).strip(),
+                        source_credits=str(sc.get('source_credits', '')).strip(),
+                        source_grade=str(sc.get('source_grade', '')).strip()
+                    ))
+        
+        return TUMModuleMapping(
+            tum_module_nr=tum_nr,
+            tum_module_title=tum_title,
+            tum_ects=tum_ects,
+            source_courses=source_courses,
+            catalogue_content=""
         )

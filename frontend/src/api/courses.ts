@@ -28,7 +28,7 @@ apiClient.interceptors.response.use(
 
 /**
  * Extract mapping table from PDF.
- * Returns rows with source course → TUM module mappings.
+ * Returns TUM modules with their equivalent source courses.
  */
 export async function extractMappingTable(file: File): Promise<MappingExtractionResult> {
   const formData = new FormData();
