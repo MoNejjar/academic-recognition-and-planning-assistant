@@ -64,10 +64,9 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 
     // Match extracted courses to source courses in modules
     const matchCourses = (extracted: CourseContent[], modules: TUMModuleMapping[]): TUMModuleMapping[] => {
-        return modules.map((mod) => {
-            let matchedContent = "";
-
-            for (const sc of mod.source_courses) {
+        return modules.map((mod) => ({
+            ...mod,
+            source_courses: mod.source_courses.map((sc) => {
                 const match = extracted.find((course) => {
                     const numberMatch = course.module_number?.toLowerCase().includes(sc.source_course_no.toLowerCase()) ||
                         sc.source_course_no.toLowerCase().includes(course.module_number?.toLowerCase() || "");
@@ -76,17 +75,9 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                     return numberMatch || nameMatch;
                 });
 
-                if (match) {
-                    if (matchedContent) matchedContent += "\n\n---\n\n";
-                    matchedContent += `[${match.module_number}] ${match.module_name}\n${match.module_content}`;
-                }
-            }
-
-            return {
-                ...mod,
-                // catalogue_content removed in favor of source_content in sources
-            };
-        });
+                return match ? { ...sc, source_content: match.module_content } : sc;
+            }),
+        }));
     };
 
     const handleFilesUpload = async (fileList: FileList) => {
