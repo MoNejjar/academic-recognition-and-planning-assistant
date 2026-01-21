@@ -2,18 +2,15 @@
 ARIP - Academic Recognition and Planning Assistant
 FastAPI Backend Application Entry Point
 """
-
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import course_matching, reporting, chatbot
 
 from app.core.database import SessionLocal, init_db
 from app.services.storage.data_cache import load_tum_modules_from_cache
-
-# Import routers
-from app.routes import course_matching, reporting, chatbot
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,11 +19,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("app.main")
 
-
+# Initialize database and load cached TUM modules on startup.
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """Initialize database and load cached TUM modules on startup."""
-
     init_db()
 
     db = SessionLocal()
@@ -43,13 +38,13 @@ async def lifespan(_: FastAPI):
 
     yield
 
-
 app = FastAPI(
     title="ARIP API",
     description="Academic Recognition and Planning Assistant API",
     version="0.1.0",
     lifespan=lifespan,
 )
+router = APIRouter()
 
 # CORS middleware
 app.add_middleware(
@@ -59,7 +54,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/")
 async def root():

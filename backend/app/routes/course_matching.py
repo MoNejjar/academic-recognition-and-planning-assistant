@@ -168,6 +168,67 @@ async def extract_course_content(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Extraction failed: {str(e)}")
 
+from pydantic import BaseModel
+from typing import Optional
+from app.services.storage.repository import TUMCoursesRepository
+
+# TUM Module lookup models
+class TUMModuleLookup(BaseModel):
+    found: bool
+    module_code: Optional[str] = None
+    module_title: Optional[str] = None
+    module_credits: Optional[str] = None
+    module_content: Optional[str] = None
+    module_outcome: Optional[str] = None
+    message: Optional[str] = None
+
+
+@router.get("/tum-module/{module_code}", response_model=TUMModuleLookup)
+async def lookup_tum_module(
+    module_code: str,
+    db: Session = Depends(get_db)
+) -> TUMModuleLookup:
+    """
+    Look up a TUM module by its code.
+    
+    Returns module content and learning outcomes.
+    Prefers English versions if available, falls back to German.
+    """
+    repo = TUMCoursesRepository(db)
+    course = repo.get_by_code(module_code.strip().upper())
+    
+    if not course:
+        return TUMModuleLookup(
+            found=False,
+            module_code=module_code,
+            message="Module not found. Check for typos or check in TUM Online."
+        )
+    
+    # Get content - prefer English if available and different from German
+    content_en = (course.module_content_en or "").strip()
+    content_de = (course.module_content or "").strip()
+    content = content_en if content_en and content_en != content_de else content_de
+    
+    # Get outcome - prefer English if available and different from German
+    outcome_en = (course.module_outcome_en or "").strip()
+    outcome_de = (course.module_outcome or "").strip()
+    outcome = outcome_en if outcome_en and outcome_en != outcome_de else outcome_de
+    
+    # Get title - prefer English
+    title_en = (course.module_title_en or "").strip()
+    title_de = (course.module_title or "").strip()
+    title = title_en if title_en else title_de
+    
+    return TUMModuleLookup(
+        found=True,
+        module_code=course.module_code,
+        module_title=title,
+        module_credits=str(course.module_credits) if course.module_credits else None,
+        module_content=content if content else None,
+        module_outcome=outcome if outcome else None,
+        message=None
+    )
+
 
 # TODO: Implement POST /match - Submit course matching request
 # TODO: Implement GET /match/{id} - Get match results

@@ -2,6 +2,7 @@
 PDF Extraction Models
 
 Pydantic models for PDF table extraction results.
+TUM Module-centric approach: each TUM module contains a list of equivalent source courses.
 """
 
 from __future__ import annotations
@@ -12,30 +13,59 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
-class CourseRecognitionRow(BaseModel):
-    """A single row from a course recognition table."""
+class SourceCourse(BaseModel):
+    """A source university course that maps to a TUM module."""
     
-    # Source university course info
     source_course_no: str = Field(..., description="Course number from source university")
     source_course_name: str = Field(..., description="Course name from source university")
     source_credits: str = Field(..., description="Credit points from source university")
     source_grade: str = Field(..., description="Original grade from source university")
     
-    # TUM course info
-    tum_module_nr: str = Field(..., description="TUM module number")
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "source_course_no": "BIE-PA1",
+                "source_course_name": "Programming and Algorithmics 1",
+                "source_credits": "7",
+                "source_grade": "1.5"
+            }
+        }
+    }
+
+
+class TUMModuleMapping(BaseModel):
+    """A TUM module with its equivalent source courses from external universities."""
+    
+    tum_module_nr: str = Field(..., description="TUM module number (primary identifier)")
     tum_module_title: str = Field(..., description="TUM module title")
     tum_ects: str = Field(..., description="TUM ECTS credits")
+    source_courses: List[SourceCourse] = Field(
+        default_factory=list, 
+        description="List of source courses that map to this TUM module"
+    )
+    catalogue_content: str = Field(default="", description="Course content from catalogue")
     
     model_config = {
         "json_schema_extra": {
             "example": {
-                "source_course_no": "CSE1100 + CSE1305",
-                "source_course_name": "Object Oriented Programming + Algorithms and Data Structures",
-                "source_credits": "5+5=10",
-                "source_grade": "8, 9",
-                "tum_module_nr": "INHN0002",
-                "tum_module_title": "Fundamentals of Programming",
-                "tum_ects": "6"
+                "tum_module_nr": "INHN0001",
+                "tum_module_title": "Introduction to Informatics",
+                "tum_ects": "6",
+                "source_courses": [
+                    {
+                        "source_course_no": "BIE-PA1",
+                        "source_course_name": "Programming and Algorithmics 1",
+                        "source_credits": "7",
+                        "source_grade": "1.5"
+                    },
+                    {
+                        "source_course_no": "BIE-PA2",
+                        "source_course_name": "Programming and Algorithmics 2",
+                        "source_credits": "7",
+                        "source_grade": "1"
+                    }
+                ],
+                "catalogue_content": ""
             }
         }
     }
@@ -46,40 +76,67 @@ class ExtractionResult(BaseModel):
     
     filename: str = Field(..., description="Original PDF filename")
     total_pages: int = Field(..., description="Total number of pages in the PDF")
-    rows: List[CourseRecognitionRow] = Field(default_factory=list, description="Extracted course recognition rows")
-    extracted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Extraction timestamp")
+    tum_modules: List[TUMModuleMapping] = Field(
+        default_factory=list, 
+        description="TUM modules with their mapped source courses"
+    )
+    extracted_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), 
+        description="Extraction timestamp"
+    )
     
     @property
-    def row_count(self) -> int:
-        """Number of extracted rows."""
-        return len(self.rows)
+    def module_count(self) -> int:
+        """Number of TUM modules."""
+        return len(self.tum_modules)
+    
+    @property
+    def total_source_courses(self) -> int:
+        """Total number of source courses across all TUM modules."""
+        return sum(len(m.source_courses) for m in self.tum_modules)
     
     model_config = {
         "json_schema_extra": {
             "example": {
-                "filename": "transcript.pdf",
-                "total_pages": 3,
-                "rows": [
+                "filename": "recognition_table.pdf",
+                "total_pages": 2,
+                "tum_modules": [
                     {
-                        "source_course_no": "CSE1100 + CSE1305",
-                        "source_course_name": "Object Oriented Programming + Algorithms and Data Structures",
-                        "source_credits": "5+5=10",
-                        "source_grade": "8, 9",
-                        "tum_module_nr": "INHN0002",
-                        "tum_module_title": "Fundamentals of Programming",
-                        "tum_ects": "6"
+                        "tum_module_nr": "INHN0001",
+                        "tum_module_title": "Introduction to Informatics",
+                        "tum_ects": "6",
+                        "source_courses": [
+                            {
+                                "source_course_no": "BIE-PA1",
+                                "source_course_name": "Programming and Algorithmics 1",
+                                "source_credits": "7",
+                                "source_grade": "1.5"
+                            },
+                            {
+                                "source_course_no": "BIE-PA2",
+                                "source_course_name": "Programming and Algorithmics 2",
+                                "source_credits": "7",
+                                "source_grade": "1"
+                            }
+                        ],
+                        "catalogue_content": ""
                     },
                     {
-                        "source_course_no": "CSE1405",
-                        "source_course_name": "Computer Networks",
-                        "source_credits": "5",
-                        "source_grade": "8",
-                        "tum_module_nr": "INHN0012",
-                        "tum_module_title": "Computer Networking and IT Security",
-                        "tum_ects": "6"
+                        "tum_module_nr": "INHN0011",
+                        "tum_module_title": "Fundamentals of Databases",
+                        "tum_ects": "6",
+                        "source_courses": [
+                            {
+                                "source_course_no": "BIE-DBS",
+                                "source_course_name": "Database Systems",
+                                "source_credits": "5",
+                                "source_grade": "1"
+                            }
+                        ],
+                        "catalogue_content": ""
                     }
                 ],
-                "extracted_at": "2026-01-01T14:00:00Z"
+                "extracted_at": "2026-01-19T13:00:00Z"
             }
         }
     }
