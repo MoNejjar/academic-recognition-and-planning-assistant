@@ -64,73 +64,75 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <SideMenu />
-        <div style={{ marginLeft: "240px" }}>
-          <Routes>
-            {/* Step 0: Personal Data Form */}
-            <Route
-              path="/"
-              element={
-                <PersonalDataPage
-                  onDataConfirmed={handlePersonalDataConfirmed}
-                  existingData={personalData}
-                />
-              }
-            />
-
-            {/* Step 1: Upload mapping table */}
-            <Route
-              path="/mapping"
-              element={
-                personalData.firstName ? (
-                  <MappingUploadPage
-                    onMappingsConfirmed={handleMappingsConfirmed}
-                    existingModules={tumModules}
-                    existingFile={mappingFile}
+        <div style={{ display: "flex", minHeight: "100vh", width: "100%" }}>
+          <SideMenu />
+          <div style={{ flex: 1, padding: "0" }}>
+            <Routes>
+              {/* Step 0: Personal Data Form */}
+              <Route
+                path="/"
+                element={
+                  <PersonalDataPage
+                    onDataConfirmed={handlePersonalDataConfirmed}
+                    existingData={personalData}
                   />
-                ) : (
-                  <Navigate to="/" replace />
-                )
-              }
-            />
+                }
+              />
 
-            {/* Step 2: Upload catalogues */}
-            <Route
-              path="/catalogue"
-              element={
-                tumModules.length > 0 ? (
-                  <CatalogueUploadPage
-                    tumModules={tumModules}
-                    onContentConfirmed={handleContentConfirmed}
-                  />
-                ) : (
-                  <Navigate to="/mapping" replace />
-                )
-              }
-            />
+              {/* Step 1: Upload mapping table */}
+              <Route
+                path="/mapping"
+                element={
+                  personalData.firstName ? (
+                    <MappingUploadPage
+                      onMappingsConfirmed={handleMappingsConfirmed}
+                      existingModules={tumModules}
+                      existingFile={mappingFile}
+                    />
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                }
+              />
 
-            {/* Step 3: Final review */}
-            <Route
-              path="/review"
-              element={
-                tumModules.length > 0 ? (
-                  <FinalReviewPage
-                    personalData={personalData}
-                    onPersonalDataChange={setPersonalData}
-                    mappingFile={mappingFile}
-                    tumModules={tumModules}
-                    onSubmit={handleSubmit}
-                  />
-                ) : (
-                  <Navigate to="/mapping" replace />
-                )
-              }
-            />
+              {/* Step 2: Upload catalogues */}
+              <Route
+                path="/catalogue"
+                element={
+                  tumModules.length > 0 ? (
+                    <CatalogueUploadPage
+                      tumModules={tumModules}
+                      onContentConfirmed={handleContentConfirmed}
+                    />
+                  ) : (
+                    <Navigate to="/mapping" replace />
+                  )
+                }
+              />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Step 3: Final review */}
+              <Route
+                path="/review"
+                element={
+                  tumModules.length > 0 ? (
+                    <FinalReviewPage
+                      personalData={personalData}
+                      onPersonalDataChange={setPersonalData}
+                      mappingFile={mappingFile}
+                      tumModules={tumModules}
+                      onSubmit={handleSubmit}
+                    />
+                  ) : (
+                    <Navigate to="/mapping" replace />
+                  )
+                }
+              />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+          <HealthCheck />
         </div>
-        <HealthCheck />
       </BrowserRouter>
     </ErrorBoundary>
   );

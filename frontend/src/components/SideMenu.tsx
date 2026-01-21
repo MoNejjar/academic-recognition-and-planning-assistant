@@ -58,14 +58,14 @@ export default function SideMenu() {
   return (
     <div style={{
       width: 260,
-      height: "100vh",
-      position: "fixed",
-      left: 0,
-      top: 0,
+      minWidth: 260,
+      flexShrink: 0,
       background: "linear-gradient(180deg, #f8fafc, #f1f5f9)",
       padding: 24,
       borderRight: "1px solid #e2e8f0",
       fontFamily: "'Inter', sans-serif",
+      display: "flex",
+      flexDirection: "column",
     }}>
       <div style={{ marginBottom: 32 }}>
         <h2 style={{
@@ -116,19 +116,6 @@ export default function SideMenu() {
         </Link>
       </nav>
 
-      <div style={{
-        position: "absolute",
-        bottom: 24,
-        left: 24,
-        right: 24,
-        padding: 16,
-        background: "#fff",
-        borderRadius: 12,
-        boxShadow: "0 1px 3px rgb(0 0 0 / 0.1)",
-      }}>
-        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>Need help?</div>
-        <div style={{ fontSize: 13, color: "#3b82f6", fontWeight: 500 }}>View Documentation →</div>
-      </div>
     </div>
   );
 }

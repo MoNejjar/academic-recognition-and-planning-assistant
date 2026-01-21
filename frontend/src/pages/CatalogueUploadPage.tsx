@@ -373,7 +373,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
-    container: { padding: 40, maxWidth: 1000, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
+    container: { padding: 40, width: "100%", maxWidth: 1000, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
     header: { marginBottom: 32, textAlign: "center" as const },
     title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
     subtitle: { fontSize: 16, color: "#6b7280" },
