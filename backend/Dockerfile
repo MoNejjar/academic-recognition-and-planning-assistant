@@ -13,8 +13,8 @@ COPY pyproject.toml .
 # Copy Readme
 COPY README.md .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir ".[extraction,llm]"
+# Install Python dependencies (including chatbot with chromadb, sentence-transformers)
+RUN pip install --no-cache-dir ".[extraction,llm,chatbot]"
 
 # Copy application code
 COPY . .

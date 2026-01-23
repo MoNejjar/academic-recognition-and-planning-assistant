@@ -76,7 +76,7 @@ export default function FloatingChat() {
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 22,
-            zIndex: 1001,
+            zIndex: 9999,
             transition: 'transform 0.2s',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
