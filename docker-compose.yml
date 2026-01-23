@@ -21,14 +21,17 @@ services:
       - LLM_PROVIDER=${LLM_PROVIDER}
       - LLM_API_KEY=${LLM_API_KEY}
       - LLM_MODEL=${LLM_MODEL}
+      - CHATBOT_MODEL=${CHATBOT_MODEL}
       - LLM_BASE_URL=${LLM_BASE_URL}
       - SECRET_KEY=${SECRET_KEY}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-127.0.0.1}
     depends_on:
       db:
         condition: service_healthy
     restart: on-failure
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
 
   db:
     image: postgres:15-alpine

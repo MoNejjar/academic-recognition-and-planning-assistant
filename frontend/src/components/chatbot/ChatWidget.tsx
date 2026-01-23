@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function ChatWidget({ onClose }: Props) {
-  const { messages, isStreaming, sendMessage, clearChat } = useChat();
+  const { messages, isStreaming, sendMessage } = useChat();
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

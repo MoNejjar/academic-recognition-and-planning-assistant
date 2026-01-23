@@ -10,9 +10,9 @@ ChunkType = Literal["text", "sources", "done", "error"]
 
 
 class SourceReference(BaseModel):
-    document: str
-    page: int | None = None
-    chunk_text: str
+    document: str = Field(min_length=1)
+    page: int | None = Field(default=None, ge=1)  # Pages are 1-indexed
+    chunk_text: str = Field(min_length=1)
     url: str | None = None
 
 

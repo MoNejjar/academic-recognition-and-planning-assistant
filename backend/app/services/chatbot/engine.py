@@ -125,7 +125,7 @@ class ChatService:
 
     def _error_chunk_for_exception(self, error_type: str) -> StreamChunk:
         """Map LLM provider exception types to user-friendly error messages."""
-        error_messages = {
+        ERROR_MESSAGES = {
             "AuthenticationError": "Authentication failed. Please check your API key.",
             "RateLimitError": "AI service rate limit exceeded. Please wait a moment.",
             "APIConnectionError": "Could not connect to AI service. Please try again later.",
@@ -134,16 +134,17 @@ class ChatService:
             "TimeoutError": "Request timed out. Please try again.",
         }
 
-        for key, message in error_messages.items():
+        for key, message in ERROR_MESSAGES.items():
             if key in error_type:
-                if key == "RateLimitError":
-                    return StreamChunk(type="error", content=message, retry_after=60.0)
-                return StreamChunk(type="error", content=message)
+                return StreamChunk(
+                    type="error",
+                    content=message,
+                    retry_after=60.0 if key == "RateLimitError" else None,
+                )
 
-        # Generic fallback - don't expose internal details
         return StreamChunk(
             type="error",
-            content="Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+            content="Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
         )
 
     async def stream_chat(

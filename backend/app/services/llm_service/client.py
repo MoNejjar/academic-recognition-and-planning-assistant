@@ -23,11 +23,11 @@ class LLMProvider(Enum):
 
 class BaseLLMClient(ABC):
     """Base abstract class for all LLM clients with common functionality"""
-    
+
     def __init__(self, api_key: Optional[str], model: str, max_retries: int = 3, rate_limit_rpm: int = 60):
         """
         Initialize base LLM client
-        
+
         Args:
             api_key: API key for the provider
             model: Model name to use
@@ -39,32 +39,33 @@ class BaseLLMClient(ABC):
         self.max_retries = max_retries
         self.rate_limit_rpm = rate_limit_rpm
         self.request_times: List[float] = []
-    
+        # Default tokenizer - subclasses can override
+        self._encoding = tiktoken.get_encoding("cl100k_base")
+
     async def _apply_rate_limit(self):
         """Apply rate limiting to prevent exceeding API limits"""
         now = time.time()
         # Remove requests older than 1 minute
         self.request_times = [t for t in self.request_times if now - t < 60]
-        
+
         if len(self.request_times) >= self.rate_limit_rpm:
             # Wait until oldest request is > 60 seconds old
             sleep_time = 60 - (now - self.request_times[0])
             if sleep_time > 0:
                 await asyncio.sleep(sleep_time)
                 self.request_times = self.request_times[1:]
-        
+
         self.request_times.append(now)
-    
-    @abstractmethod
+
     def count_tokens(self, text: str) -> int:
-        """Count tokens in text"""
-        pass
-    
+        """Count tokens using tiktoken (approximate for non-OpenAI models)"""
+        return len(self._encoding.encode(text))
+
     @abstractmethod
     async def complete(self, prompt: str, **kwargs) -> Dict[str, Any]:
         """Generate completion from prompt"""
         pass
-    
+
     @abstractmethod
     async def chat(self, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
         """Generate chat completion"""
@@ -73,24 +74,20 @@ class BaseLLMClient(ABC):
 
 class OpenAIClient(BaseLLMClient):
     """OpenAI API client with GPT models"""
-    
+
     SUPPORTED_MODELS = ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"]
-    
+
     def __init__(self, api_key: str, model: str = "gpt-4", **kwargs):
         """Initialize OpenAI client"""
         super().__init__(api_key, model, **kwargs)
         from openai import AsyncOpenAI
         self.client = AsyncOpenAI(api_key=api_key)
-        
-        # Initialize tokenizer
+
+        # Use model-specific tokenizer for accurate counting
         try:
-            self.encoding = tiktoken.encoding_for_model(model)
+            self._encoding = tiktoken.encoding_for_model(model)
         except KeyError:
-            self.encoding = tiktoken.get_encoding("cl100k_base")
-    
-    def count_tokens(self, text: str) -> int:
-        """Count tokens using tiktoken"""
-        return len(self.encoding.encode(text))
+            pass  # Keep default cl100k_base from base class
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def complete(self, prompt: str, max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
@@ -182,27 +179,21 @@ class OpenAIClient(BaseLLMClient):
 
 
 class GroqClient(BaseLLMClient):
-
     """Groq API client with fast inference models"""
-    
+
     SUPPORTED_MODELS = [
         "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant", 
+        "llama-3.1-8b-instant",
         "meta-llama/llama-guard-4-12b",
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b"
     ]
-    
+
     def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile", **kwargs):
         """Initialize Groq client"""
         super().__init__(api_key, model, **kwargs)
         from groq import AsyncGroq
         self.client = AsyncGroq(api_key=api_key)
-        self.encoding = tiktoken.get_encoding("cl100k_base")
-    
-    def count_tokens(self, text: str) -> int:
-        """Approximate token counting"""
-        return len(self.encoding.encode(text))
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def complete(self, prompt: str, max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
@@ -233,20 +224,14 @@ class GroqClient(BaseLLMClient):
 
 class GeminiClient(BaseLLMClient):
     """Google Gemini API client"""
-    
+
     SUPPORTED_MODELS = ["gemini-3-pro-preview", "gemini-3-flash-preview", "gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
-    
+
     def __init__(self, api_key: str, model: str = "gemini-2.5-flash", **kwargs):
         """Initialize Gemini client"""
         super().__init__(api_key, model, **kwargs)
         from google import genai
         self.client = genai.Client(api_key=api_key)
-        self.encoding = tiktoken.get_encoding("cl100k_base")
-        self.model = model
-    
-    def count_tokens(self, text: str) -> int:
-        """Approximate token counting"""
-        return len(self.encoding.encode(text))
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def complete(self, prompt: str, max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
@@ -354,9 +339,8 @@ class GeminiClient(BaseLLMClient):
 
 
 class OpenRouterClient(BaseLLMClient):
-
     """OpenRouter API client - access to multiple models through one API"""
-    
+
     def __init__(self, api_key: str, model: str = "openai/gpt-4", **kwargs):
         """Initialize OpenRouter client"""
         super().__init__(api_key, model, **kwargs)
@@ -365,11 +349,6 @@ class OpenRouterClient(BaseLLMClient):
             api_key=api_key,
             base_url="https://openrouter.ai/api/v1"
         )
-        self.encoding = tiktoken.get_encoding("cl100k_base")
-    
-    def count_tokens(self, text: str) -> int:
-        """Approximate token counting"""
-        return len(self.encoding.encode(text))
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def complete(self, prompt: str, max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
@@ -440,19 +419,15 @@ class OpenRouterClient(BaseLLMClient):
 
 class OllamaClient(BaseLLMClient):
     """Ollama client for local LLM inference"""
-    
-    def __init__(self, api_key: Optional[str] = None, model: str = "llama2", base_url: str = "http://localhost:11434", **kwargs
+
+    def __init__(
+        self, api_key: Optional[str] = None, model: str = "llama2", base_url: str = "http://localhost:11434", **kwargs
     ):
         """Initialize Ollama client"""
         super().__init__(api_key, model, **kwargs)
         import httpx
         self.base_url = base_url
         self.client = httpx.AsyncClient(timeout=120.0)
-        self.encoding = tiktoken.get_encoding("cl100k_base")
-    
-    def count_tokens(self, text: str) -> int:
-        """Approximate token counting"""
-        return len(self.encoding.encode(text))
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def complete(self, prompt: str, max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
@@ -643,6 +618,7 @@ def create_sync_streaming_client(provider: str, api_key: Optional[str], base_url
     if not api_key and provider != "ollama":
         raise ValueError(f"API key required for provider: {provider}. Set LLM_API_KEY in your .env file.")
 
+    # Groq uses its own SDK
     if provider == "groq":
         try:
             from groq import Groq
@@ -650,18 +626,20 @@ def create_sync_streaming_client(provider: str, api_key: Optional[str], base_url
             raise ValueError("The 'groq' package is required. Install with: pip install groq") from None
         return Groq(api_key=api_key)
 
-    # All other supported providers use the OpenAI client
+    # All other providers use OpenAI-compatible client with different base URLs
     try:
         from openai import OpenAI
     except ImportError:
         raise ValueError("The 'openai' package is required. Install with: pip install openai") from None
 
-    if provider == "openai":
-        return OpenAI(api_key=api_key)
-    if provider == "openrouter":
-        return OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
-    if provider == "ollama":
-        url = base_url or "http://localhost:11434/v1"
-        return OpenAI(api_key="ollama", base_url=url)
+    OPENAI_COMPATIBLE_PROVIDERS = {
+        "openai": {"api_key": api_key},
+        "openrouter": {"api_key": api_key, "base_url": "https://openrouter.ai/api/v1"},
+        "ollama": {"api_key": "ollama", "base_url": base_url or "http://localhost:11434/v1"},
+    }
 
-    raise ValueError(f"Unsupported provider: {provider}. Use: groq, openai, openrouter, ollama")
+    config = OPENAI_COMPATIBLE_PROVIDERS.get(provider)
+    if config is None:
+        raise ValueError(f"Unsupported provider: {provider}. Use: groq, openai, openrouter, ollama")
+
+    return OpenAI(**config)
