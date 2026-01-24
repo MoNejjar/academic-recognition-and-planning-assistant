@@ -1,9 +1,8 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Play, Loader2, Plus, Trash2, BookOpen, AlertCircle } from 'lucide-react';
+import { Play, Loader2, Plus, Trash2, BookOpen } from 'lucide-react';
 import { TUM_COLORS } from '../styles/tumStyles';
-import { ModuleAnalysisResult } from '../types/analyticsTypes';
 import { addManualTask } from '../data/taskManager';
 import { analyzeModules } from '../services/analyticsApi';
 

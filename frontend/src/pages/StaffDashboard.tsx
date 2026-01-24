@@ -8,7 +8,7 @@ import { mockAnalyticsData } from "../data/mockAnalyticsData";
 
 // Wrapper to inject data based on task ID
 const TaskAnalyticsDetail = () => {
-    const { taskId } = useParams();
+    const { } = useParams();
     // In a real app, fetch analytics by task ID
     // For now, use default mock data
     return <AnalyticsPage data={mockAnalyticsData} isLoading={false} />;

@@ -4,7 +4,7 @@
  * Realistic dummy data for testing the analytics page without backend.
  */
 
-import { AnalyticsResponse, ModuleAnalysisResult } from '../types/analyticsTypes';
+import { AnalyticsResponse } from '../types/analyticsTypes';
 
 export const mockAnalyticsData: AnalyticsResponse = {
     totalModulesAnalyzed: 3,

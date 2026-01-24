@@ -8,8 +8,7 @@
 import React from 'react';
 import {
     DecisionHint,
-    getDecisionHintEmoji,
-    getScoreColor
+    getDecisionHintEmoji
 } from '../../types/analyticsTypes';
 import ScoreGauge from './ScoreGauge';
 import './analytics.css';
@@ -21,7 +20,7 @@ interface SummaryCardProps {
 }
 
 export default function SummaryCard({ score, decisionHint, decisionHintText }: SummaryCardProps) {
-    const color = getScoreColor(score);
+    // const color = getScoreColor(score);
     const emoji = getDecisionHintEmoji(decisionHint);
 
     // Get badge class based on decision

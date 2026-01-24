@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowRight, BookOpen, User, CheckCircle2, AlertTriangle, XCircle, Clock } from 'lucide-react';
+import { Search, Filter, ArrowRight, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import { getTasks } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
 

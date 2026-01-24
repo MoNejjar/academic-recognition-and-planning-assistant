@@ -1,12 +1,10 @@
 
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-    FileText,
     CheckSquare,
     LayoutDashboard,
     FlaskConical,
-    LogOut,
-    GraduationCap
+    LogOut
 } from 'lucide-react';
 
 const TUM_COLORS = {

@@ -229,7 +229,6 @@ export default function ModuleCard({ result, defaultExpanded = false }: { result
                         {result.flags.map((flag, i) => (
                             <span key={i} style={{
                                 display: 'inline-flex',
-                                type: 'button',
                                 alignItems: 'center',
                                 gap: 4,
                                 padding: '4px 8px',
