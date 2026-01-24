@@ -1,7 +1,7 @@
 
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, Upload, BookOpen, CheckCircle2, LogOut } from 'lucide-react';
-import { TUM_COLORS } from '../styles/tumStyles';
+
 
 interface SideMenuProps {
   progress: {
@@ -51,22 +51,23 @@ export default function SideMenu({ progress }: SideMenuProps) {
   return (
     <div style={{
       width: 260,
-      backgroundColor: '#1E293B', // Slate 800 - dark dashboard sidebar
+      backgroundColor: '#f8fafc', // Light background
       height: '100vh',
       position: 'fixed',
       left: 0,
       top: 0,
-      color: 'white',
+      color: '#1e293b',
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 50
+      zIndex: 50,
+      borderRight: '1px solid #e2e8f0'
     }}>
       {/* Header */}
-      <div style={{ padding: '24px 24px 12px', borderBottom: '1px solid #334155' }}>
+      <div style={{ padding: '24px 24px 12px', borderBottom: '1px solid #e2e8f0' }}>
         <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px' }}>
-          <span style={{ color: '#3B82F6' }}>TUM</span> Assistant
+          <span style={{ color: '#0065BD' }}>TUM</span> Assistant
         </div>
-        <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Student Portal</div>
+        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Student Portal</div>
       </div>
 
       {/* Menu Items */}
@@ -96,8 +97,8 @@ export default function SideMenu({ progress }: SideMenuProps) {
                   textAlign: 'left',
                   border: 'none',
                   cursor: accessible ? 'pointer' : 'not-allowed',
-                  backgroundColor: active ? '#3069d6' : 'transparent', // TUM Blue-ish for active
-                  color: active ? 'white' : accessible ? '#E2E8F0' : '#475569',
+                  backgroundColor: active ? '#0065BD' : 'transparent', // TUM Blue for active
+                  color: active ? 'white' : accessible ? '#1e293b' : '#94a3b8',
                   transition: 'all 0.2s',
                   opacity: accessible ? 1 : 0.5
                 }}
@@ -105,7 +106,7 @@ export default function SideMenu({ progress }: SideMenuProps) {
                 <Icon size={18} />
                 <span style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</span>
                 {!accessible && (
-                  <div style={{ marginLeft: 'auto', fontSize: 10, color: '#475569' }}>🔒</div>
+                  <div style={{ marginLeft: 'auto', fontSize: 10, color: '#94a3b8' }}>🔒</div>
                 )}
               </button>
             );
@@ -114,7 +115,7 @@ export default function SideMenu({ progress }: SideMenuProps) {
       </div>
 
       {/* Footer */}
-      <div style={{ padding: 16, borderTop: '1px solid #334155' }}>
+      <div style={{ padding: 16, borderTop: '1px solid #e2e8f0' }}>
         <button
           onClick={() => navigate('/')}
           style={{
@@ -127,12 +128,12 @@ export default function SideMenu({ progress }: SideMenuProps) {
             textAlign: 'left',
             border: 'none',
             cursor: 'pointer',
-            color: '#94A3B8',
+            color: '#64748b',
             backgroundColor: 'transparent',
             transition: 'color 0.2s'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.color = '#fff'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#94A3B8'}
+          onMouseEnter={(e) => e.currentTarget.style.color = '#1e293b'}
+          onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
         >
           <LogOut size={18} />
           <span style={{ fontSize: 14, fontWeight: 500 }}>Logout</span>
