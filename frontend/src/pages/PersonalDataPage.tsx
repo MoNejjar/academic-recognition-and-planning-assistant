@@ -210,32 +210,25 @@ export default function PersonalDataPage({ onDataConfirmed, existingData }: Prop
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
-<<<<<<< HEAD
     container: {
-        padding: 32,
+        padding: 40,
         maxWidth: 1200,
         margin: "0 auto",
-        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+        fontFamily: "'Inter', sans-serif",
         minHeight: '100vh',
-        backgroundColor: TUM_COLORS.grayBg,
+        backgroundColor: '#f8fafc',
     },
-    header: { marginBottom: 24 },
+    header: { marginBottom: 32 },
     title: {
         fontSize: 24,
         fontWeight: 700,
-        color: TUM_COLORS.gray80,
+        color: '#1e293b',
         marginBottom: 8,
         display: 'flex',
         alignItems: 'center',
         gap: 12,
     },
-    subtitle: { fontSize: 14, color: TUM_COLORS.gray50, margin: 0 },
-=======
-    container: { padding: 40, width: "100%", maxWidth: 1200, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
-    header: { marginBottom: 32, textAlign: "center" as const },
-    title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
-    subtitle: { fontSize: 16, color: "#6b7280" },
->>>>>>> origin/main
+    subtitle: { fontSize: 14, color: '#64748b', margin: 0 },
     formContainer: { display: "flex", gap: 24, flexWrap: "wrap" as const },
     column: { flex: 1, minWidth: 300, display: "flex", flexDirection: "column" as const, gap: 24 },
     card: {
