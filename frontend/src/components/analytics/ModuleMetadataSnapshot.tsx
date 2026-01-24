@@ -5,7 +5,7 @@
  * Follows 50 Golden Rules: dark mode, 8-point spacing, responsive design.
  */
 
-import React from 'react';
+
 import './analytics.css';
 
 interface ModuleMetadataSnapshotProps {

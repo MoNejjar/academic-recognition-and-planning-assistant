@@ -5,7 +5,7 @@
  * Follows 50 Golden Rules: 200ms transitions, dark mode aware colors.
  */
 
-import React from 'react';
+
 import { getScoreColor } from '../../types/analyticsTypes';
 import './analytics.css';
 

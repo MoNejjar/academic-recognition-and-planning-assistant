@@ -5,7 +5,7 @@
  * Follows 50 Golden Rules: dark mode, 8-point spacing, smooth transitions.
  */
 
-import React from 'react';
+
 import { CoverageMetrics as CoverageMetricsType } from '../../types/analyticsTypes';
 import './analytics.css';
 

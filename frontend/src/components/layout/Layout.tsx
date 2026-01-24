@@ -7,14 +7,7 @@ import {
     LogOut
 } from 'lucide-react';
 
-const TUM_COLORS = {
-    blue: '#0065BD',
-    blueDark: '#005293',
-    white: '#FFFFFF',
-    gray10: '#F9FAFB',
-    gray20: '#E5E7EB',
-    gray80: '#333333',
-};
+
 
 const SidebarItem = ({ icon: Icon, label, isActive, onClick }: any) => {
     return (

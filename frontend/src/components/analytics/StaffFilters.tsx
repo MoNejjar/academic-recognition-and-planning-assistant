@@ -5,7 +5,7 @@
  * Follows 50 Golden Rules: dark mode, hover states, 8-point spacing.
  */
 
-import React from 'react';
+
 import { AnalysisFlag, FlagType } from '../../types/analyticsTypes';
 import './analytics.css';
 

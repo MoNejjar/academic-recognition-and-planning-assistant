@@ -5,7 +5,7 @@
  * Follows 50 Golden Rules: dark mode, 8-point spacing, proper transitions.
  */
 
-import React from 'react';
+
 import {
     DecisionHint,
     getDecisionHintEmoji

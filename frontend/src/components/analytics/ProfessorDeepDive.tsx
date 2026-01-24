@@ -5,7 +5,7 @@
  * Follows 50 Golden Rules: dark mode, proper transitions, 8-point spacing.
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ConfidenceIndicators } from '../../types/analyticsTypes';
 import './analytics.css';
 
@@ -144,7 +144,7 @@ export default function ProfessorDeepDive({
                                     Input Quality
                                 </span>
                                 <span className={`analytics-badge ${confidence.inputQuality === 'rich' ? 'analytics-badge-success' :
-                                        confidence.inputQuality === 'adequate' ? 'analytics-badge-warning' : 'analytics-badge-error'
+                                    confidence.inputQuality === 'adequate' ? 'analytics-badge-warning' : 'analytics-badge-error'
                                     }`}>
                                     {confidence.inputQuality.charAt(0).toUpperCase() + confidence.inputQuality.slice(1)}
                                 </span>

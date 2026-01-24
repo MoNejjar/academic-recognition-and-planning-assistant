@@ -5,7 +5,7 @@
  * Rule 37: Skeleton loaders beat spinners.
  */
 
-import React from 'react';
+
 import './analytics.css';
 
 export default function AnalyticsSkeleton() {
