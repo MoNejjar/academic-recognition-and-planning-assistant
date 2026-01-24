@@ -1,5 +1,4 @@
 
-import { mockApplications } from './mockApplications';
 import { ModuleAnalysisResult } from '../types/analyticsTypes';
 
 // Type for a flattened task item (compatible with TasksPage view)
@@ -21,27 +20,10 @@ export interface TaskItem {
 const STORAGE_KEY = 'tum_assistant_custom_tasks';
 
 export const getTasks = (): TaskItem[] => {
-    // 1. Get Mock Tasks (flattened)
-    const mockTasks: TaskItem[] = mockApplications.flatMap(app =>
-        app.analyticsData.moduleResults.map(result => ({
-            id: `${app.id}-${result.tumModuleNr}`,
-            studentName: app.studentName,
-            university: app.university,
-            tumModuleNr: result.tumModuleNr,
-            tumModuleTitle: result.tumModuleTitle,
-            tumEcts: result.tumEcts,
-            score: result.overallScore,
-            decision: result.decisionHint,
-            status: app.status,
-            result: result // Store full result for detail view
-        }))
-    );
-
-    // 2. Get Custom Manual Tasks from LocalStorage
+    // Get Custom Manual Tasks from LocalStorage only
     const stored = localStorage.getItem(STORAGE_KEY);
     const customTasks: TaskItem[] = stored ? JSON.parse(stored) : [];
-
-    return [...customTasks, ...mockTasks];
+    return customTasks;
 };
 
 // Simplified: find by single ID
