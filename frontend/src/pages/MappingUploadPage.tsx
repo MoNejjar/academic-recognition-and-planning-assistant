@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { extractMappingTable } from "../api/courses";
 import { TUMModuleMapping, SourceCourse, createEmptySourceCourse, createEmptyTUMModule } from "../types";
+import { Upload, FileText, ArrowLeft, ArrowRight, Plus, Trash2, X, BookOpen, Loader2, PenLine } from "lucide-react";
+import { TUM_COLORS } from "../styles/tumStyles";
+import { mockTUMModules } from "../data/mockTUMModules";
 
 type Props = {
     onMappingsConfirmed: (file: File | null, modules: TUMModuleMapping[]) => void;
@@ -38,7 +41,6 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
                 setError("No mapping table found in the PDF.");
                 return;
             }
-            // Add IDs to modules and source courses
             const modules: TUMModuleMapping[] = result.tum_modules.map((mod) => ({
                 ...mod,
                 id: crypto.randomUUID(),
@@ -62,7 +64,21 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
         setShowReview(true);
     };
 
-    // Module operations
+    const handleFillDemoData = () => {
+        // Strip out content/outcomes to simulate just the mapping table extraction
+        const demoMappings = mockTUMModules.map(m => ({
+            ...m,
+            tum_content: "", // Content comes later
+            tum_outcome: "",
+            source_courses: m.source_courses.map(sc => ({
+                ...sc,
+                source_content: "" // Content comes later
+            }))
+        }));
+        setTumModules(demoMappings);
+        setShowReview(true);
+    };
+
     const handleModuleChange = (moduleId: string, field: keyof TUMModuleMapping, value: string) => {
         setTumModules((prev) =>
             prev.map((mod) => (mod.id === moduleId ? { ...mod, [field]: value } : mod))
@@ -77,7 +93,6 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
         setTumModules((prev) => [...prev, createEmptyTUMModule()]);
     };
 
-    // Source course operations
     const handleSourceCourseChange = (
         moduleId: string,
         courseId: string,
@@ -113,7 +128,6 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
         setTumModules((prev) =>
             prev.map((mod) => {
                 if (mod.id !== moduleId) return mod;
-                // Keep at least one source course
                 if (mod.source_courses.length <= 1) return mod;
                 return {
                     ...mod,
@@ -126,7 +140,6 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
     const handleConfirm = () => {
         if (tumModules.length === 0) return;
 
-        // Validation
         const invalidModules = tumModules.filter(
             mod => !mod.tum_module_nr.trim() || !mod.tum_module_title.trim() || !mod.tum_ects.trim()
         );
@@ -152,10 +165,9 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
         }
 
         onMappingsConfirmed(file, tumModules);
-        navigate("/catalogue");
+        navigate("/student/catalogue");
     };
 
-    // Drag and drop
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -190,7 +202,10 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
         return (
             <div style={styles.container}>
                 <div style={styles.header}>
-                    <h1 style={styles.title}>Review TUM Module Mappings</h1>
+                    <h1 style={styles.title}>
+                        <BookOpen size={28} color={TUM_COLORS.blue} />
+                        Review TUM Module Mappings
+                    </h1>
                     <p style={styles.subtitle}>
                         Each TUM module shows its equivalent source courses. You can add, edit, or remove courses.
                     </p>
@@ -199,10 +214,12 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
                 {/* Stats */}
                 <div style={styles.statsRow}>
                     <div style={styles.statBadge}>
-                        📚 {tumModules.length} TUM Modules
+                        <BookOpen size={16} />
+                        {tumModules.length} TUM Modules
                     </div>
                     <div style={styles.statBadge}>
-                        📝 {tumModules.reduce((sum, m) => sum + m.source_courses.length, 0)} Source Courses
+                        <FileText size={16} />
+                        {tumModules.reduce((sum, m) => sum + m.source_courses.length, 0)} Source Courses
                     </div>
                 </div>
 
@@ -241,7 +258,7 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
                                     style={styles.deleteModuleBtn}
                                     title="Delete module"
                                 >
-                                    🗑️
+                                    <Trash2 size={16} />
                                 </button>
                             </div>
 
@@ -293,7 +310,7 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
                                             title="Remove course"
                                             disabled={mod.source_courses.length <= 1}
                                         >
-                                            ✕
+                                            <X size={14} />
                                         </button>
                                     </div>
                                 ))}
@@ -301,7 +318,8 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
                                     onClick={() => handleAddSourceCourse(mod.id)}
                                     style={styles.addSourceBtn}
                                 >
-                                    + Add Source Course
+                                    <Plus size={14} />
+                                    Add Source Course
                                 </button>
                             </div>
                         </div>
@@ -310,7 +328,8 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
 
                 {/* Add Module Button */}
                 <button onClick={handleAddModule} style={styles.addModuleBtn}>
-                    + Add TUM Module
+                    <Plus size={18} />
+                    Add TUM Module
                 </button>
 
                 {/* Actions */}
@@ -323,14 +342,16 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
                         }}
                         style={styles.secondaryBtn}
                     >
-                        ← Upload New File
+                        <ArrowLeft size={16} />
+                        Upload New File
                     </button>
                     <button
                         onClick={handleConfirm}
                         style={styles.primaryBtn}
                         disabled={tumModules.length === 0}
                     >
-                        Continue to Catalogue Upload →
+                        Continue to Catalogue Upload
+                        <ArrowRight size={16} />
                     </button>
                 </div>
             </div>
@@ -340,9 +361,11 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
     // Upload view
     return (
         <div style={styles.container}>
-
             <div style={styles.header}>
-                <h1 style={styles.title}>Upload Mapping Table</h1>
+                <h1 style={styles.title}>
+                    <Upload size={28} color={TUM_COLORS.blue} />
+                    Upload Mapping Table
+                </h1>
                 <p style={styles.subtitle}>
                     Upload your course recognition PDF to extract TUM module mappings.
                 </p>
@@ -353,22 +376,23 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
             <div
                 style={{
                     ...styles.dropzone,
-                    borderColor: dragActive ? "#8b5cf6" : file ? "#22c55e" : "#d1d5db",
-                    background: dragActive ? "#f3e8ff" : file ? "#f0fdf4" : "#fafafa",
+                    borderColor: dragActive ? TUM_COLORS.blue : file ? TUM_COLORS.green : TUM_COLORS.gray20,
+                    background: dragActive ? "rgba(0, 101, 189, 0.05)" : file ? "rgba(162, 173, 0, 0.05)" : TUM_COLORS.white,
                 }}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
             >
-                <div style={{ fontSize: 48, marginBottom: 16 }}>{file ? "✅" : "📄"}</div>
                 {file ? (
                     <>
+                        <FileText size={48} color={TUM_COLORS.green} />
                         <div style={styles.fileName}>{file.name}</div>
                         <div style={styles.fileSize}>{(file.size / 1024).toFixed(1)} KB</div>
                     </>
                 ) : (
                     <>
+                        <Upload size={48} color={TUM_COLORS.gray50} />
                         <div style={styles.dropText}>Drag & drop your PDF here</div>
                         <div style={styles.dropSubtext}>or click to browse</div>
                     </>
@@ -382,11 +406,17 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
             </div>
 
             <div style={styles.actions}>
-                <button onClick={() => navigate("/")} style={styles.secondaryBtn}>
-                    ← Back
+                <button onClick={() => navigate("/student")} style={styles.secondaryBtn}>
+                    <ArrowLeft size={16} />
+                    Back
                 </button>
                 <button onClick={handleSkipToManual} style={styles.secondaryBtn}>
-                    Skip (Enter Manually)
+                    <PenLine size={16} />
+                    Manual
+                </button>
+                <button onClick={handleFillDemoData} style={{ ...styles.secondaryBtn, borderColor: TUM_COLORS.orange, color: TUM_COLORS.orange }}>
+                    <BookOpen size={16} />
+                    Demo Fill
                 </button>
                 <button
                     onClick={handleExtract}
@@ -397,13 +427,24 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
                         cursor: !file || loading ? "not-allowed" : "pointer",
                     }}
                 >
-                    {loading ? "Extracting..." : "Extract Mappings →"}
+                    {loading ? (
+                        <>
+                            <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                            Extracting...
+                        </>
+                    ) : (
+                        <>
+                            Extract Mappings
+                            <ArrowRight size={16} />
+                        </>
+                    )}
                 </button>
             </div>
 
             {loading && (
                 <div style={styles.loadingStatus}>
-                    🔄 Extracting mappings from PDF... This may take some time.
+                    <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                    Extracting mappings from PDF... This may take some time.
                 </div>
             )}
         </div>
@@ -411,53 +452,239 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
-    container: { padding: 40, maxWidth: 1100, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
-    header: { marginBottom: 32, textAlign: "center" as const },
-    title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
-    subtitle: { fontSize: 16, color: "#6b7280" },
-    errorBox: { padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", marginBottom: 24 },
+    container: {
+        padding: 32,
+        maxWidth: 1100,
+        margin: "0 auto",
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+        minHeight: '100vh',
+        backgroundColor: TUM_COLORS.grayBg,
+    },
+    header: { marginBottom: 24 },
+    title: {
+        fontSize: 24,
+        fontWeight: 700,
+        color: TUM_COLORS.gray80,
+        marginBottom: 8,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+    },
+    subtitle: { fontSize: 14, color: TUM_COLORS.gray50, margin: 0 },
+    errorBox: {
+        padding: 16,
+        background: "rgba(239, 68, 68, 0.1)",
+        border: `1px solid ${TUM_COLORS.error}`,
+        borderRadius: 8,
+        color: TUM_COLORS.error,
+        marginBottom: 24
+    },
 
     // Stats
-    statsRow: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 24 },
-    statBadge: { padding: "8px 16px", background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, fontSize: 14, fontWeight: 500 },
+    statsRow: { display: "flex", gap: 16, marginBottom: 24 },
+    statBadge: {
+        padding: "8px 16px",
+        background: "rgba(0, 101, 189, 0.1)",
+        color: TUM_COLORS.blue,
+        borderRadius: 20,
+        fontSize: 14,
+        fontWeight: 500,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+    },
 
     // Module card
     modulesList: { display: "flex", flexDirection: "column" as const, gap: 20, marginBottom: 24 },
-    moduleCard: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, boxShadow: "0 2px 4px rgb(0 0 0 / 0.05)" },
+    moduleCard: {
+        background: TUM_COLORS.white,
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 8,
+        padding: 20,
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+    },
     moduleHeader: { display: "flex", alignItems: "center", gap: 12, marginBottom: 16 },
-    tumBadge: { padding: "6px 12px", background: "#3b82f6", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 600 },
+    tumBadge: {
+        padding: "6px 12px",
+        background: TUM_COLORS.blue,
+        color: TUM_COLORS.white,
+        borderRadius: 6,
+        fontSize: 12,
+        fontWeight: 600
+    },
     moduleInputs: { display: "flex", gap: 8, flex: 1 },
-    inputNr: { width: 140, padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 14, fontWeight: 500 },
-    inputTitle: { flex: 1, padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 14 },
-    inputEcts: { width: 70, padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 14, textAlign: "center" as const },
-    deleteModuleBtn: { padding: "8px 12px", background: "#fee2e2", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 14 },
+    inputNr: {
+        width: 140,
+        padding: "8px 12px",
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 6,
+        fontSize: 14,
+        fontWeight: 500,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    inputTitle: {
+        flex: 1,
+        padding: "8px 12px",
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 6,
+        fontSize: 14,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    inputEcts: {
+        width: 70,
+        padding: "8px 12px",
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 6,
+        fontSize: 14,
+        textAlign: "center" as const,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    deleteModuleBtn: {
+        padding: "8px 12px",
+        background: "rgba(239, 68, 68, 0.1)",
+        border: "none",
+        borderRadius: 6,
+        cursor: "pointer",
+        color: TUM_COLORS.error,
+        display: 'flex',
+        alignItems: 'center',
+    },
 
     // Source courses
-    sourceCoursesList: { paddingLeft: 24, borderLeft: "3px solid #e5e7eb" },
-    sourceLabel: { fontSize: 12, color: "#6b7280", marginBottom: 12, fontWeight: 500 },
+    sourceCoursesList: { paddingLeft: 24, borderLeft: `3px solid ${TUM_COLORS.blue}` },
+    sourceLabel: { fontSize: 12, color: TUM_COLORS.gray50, marginBottom: 12, fontWeight: 500 },
     sourceCourseRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 },
-    sourceIndex: { width: 24, color: "#9ca3af", fontSize: 13 },
-    sourceInputNo: { width: 100, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 4, fontSize: 13 },
-    sourceInputName: { flex: 1, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 4, fontSize: 13 },
-    sourceInputSmall: { width: 60, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 4, fontSize: 13, textAlign: "center" as const },
-    deleteSourceBtn: { padding: "4px 8px", background: "transparent", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 14 },
-    addSourceBtn: { marginTop: 8, padding: "6px 12px", background: "#f3f4f6", border: "1px dashed #d1d5db", borderRadius: 4, color: "#6b7280", cursor: "pointer", fontSize: 13 },
+    sourceIndex: { width: 24, color: TUM_COLORS.gray50, fontSize: 13 },
+    sourceInputNo: {
+        width: 100,
+        padding: "6px 10px",
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 4,
+        fontSize: 13,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    sourceInputName: {
+        flex: 1,
+        padding: "6px 10px",
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 4,
+        fontSize: 13,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    sourceInputSmall: {
+        width: 60,
+        padding: "6px 10px",
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 4,
+        fontSize: 13,
+        textAlign: "center" as const,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    deleteSourceBtn: {
+        padding: "4px 8px",
+        background: "transparent",
+        border: "none",
+        color: TUM_COLORS.gray50,
+        cursor: "pointer",
+        display: 'flex',
+        alignItems: 'center',
+    },
+    addSourceBtn: {
+        marginTop: 8,
+        padding: "6px 12px",
+        background: TUM_COLORS.grayBg,
+        border: `1px dashed ${TUM_COLORS.gray20}`,
+        borderRadius: 4,
+        color: TUM_COLORS.gray50,
+        cursor: "pointer",
+        fontSize: 13,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
 
-    addModuleBtn: { width: "100%", padding: 16, background: "#f0fdf4", border: "2px dashed #22c55e", borderRadius: 12, color: "#16a34a", cursor: "pointer", fontSize: 15, fontWeight: 500, marginBottom: 32 },
+    addModuleBtn: {
+        width: "100%",
+        padding: 16,
+        background: "rgba(162, 173, 0, 0.1)",
+        border: `2px dashed ${TUM_COLORS.green}`,
+        borderRadius: 8,
+        color: TUM_COLORS.green,
+        cursor: "pointer",
+        fontSize: 15,
+        fontWeight: 500,
+        marginBottom: 32,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
 
     // Actions
     actions: { display: "flex", gap: 12, justifyContent: "space-between", flexWrap: "wrap" as const },
-    secondaryBtn: { padding: "12px 24px", background: "#fff", color: "#374151", border: "1px solid #d1d5db", borderRadius: 8, cursor: "pointer", fontSize: 15, fontWeight: 500 },
-    primaryBtn: { padding: "14px 32px", background: "linear-gradient(135deg, #8b5cf6, #7c3aed)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 16, fontWeight: 600, boxShadow: "0 4px 6px -1px rgb(139 92 246 / 0.4)" },
+    secondaryBtn: {
+        padding: "12px 24px",
+        background: TUM_COLORS.white,
+        color: TUM_COLORS.gray80,
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 8,
+        cursor: "pointer",
+        fontSize: 14,
+        fontWeight: 500,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    primaryBtn: {
+        padding: "12px 24px",
+        background: TUM_COLORS.blue,
+        color: TUM_COLORS.white,
+        border: "none",
+        borderRadius: 8,
+        cursor: "pointer",
+        fontSize: 14,
+        fontWeight: 600,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
 
     // Upload
-    dropzone: { border: "2px dashed #d1d5db", borderRadius: 16, padding: 48, textAlign: "center" as const, cursor: "pointer", marginBottom: 32, position: "relative" as const, transition: "all 0.2s" },
-    dropText: { fontSize: 18, fontWeight: 600, color: "#374151", marginBottom: 8 },
-    dropSubtext: { fontSize: 14, color: "#9ca3af" },
-    fileName: { fontSize: 16, fontWeight: 600, color: "#16a34a", marginTop: 8 },
-    fileSize: { fontSize: 14, color: "#6b7280" },
+    dropzone: {
+        border: `2px dashed ${TUM_COLORS.gray20}`,
+        borderRadius: 8,
+        padding: 48,
+        textAlign: "center" as const,
+        cursor: "pointer",
+        marginBottom: 32,
+        position: "relative" as const,
+        transition: "all 0.2s",
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        gap: 12,
+    },
+    dropText: { fontSize: 16, fontWeight: 600, color: TUM_COLORS.gray80 },
+    dropSubtext: { fontSize: 14, color: TUM_COLORS.gray50 },
+    fileName: { fontSize: 16, fontWeight: 600, color: TUM_COLORS.green },
+    fileSize: { fontSize: 14, color: TUM_COLORS.gray50 },
     fileInput: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" },
 
     // Loading
-    loadingStatus: { marginTop: 16, padding: 16, background: "#eff6ff", borderRadius: 8, color: "#1d4ed8", fontSize: 14, textAlign: "center" as const },
+    loadingStatus: {
+        marginTop: 16,
+        padding: 16,
+        background: "rgba(0, 101, 189, 0.1)",
+        borderRadius: 8,
+        color: TUM_COLORS.blue,
+        fontSize: 14,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+    },
 };

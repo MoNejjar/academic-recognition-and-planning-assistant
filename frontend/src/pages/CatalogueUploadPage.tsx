@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { extractCatalogueContent, lookupTUMModule } from "../api/courses";
 import { TUMModuleMapping, CourseContent } from "../types";
+import { Upload, FileText, ArrowLeft, ArrowRight, BookOpen, Loader2, PenLine, ChevronDown, ChevronRight, AlertTriangle, Wand2 } from "lucide-react";
+import { TUM_COLORS } from "../styles/tumStyles";
+import { mockTUMModules } from "../data/mockTUMModules";
 
 type Props = {
     tumModules: TUMModuleMapping[];
@@ -32,7 +35,6 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
         });
     };
 
-    // Fetch TUM module content on mount
     useEffect(() => {
         const fetchTUMContent = async () => {
             if (tumLookupDone) return;
@@ -62,7 +64,6 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
         fetchTUMContent();
     }, [tumModules, tumLookupDone]);
 
-    // Match extracted courses to source courses in modules
     const matchCourses = (extracted: CourseContent[], modules: TUMModuleMapping[]): TUMModuleMapping[] => {
         return modules.map((mod) => ({
             ...mod,
@@ -132,7 +133,6 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
     };
 
     const handleConfirm = () => {
-        // Validation: Ensure every source course has content
         const missingContentCourses = updatedModules.flatMap(mod =>
             mod.source_courses.filter(sc => !sc.source_content || !sc.source_content.trim())
         );
@@ -142,12 +142,40 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
             return;
         }
         onContentConfirmed(updatedModules);
-        navigate("/review");
+        navigate("/student/review");
     };
 
     const handleSkipToManual = () => {
         const modulesToUse = updatedModules.length > 0 ? updatedModules : tumModules;
         setUpdatedModules(modulesToUse);
+        setShowReview(true);
+    };
+
+    const handleFillDemoContent = () => {
+        // Merge existing modules with demo content
+        // We match by module NR to be safe, or just use the demo data if it matches
+        const modulesToUse = updatedModules.length > 0 ? updatedModules : tumModules;
+
+        const demoFilled = modulesToUse.map(mod => {
+            const demoMatch = mockTUMModules.find(dm => dm.tum_module_nr === mod.tum_module_nr);
+            if (demoMatch) {
+                return {
+                    ...mod,
+                    tum_content: demoMatch.tum_content,
+                    tum_outcome: demoMatch.tum_outcome,
+                    source_courses: mod.source_courses.map((sc, idx) => {
+                        const demoSc = demoMatch.source_courses[idx];
+                        return {
+                            ...sc,
+                            source_content: demoSc ? demoSc.source_content : sc.source_content
+                        }
+                    })
+                };
+            }
+            return mod;
+        });
+
+        setUpdatedModules(demoFilled);
         setShowReview(true);
     };
 
@@ -173,7 +201,6 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
         }
     };
 
-    // Get current modules for display
     const modulesToDisplay = updatedModules.length > 0 ? updatedModules : tumModules;
 
     // Review View
@@ -181,12 +208,16 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
         return (
             <div style={styles.container}>
                 <div style={styles.header}>
-                    <h1 style={styles.title}>Review Extracted Content</h1>
+                    <h1 style={styles.title}>
+                        <FileText size={28} color={TUM_COLORS.blue} />
+                        Review Extracted Content
+                    </h1>
                     <p style={styles.subtitle}>Review and edit the catalogue content for each TUM module.</p>
                 </div>
 
                 <div style={styles.warningBox}>
-                    <strong>⚠️ Important:</strong> Auto-matching is not 100% accurate. Please verify that each content matches the correct TUM module.
+                    <AlertTriangle size={18} color={TUM_COLORS.orange} />
+                    <span><strong>Important:</strong> Auto-matching is not 100% accurate. Please verify that each content matches the correct TUM module.</span>
                 </div>
 
                 <div style={styles.modulesList}>
@@ -204,13 +235,13 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                             </div>
 
                             <div style={{ marginTop: 24 }}>
-                                <label style={{ ...styles.label, fontSize: 13, color: "#374151", marginBottom: 12 }}>
-                                    📝 Source Course Content {mod.source_courses.length > 1 ? "(One per source course)" : ""}
+                                <label style={{ fontSize: 13, color: TUM_COLORS.gray80, marginBottom: 12, display: 'block', fontWeight: 500 }}>
+                                    Source Course Content {mod.source_courses.length > 1 ? "(One per source course)" : ""}
                                 </label>
 
                                 {mod.source_courses.map((sc) => (
-                                    <div key={sc.id} style={{ marginBottom: 16, paddingLeft: 12, borderLeft: "3px solid #e5e7eb" }}>
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: "#4b5563", marginBottom: 6 }}>
+                                    <div key={sc.id} style={{ marginBottom: 16, paddingLeft: 12, borderLeft: `3px solid ${TUM_COLORS.blue}` }}>
+                                        <div style={{ fontSize: 13, fontWeight: 600, color: TUM_COLORS.gray80, marginBottom: 6 }}>
                                             {sc.source_course_no} - {sc.source_course_name}
                                         </div>
                                         <textarea
@@ -220,7 +251,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                                             style={{
                                                 ...styles.textarea,
                                                 minHeight: 100,
-                                                borderColor: sc.source_content ? "#d1d5db" : "#fbbf24",
+                                                borderColor: sc.source_content ? TUM_COLORS.gray20 : TUM_COLORS.orange,
                                             }}
                                         />
                                     </div>
@@ -232,10 +263,12 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 
                 <div style={styles.actions}>
                     <button onClick={() => { setShowReview(false); setFiles([]); }} style={styles.secondaryBtn}>
-                        ← Upload Different Files
+                        <ArrowLeft size={16} />
+                        Upload Different Files
                     </button>
                     <button onClick={handleConfirm} style={styles.primaryBtn}>
-                        Continue to Review →
+                        Continue to Review
+                        <ArrowRight size={16} />
                     </button>
                 </div>
             </div>
@@ -246,7 +279,10 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
     return (
         <div style={styles.container}>
             <div style={styles.header}>
-                <h1 style={styles.title}>Upload Course Catalogues</h1>
+                <h1 style={styles.title}>
+                    <Upload size={28} color={TUM_COLORS.blue} />
+                    Upload Course Catalogues
+                </h1>
                 <p style={styles.subtitle}>
                     Upload catalogue PDFs to auto-match content to your TUM modules.
                 </p>
@@ -255,15 +291,24 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
             {error && <div style={styles.errorBox}>{error}</div>}
 
             <div style={styles.statsRow}>
-                <div style={styles.statBadge}>📚 {tumModules.length} TUM Modules to match</div>
+                <div style={styles.statBadge}>
+                    <BookOpen size={16} />
+                    {tumModules.length} TUM Modules to match
+                </div>
             </div>
 
             {/* TUM Content Preview Section */}
             {loadingTumContent ? (
-                <div style={styles.loadingStatus}>🔄 Loading TUM module content...</div>
+                <div style={styles.loadingStatus}>
+                    <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                    Loading TUM module content...
+                </div>
             ) : (
                 <div style={styles.tumPreviewSection}>
-                    <h3 style={styles.previewTitle}>📖 TUM Module Content Reference</h3>
+                    <h3 style={styles.previewTitle}>
+                        <BookOpen size={18} />
+                        TUM Module Content Reference
+                    </h3>
                     <p style={styles.previewSubtitle}>Click on a module to see its content and learning outcomes.</p>
                     <div style={styles.tumPreviewList}>
                         {modulesToDisplay.map((mod) => {
@@ -282,9 +327,9 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                                             <strong>{mod.tum_module_nr}</strong> - {mod.tum_module_title} ({mod.tum_ects} ECTS)
                                         </span>
                                         {hasContent ? (
-                                            <span style={styles.expandIcon}>{isExpanded ? "▼" : "▶"}</span>
+                                            isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
                                         ) : (
-                                            <span style={styles.notFoundBadge}>Module not found, Check for typos or check in TUM Online</span>
+                                            <span style={styles.notFoundBadge}>Module not found</span>
                                         )}
                                     </div>
                                     {isExpanded && hasContent && (
@@ -313,17 +358,17 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
             <div
                 style={{
                     ...styles.dropzone,
-                    borderColor: dragActive ? "#8b5cf6" : files.length > 0 ? "#22c55e" : "#d1d5db",
-                    background: dragActive ? "#f3e8ff" : files.length > 0 ? "#f0fdf4" : "#fafafa",
+                    borderColor: dragActive ? TUM_COLORS.blue : files.length > 0 ? TUM_COLORS.green : TUM_COLORS.gray20,
+                    background: dragActive ? "rgba(0, 101, 189, 0.05)" : files.length > 0 ? "rgba(162, 173, 0, 0.05)" : TUM_COLORS.white,
                 }}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
             >
-                <div style={{ fontSize: 48, marginBottom: 16 }}>{files.length > 0 ? "✅" : "📚"}</div>
                 {files.length > 0 ? (
                     <>
+                        <FileText size={48} color={TUM_COLORS.green} />
                         <div style={styles.fileName}>{files.length} file(s) selected</div>
                         <div style={styles.fileList}>
                             {files.map((f, i) => <div key={i} style={styles.fileItem}>{f.name}</div>)}
@@ -331,6 +376,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                     </>
                 ) : (
                     <>
+                        <Upload size={48} color={TUM_COLORS.gray50} />
                         <div style={styles.dropText}>Drag & drop catalogue PDFs here</div>
                         <div style={styles.dropSubtext}>or click to browse (multiple files supported)</div>
                     </>
@@ -345,11 +391,17 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
             </div>
 
             <div style={styles.actions}>
-                <button onClick={() => navigate("/mapping")} style={styles.secondaryBtn}>
-                    ← Back
+                <button onClick={() => navigate("/student/mapping")} style={styles.secondaryBtn}>
+                    <ArrowLeft size={16} />
+                    Back
                 </button>
                 <button onClick={handleSkipToManual} style={styles.secondaryBtn}>
-                    Skip (Enter Manually)
+                    <PenLine size={16} />
+                    Manual
+                </button>
+                <button onClick={handleFillDemoContent} style={{ ...styles.secondaryBtn, borderColor: TUM_COLORS.orange, color: TUM_COLORS.orange }}>
+                    <Wand2 size={16} />
+                    Demo Fill
                 </button>
                 <button
                     onClick={handleExtract}
@@ -359,13 +411,24 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                         opacity: files.length === 0 || loading ? 0.5 : 1,
                     }}
                 >
-                    {loading ? "Extracting..." : "Extract & Match →"}
+                    {loading ? (
+                        <>
+                            <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                            Extracting...
+                        </>
+                    ) : (
+                        <>
+                            Extract & Match
+                            <ArrowRight size={16} />
+                        </>
+                    )}
                 </button>
             </div>
 
             {loading && (
                 <div style={styles.loadingStatus}>
-                    🔄 Extracting content from PDFs... This may take some time.
+                    <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                    Extracting content from PDFs... This may take some time.
                 </div>
             )}
         </div>
@@ -373,62 +436,207 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
-    container: { padding: 40, maxWidth: 1000, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
-    header: { marginBottom: 32, textAlign: "center" as const },
-    title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
-    subtitle: { fontSize: 16, color: "#6b7280" },
-    errorBox: { padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", marginBottom: 24 },
-    warningBox: { padding: 16, background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, color: "#92400e", marginBottom: 24, fontSize: 14 },
+    container: {
+        padding: 32,
+        maxWidth: 1000,
+        margin: "0 auto",
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+        minHeight: '100vh',
+        backgroundColor: TUM_COLORS.grayBg,
+    },
+    header: { marginBottom: 24 },
+    title: {
+        fontSize: 24,
+        fontWeight: 700,
+        color: TUM_COLORS.gray80,
+        marginBottom: 8,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+    },
+    subtitle: { fontSize: 14, color: TUM_COLORS.gray50, margin: 0 },
+    errorBox: {
+        padding: 16,
+        background: "rgba(239, 68, 68, 0.1)",
+        border: `1px solid ${TUM_COLORS.error}`,
+        borderRadius: 8,
+        color: TUM_COLORS.error,
+        marginBottom: 24
+    },
+    warningBox: {
+        padding: 16,
+        background: "rgba(227, 114, 34, 0.1)",
+        border: `1px solid ${TUM_COLORS.orange}`,
+        borderRadius: 8,
+        color: TUM_COLORS.gray80,
+        marginBottom: 24,
+        fontSize: 14,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+    },
 
-    statsRow: { display: "flex", gap: 16, justifyContent: "center", marginBottom: 24 },
-    statBadge: { padding: "8px 16px", background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, fontSize: 14, fontWeight: 500 },
+    statsRow: { display: "flex", gap: 16, marginBottom: 24 },
+    statBadge: {
+        padding: "8px 16px",
+        background: "rgba(0, 101, 189, 0.1)",
+        color: TUM_COLORS.blue,
+        borderRadius: 20,
+        fontSize: 14,
+        fontWeight: 500,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+    },
 
     // TUM Content Preview
-    tumPreviewSection: { marginBottom: 32, padding: 20, background: "#f0f9ff", borderRadius: 12, border: "1px solid #bae6fd" },
-    previewTitle: { fontSize: 16, fontWeight: 600, color: "#0369a1", margin: 0, marginBottom: 4 },
-    previewSubtitle: { fontSize: 13, color: "#0284c7", marginBottom: 16 },
-    tumPreviewList: { display: "flex", flexDirection: "column" as const, gap: 8, maxHeight: 500, overflowY: "auto" as const, paddingRight: 8 },
-    tumPreviewCard: { background: "#fff", borderRadius: 8, border: "1px solid #e0f2fe", overflow: "visible" as const, flexShrink: 0 },
-    tumPreviewHeader: { display: "flex", alignItems: "center", padding: "12px 16px", fontSize: 14, color: "#0369a1", background: "#f8fafc", borderRadius: "8px 8px 0 0" },
-    tumPreviewContent: { padding: "12px 16px", fontSize: 12, color: "#475569", background: "#fff", borderTop: "1px solid #e0f2fe", borderRadius: "0 0 8px 8px" },
+    tumPreviewSection: {
+        marginBottom: 24,
+        padding: 20,
+        background: "rgba(152, 198, 234, 0.2)",
+        borderRadius: 8,
+        border: `1px solid ${TUM_COLORS.lightBlue2}`
+    },
+    previewTitle: {
+        fontSize: 16,
+        fontWeight: 600,
+        color: TUM_COLORS.blue,
+        margin: 0,
+        marginBottom: 4,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+    },
+    previewSubtitle: { fontSize: 13, color: TUM_COLORS.gray50, marginBottom: 16 },
+    tumPreviewList: { display: "flex", flexDirection: "column" as const, gap: 8, maxHeight: 400, overflowY: "auto" as const, paddingRight: 8 },
+    tumPreviewCard: { background: TUM_COLORS.white, borderRadius: 8, border: `1px solid ${TUM_COLORS.gray20}`, overflow: "visible" as const, flexShrink: 0 },
+    tumPreviewHeader: {
+        display: "flex",
+        alignItems: "center",
+        padding: "12px 16px",
+        fontSize: 14,
+        color: TUM_COLORS.gray80,
+        background: TUM_COLORS.grayBg,
+        borderRadius: "8px 8px 0 0"
+    },
+    tumPreviewContent: {
+        padding: "12px 16px",
+        fontSize: 12,
+        color: TUM_COLORS.gray80,
+        background: TUM_COLORS.white,
+        borderTop: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: "0 0 8px 8px"
+    },
     tumPreviewText: { marginBottom: 12 },
-    tumContentExpanded: { marginTop: 6, whiteSpace: "pre-wrap" as const, lineHeight: 1.5, maxHeight: 150, overflowY: "auto" as const, padding: 8, background: "#f8fafc", borderRadius: 4, fontSize: 12 },
-    expandIcon: { fontSize: 12, color: "#0284c7", marginLeft: 8 },
-    notFoundBadge: { fontSize: 11, color: "#9ca3af", padding: "2px 8px", background: "#f3f4f6", borderRadius: 4 },
-    tumPreviewNotFound: { fontSize: 12, color: "#9ca3af", fontStyle: "italic" as const },
+    tumContentExpanded: {
+        marginTop: 6,
+        whiteSpace: "pre-wrap" as const,
+        lineHeight: 1.5,
+        maxHeight: 150,
+        overflowY: "auto" as const,
+        padding: 8,
+        background: TUM_COLORS.grayBg,
+        borderRadius: 4,
+        fontSize: 12
+    },
+    notFoundBadge: { fontSize: 11, color: TUM_COLORS.gray50, padding: "2px 8px", background: TUM_COLORS.grayBg, borderRadius: 4 },
 
-    modulesList: { display: "flex", flexDirection: "column" as const, gap: 20, marginBottom: 32 },
-    moduleCard: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, boxShadow: "0 2px 4px rgb(0 0 0 / 0.05)" },
-    moduleHeader: { display: "flex", alignItems: "center", gap: 12, marginBottom: 12 },
-    tumBadge: { padding: "6px 12px", background: "#3b82f6", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 600 },
-    moduleNr: { fontSize: 15, fontWeight: 600, color: "#374151" },
-    moduleTitle: { fontSize: 13, color: "#6b7280" },
-    sourceCount: { marginLeft: "auto", fontSize: 12, color: "#9ca3af" },
+    modulesList: { display: "flex", flexDirection: "column" as const, gap: 20, marginBottom: 24 },
+    moduleCard: {
+        background: TUM_COLORS.white,
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 8,
+        padding: 20,
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+    },
+    moduleHeader: { display: "flex", alignItems: "center", gap: 12 },
+    tumBadge: {
+        padding: "6px 12px",
+        background: TUM_COLORS.blue,
+        color: TUM_COLORS.white,
+        borderRadius: 6,
+        fontSize: 12,
+        fontWeight: 600
+    },
+    moduleNr: { fontSize: 15, fontWeight: 600, color: TUM_COLORS.gray80 },
+    moduleTitle: { fontSize: 13, color: TUM_COLORS.gray50 },
+    sourceCount: { marginLeft: "auto", fontSize: 12, color: TUM_COLORS.gray50 },
 
-    sourceCoursesList: { display: "flex", flexWrap: "wrap" as const, gap: 8 },
-    sourceTag: { padding: "4px 10px", background: "#f3f4f6", borderRadius: 4, fontSize: 12, color: "#4b5563" },
-
-    // TUM Content Display
-    tumContentBox: { marginTop: 16, padding: 16, background: "#f0f9ff", borderRadius: 8, border: "1px solid #bae6fd" },
-    tumContentHeader: { fontSize: 13, fontWeight: 600, color: "#0369a1", marginBottom: 12 },
-    tumContentSection: { marginBottom: 12 },
-    tumContentText: { fontSize: 12, color: "#475569", marginTop: 4, whiteSpace: "pre-wrap" as const, maxHeight: 150, overflowY: "auto" as const },
-    tumContentNotFound: { marginTop: 12, padding: 12, background: "#fffbeb", borderRadius: 6, fontSize: 12, color: "#92400e" },
-
-    label: { display: "block", fontSize: 12, fontWeight: 500, color: "#6b7280", marginBottom: 6 },
-    textarea: { width: "100%", minHeight: 120, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, fontSize: 14, resize: "vertical" as const, boxSizing: "border-box" as const },
+    textarea: {
+        width: "100%",
+        minHeight: 120,
+        padding: 12,
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 6,
+        fontSize: 14,
+        resize: "vertical" as const,
+        boxSizing: "border-box" as const,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
 
     actions: { display: "flex", gap: 12, justifyContent: "space-between", flexWrap: "wrap" as const },
-    secondaryBtn: { padding: "12px 24px", background: "#fff", color: "#374151", border: "1px solid #d1d5db", borderRadius: 8, cursor: "pointer", fontSize: 15, fontWeight: 500 },
-    primaryBtn: { padding: "14px 32px", background: "linear-gradient(135deg, #8b5cf6, #7c3aed)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 16, fontWeight: 600, boxShadow: "0 4px 6px -1px rgb(139 92 246 / 0.4)" },
+    secondaryBtn: {
+        padding: "12px 24px",
+        background: TUM_COLORS.white,
+        color: TUM_COLORS.gray80,
+        border: `1px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 8,
+        cursor: "pointer",
+        fontSize: 14,
+        fontWeight: 500,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    primaryBtn: {
+        padding: "12px 24px",
+        background: TUM_COLORS.blue,
+        color: TUM_COLORS.white,
+        border: "none",
+        borderRadius: 8,
+        cursor: "pointer",
+        fontSize: 14,
+        fontWeight: 600,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
 
-    dropzone: { border: "2px dashed #d1d5db", borderRadius: 16, padding: 48, textAlign: "center" as const, cursor: "pointer", marginBottom: 32, position: "relative" as const, transition: "all 0.2s" },
-    dropText: { fontSize: 18, fontWeight: 600, color: "#374151", marginBottom: 8 },
-    dropSubtext: { fontSize: 14, color: "#9ca3af" },
-    fileName: { fontSize: 16, fontWeight: 600, color: "#16a34a", marginTop: 8 },
-    fileList: { marginTop: 12 },
-    fileItem: { fontSize: 13, color: "#6b7280", marginTop: 4 },
+    dropzone: {
+        border: `2px dashed ${TUM_COLORS.gray20}`,
+        borderRadius: 8,
+        padding: 48,
+        textAlign: "center" as const,
+        cursor: "pointer",
+        marginBottom: 24,
+        position: "relative" as const,
+        transition: "all 0.2s",
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        gap: 12,
+    },
+    dropText: { fontSize: 16, fontWeight: 600, color: TUM_COLORS.gray80 },
+    dropSubtext: { fontSize: 14, color: TUM_COLORS.gray50 },
+    fileName: { fontSize: 16, fontWeight: 600, color: TUM_COLORS.green },
+    fileList: { marginTop: 8 },
+    fileItem: {
+        fontSize: 13, color: TUM_COLORS.gray50, marginTop: 4
+    },
     fileInput: { position: "absolute" as const, top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" },
 
-    loadingStatus: { marginTop: 16, padding: 16, background: "#eff6ff", borderRadius: 8, color: "#1d4ed8", fontSize: 14, textAlign: "center" as const },
+    loadingStatus: {
+        marginTop: 16,
+        padding: 16,
+        background: "rgba(0, 101, 189, 0.1)",
+        borderRadius: 8,
+        color: TUM_COLORS.blue,
+        fontSize: 14,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+    },
 };
