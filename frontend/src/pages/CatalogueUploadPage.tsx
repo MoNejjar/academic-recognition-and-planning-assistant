@@ -436,6 +436,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
+<<<<<<< HEAD
     container: {
         padding: 32,
         maxWidth: 1000,
@@ -475,6 +476,14 @@ const styles: { [key: string]: React.CSSProperties } = {
         alignItems: 'center',
         gap: 12,
     },
+=======
+    container: { padding: 40, width: "100%", maxWidth: 1000, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
+    header: { marginBottom: 32, textAlign: "center" as const },
+    title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
+    subtitle: { fontSize: 16, color: "#6b7280" },
+    errorBox: { padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", marginBottom: 24 },
+    warningBox: { padding: 16, background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, color: "#92400e", marginBottom: 24, fontSize: 14 },
+>>>>>>> origin/main
 
     statsRow: { display: "flex", gap: 16, marginBottom: 24 },
     statBadge: {

@@ -195,7 +195,7 @@ async def lookup_tum_module(
     Prefers English versions if available, falls back to German.
     """
     repo = TUMCoursesRepository(db)
-    course = repo.get_by_code(module_code.strip())
+    course = repo.get_by_code(module_code.strip().upper())
     
     if not course:
         return TUMModuleLookup(

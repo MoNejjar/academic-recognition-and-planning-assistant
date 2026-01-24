@@ -452,6 +452,7 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
+<<<<<<< HEAD
     container: {
         padding: 32,
         maxWidth: 1100,
@@ -479,6 +480,13 @@ const styles: { [key: string]: React.CSSProperties } = {
         color: TUM_COLORS.error,
         marginBottom: 24
     },
+=======
+    container: { padding: 40, width: "100%", maxWidth: 1100, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
+    header: { marginBottom: 32, textAlign: "center" as const },
+    title: { fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8 },
+    subtitle: { fontSize: 16, color: "#6b7280" },
+    errorBox: { padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", marginBottom: 24 },
+>>>>>>> origin/main
 
     // Stats
     statsRow: { display: "flex", gap: 16, marginBottom: 24 },

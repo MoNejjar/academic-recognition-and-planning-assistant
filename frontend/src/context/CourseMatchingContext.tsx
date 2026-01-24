@@ -1,10 +1,12 @@
 import { createContext, useContext, useState } from "react";
-import { AppState } from "../types";
+import { AppState, emptyPersonalData } from "../types";
 
 
 const initialState: AppState = {
-  tumFile: null,
-  courses: [],
+  personalData: emptyPersonalData,
+  mappingFile: null,
+  tumModules: [],
+  step: 'personal',
 };
 
 

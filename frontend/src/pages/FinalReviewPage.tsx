@@ -430,6 +430,7 @@ export default function FinalReviewPage({
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
+<<<<<<< HEAD
     container: {
         padding: 40,
         maxWidth: 1100,
@@ -438,6 +439,9 @@ const styles: { [key: string]: React.CSSProperties } = {
         minHeight: '100vh',
         backgroundColor: TUM_COLORS.grayBg,
     },
+=======
+    container: { padding: 40, width: "100%", maxWidth: 1200, margin: "0 auto", fontFamily: "'Inter', sans-serif" },
+>>>>>>> origin/main
     header: { marginBottom: 32, textAlign: "center" as const },
     title: {
         fontSize: 32,
