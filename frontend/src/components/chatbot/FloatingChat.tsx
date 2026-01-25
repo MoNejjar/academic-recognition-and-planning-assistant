@@ -59,6 +59,12 @@ export default function FloatingChat() {
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartY = useRef(0);
   const resizeStartHeight = useRef(0);
+  const chatHeightRef = useRef(chatHeight); // Track current height for save
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    chatHeightRef.current = chatHeight;
+  }, [chatHeight]);
 
   // Handle resize drag
   const handleResizeStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -80,12 +86,13 @@ export default function FloatingChat() {
 
     const handleEnd = () => {
       setIsResizing(false);
-      saveHeight(chatHeight);
+      // Use ref to get current height (avoids stale closure)
+      saveHeight(chatHeightRef.current);
     };
 
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleEnd);
-    document.addEventListener('touchmove', handleMove);
+    document.addEventListener('touchmove', handleMove, { passive: false });
     document.addEventListener('touchend', handleEnd);
 
     return () => {
@@ -94,7 +101,7 @@ export default function FloatingChat() {
       document.removeEventListener('touchmove', handleMove);
       document.removeEventListener('touchend', handleEnd);
     };
-  }, [isResizing, chatHeight, maxHeight]);
+  }, [isResizing, maxHeight]);
 
   // Clamp height when window resizes
   useEffect(() => {

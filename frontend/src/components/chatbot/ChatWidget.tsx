@@ -4,7 +4,7 @@ import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 
 export default function ChatWidget() {
-  const { messages, isStreaming, sendMessage, clearChat } = useChat();
+  const { messages, isStreaming, isLoadingHistory, sendMessage, clearChat } = useChat();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const lastAssistantRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(0);
@@ -17,19 +17,16 @@ export default function ChatWidget() {
       const elementTop = element.offsetTop - container.offsetTop;
 
       container.scrollTo({
-        top: elementTop - 16, // Small padding from top
+        top: elementTop - 16,
         behavior: 'smooth'
       });
     }
   }, []);
 
   useEffect(() => {
-    // Only scroll when a new message pair is added (user + assistant)
     if (messages.length > prevMessageCountRef.current && messages.length >= 2) {
       const lastMessage = messages[messages.length - 1];
-      // Scroll when assistant message appears (starts empty during streaming)
       if (lastMessage?.role === 'assistant') {
-        // Small delay to ensure DOM is updated
         setTimeout(scrollToLastAssistant, 50);
       }
     }
@@ -84,6 +81,7 @@ export default function ChatWidget() {
         <button
           onClick={handleNewChat}
           title="Start new chat"
+          disabled={isLoadingHistory}
           style={{
             background: 'rgba(255,255,255,0.15)',
             border: 'none',
@@ -93,7 +91,7 @@ export default function ChatWidget() {
             borderRadius: 6,
             fontSize: 12,
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: isLoadingHistory ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -101,9 +99,14 @@ export default function ChatWidget() {
             transition: 'background 0.2s',
             whiteSpace: 'nowrap',
             flexShrink: 0,
+            opacity: isLoadingHistory ? 0.5 : 1,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+          onMouseEnter={(e) => {
+            if (!isLoadingHistory) e.currentTarget.style.background = 'rgba(255,255,255,0.25)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+          }}
         >
           <span style={{ fontSize: 14 }}>+</span>
           New Chat
@@ -120,7 +123,27 @@ export default function ChatWidget() {
           background: '#f8fafc'
         }}
       >
-        {messages.length === 0 ? (
+        {isLoadingHistory ? (
+          // Loading state
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748b' }}>
+            <div style={{
+              width: 36,
+              height: 36,
+              border: '3px solid #e2e8f0',
+              borderTopColor: '#3b82f6',
+              borderRadius: '50%',
+              margin: '0 auto 16px',
+              animation: 'spin 0.8s linear infinite',
+            }} />
+            <p style={{ margin: 0, fontSize: 14 }}>Loading chat history...</p>
+            <style>{`
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        ) : messages.length === 0 ? (
+          // Welcome state
           <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748b' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
             <h3 style={{ margin: '0 0 12px', color: '#1e293b', fontSize: 18, fontWeight: 600 }}>
@@ -138,6 +161,7 @@ export default function ChatWidget() {
             </p>
           </div>
         ) : (
+          // Messages
           <>
             {messages.map((msg, i) => {
               const isLastAssistant = msg.role === 'assistant' && i === messages.length - 1;
@@ -167,7 +191,7 @@ export default function ChatWidget() {
 
       {/* Input */}
       <div style={{ padding: 16, background: 'white', borderTop: '1px solid #e2e8f0' }}>
-        <ChatInput onSend={sendMessage} disabled={isStreaming} />
+        <ChatInput onSend={sendMessage} disabled={isStreaming || isLoadingHistory} />
       </div>
     </div>
   );

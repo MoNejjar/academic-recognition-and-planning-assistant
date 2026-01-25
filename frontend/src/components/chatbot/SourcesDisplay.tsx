@@ -59,7 +59,7 @@ export default function SourcesDisplay({ sources }: { sources: SourceReference[]
         }}>
           {sources.map((s, i) => (
             <div
-              key={i}
+              key={`${s.document}-${s.page ?? 'no-page'}-${i}`}
               style={{
                 borderLeft: '3px solid #3b82f6',
                 paddingLeft: 12,
