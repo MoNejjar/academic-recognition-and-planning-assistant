@@ -10,6 +10,10 @@ export default function ChatInput({ onSend, disabled = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    ref.current?.focus();
+  }, []);
+
+  useEffect(() => {
     if (ref.current) {
       ref.current.style.height = 'auto';
       ref.current.style.height = `${Math.min(ref.current.scrollHeight, 100)}px`;
@@ -29,12 +33,13 @@ export default function ChatInput({ onSend, disabled = false }: Props) {
   return (
     <div style={{
       display: 'flex',
-      alignItems: 'flex-end',
+      alignItems: 'center',
       gap: 10,
       background: 'white',
-      border: '1px solid #ddd',
+      border: '1px solid #e2e8f0',
       borderRadius: 10,
       padding: '6px 6px 6px 14px',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       <textarea
         ref={ref}
@@ -54,8 +59,9 @@ export default function ChatInput({ onSend, disabled = false }: Props) {
           fontFamily: 'inherit',
           minHeight: 20,
           maxHeight: 100,
-          lineHeight: 1.4,
+          lineHeight: 1.5,
           background: 'transparent',
+          color: '#1e293b',
         }}
       />
       <button
@@ -64,8 +70,8 @@ export default function ChatInput({ onSend, disabled = false }: Props) {
         style={{
           padding: '8px 16px',
           borderRadius: 8,
-          background: canSend ? '#0051a2' : '#e0e0e0',
-          color: canSend ? 'white' : '#999',
+          background: canSend ? '#3b82f6' : '#e2e8f0',
+          color: canSend ? 'white' : '#94a3b8',
           border: 'none',
           cursor: canSend ? 'pointer' : 'not-allowed',
           fontSize: 13,

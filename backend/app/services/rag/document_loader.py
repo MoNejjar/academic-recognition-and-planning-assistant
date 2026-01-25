@@ -2,7 +2,6 @@
 
 import logging
 import re
-from functools import cached_property
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -22,13 +21,12 @@ class DocumentChunk(BaseModel):
     page_number: int | None
     chunk_index: int
 
-    @cached_property
+    @property
     def id(self) -> str:
         page = f"_p{self.page_number}" if self.page_number else ""
         return f"{self.document_name}{page}_c{self.chunk_index}"
 
-    class Config:
-        frozen = True
+    model_config = {"frozen": True}
 
 
 def load_all_documents(sources_path: Path | None = None) -> list[DocumentChunk]:
@@ -110,7 +108,7 @@ def _chunk_text(text: str, doc_name: str, page: int | None) -> list[DocumentChun
     """Split text into overlapping chunks at sentence boundaries."""
     text = re.sub(r"\s+", " ", text).strip()
     if len(text) <= CHUNK_SIZE:
-        return [DocumentChunk(text, doc_name, page, 0)]
+        return [DocumentChunk(text=text, document_name=doc_name, page_number=page, chunk_index=0)]
 
     chunks: list[DocumentChunk] = []
     sentences = re.split(r"(?<=[.!?])\s+", text)
@@ -125,7 +123,7 @@ def _chunk_text(text: str, doc_name: str, page: int | None) -> list[DocumentChun
             continue
 
         if current:
-            chunks.append(DocumentChunk(current, doc_name, page, chunk_index))
+            chunks.append(DocumentChunk(text=current, document_name=doc_name, page_number=page, chunk_index=chunk_index))
             chunk_index += 1
             overlap = current[-CHUNK_OVERLAP:] if len(current) >= CHUNK_OVERLAP else current
             current = f"{overlap} {sentence}".strip()
@@ -134,6 +132,6 @@ def _chunk_text(text: str, doc_name: str, page: int | None) -> list[DocumentChun
             current = sentence
 
     if current.strip():
-        chunks.append(DocumentChunk(current.strip(), doc_name, page, chunk_index))
+        chunks.append(DocumentChunk(text=current.strip(), document_name=doc_name, page_number=page, chunk_index=chunk_index))
 
     return chunks

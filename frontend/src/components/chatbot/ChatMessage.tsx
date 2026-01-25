@@ -40,16 +40,16 @@ export default function ChatMessage({ message }: Props): JSX.Element {
       gap: 12,
       padding: 12,
       marginBottom: 8,
-      background: '#f5f5f5',
+      background: isUser ? '#eff6ff' : '#f1f5f9',
       borderRadius: 12,
       flexDirection: isUser ? 'row-reverse' : 'row',
+      border: isUser ? '1px solid #dbeafe' : '1px solid #e2e8f0',
     }}>
-      {/* Avatar */}
       <div style={{
         width: 36,
         height: 36,
         borderRadius: 8,
-        background: isUser ? '#0051a2' : '#e0e0e0',
+        background: isUser ? '#3b82f6' : '#e2e8f0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -59,15 +59,15 @@ export default function ChatMessage({ message }: Props): JSX.Element {
         {isUser ? '👤' : '🎓'}
       </div>
 
-      {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            fontSize: 15,
+            fontSize: 14,
             lineHeight: 1.6,
-            color: '#333',
+            color: '#1e293b',
             wordWrap: 'break-word',
             overflowWrap: 'break-word',
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           }}
           dangerouslySetInnerHTML={{ __html: formatContent(message.content, isUser) }}
         />

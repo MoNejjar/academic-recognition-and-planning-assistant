@@ -18,7 +18,7 @@ from app.utils.rate_limiter import RateLimitExceeded, get_chat_rate_limiter
 router = APIRouter()
 
 # Trusted proxy IPs (add your load balancer IPs here)
-TRUSTED_PROXIES: set[str] = set(os.environ.get("TRUSTED_PROXIES", "127.0.0.1").split(","))
+TRUSTED_PROXIES: set[str] = {ip.strip() for ip in os.environ.get("TRUSTED_PROXIES", "127.0.0.1").split(",")}
 
 
 def get_chat_service(db: Session = Depends(get_db)) -> ChatService:
@@ -29,12 +29,13 @@ def get_client_ip(request: Request) -> str:
     """Extract client IP, only trusting X-Forwarded-For from known proxies."""
     client_ip = request.client.host if request.client else "unknown"
 
-    # Only trust forwarded headers if request comes from trusted proxy
-    if client_ip in TRUSTED_PROXIES:
-        if forwarded := request.headers.get("X-Forwarded-For"):
-            return forwarded.split(",")[0].strip()
-        if real_ip := request.headers.get("X-Real-IP"):
-            return real_ip
+    if client_ip not in TRUSTED_PROXIES:
+        return client_ip
+
+    if forwarded := request.headers.get("X-Forwarded-For"):
+        return forwarded.split(",")[0].strip()
+    if real_ip := request.headers.get("X-Real-IP"):
+        return real_ip
 
     return client_ip
 

@@ -447,6 +447,7 @@ class OllamaClient(BaseLLMClient):
                 "options": options
             }
         )
+        response.raise_for_status()
         data = response.json()
         
         return {
@@ -474,8 +475,9 @@ class OllamaClient(BaseLLMClient):
                 "options": options
             }
         )
+        response.raise_for_status()
         data = response.json()
-        
+
         total_tokens = sum(self.count_tokens(m["content"]) for m in messages)
         total_tokens += self.count_tokens(data["message"]["content"])
         
@@ -521,6 +523,7 @@ class OllamaClient(BaseLLMClient):
                 "options": options
             }
         )
+        response.raise_for_status()
         data = response.json()
         
         return {

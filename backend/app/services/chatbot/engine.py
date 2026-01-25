@@ -126,21 +126,17 @@ class ChatService:
     def _error_chunk_for_exception(self, error_type: str) -> StreamChunk:
         """Map LLM provider exception types to user-friendly error messages."""
         ERROR_MESSAGES = {
-            "AuthenticationError": "Authentication failed. Please check your API key.",
-            "RateLimitError": "AI service rate limit exceeded. Please wait a moment.",
-            "APIConnectionError": "Could not connect to AI service. Please try again later.",
-            "ConnectionError": "Could not connect to AI service. Please try again later.",
-            "Timeout": "Request timed out. Please try again.",
-            "TimeoutError": "Request timed out. Please try again.",
+            "AuthenticationError": ("Authentication failed. Please check your API key.", None),
+            "RateLimitError": ("AI service rate limit exceeded. Please wait a moment.", 60.0),
+            "APIConnectionError": ("Could not connect to AI service. Please try again later.", None),
+            "ConnectionError": ("Could not connect to AI service. Please try again later.", None),
+            "Timeout": ("Request timed out. Please try again.", None),
+            "TimeoutError": ("Request timed out. Please try again.", None),
         }
 
-        for key, message in ERROR_MESSAGES.items():
+        for key, (message, retry_after) in ERROR_MESSAGES.items():
             if key in error_type:
-                return StreamChunk(
-                    type="error",
-                    content=message,
-                    retry_after=60.0 if key == "RateLimitError" else None,
-                )
+                return StreamChunk(type="error", content=message, retry_after=retry_after)
 
         return StreamChunk(
             type="error",
@@ -185,7 +181,8 @@ class ChatService:
                 if m.role in ("user", "assistant")
             ]
             messages.append({"role": "user", "content": message})
-            self.repo.add_message(session_id, "user", message)
+            if not self.repo.add_message(session_id, "user", message):
+                logger.warning("Failed to save user message for session %s", session_id)
 
             # Stream from LLM (run sync client in thread pool to avoid blocking)
             full_response = ""
@@ -208,7 +205,7 @@ class ChatService:
             # Run sync call in thread pool to avoid blocking event loop
             stream = await asyncio.to_thread(create_stream)
 
-            # Process stream chunks (sync iteration in thread)
+            # Process stream chunks (sync iteration in thread, then yield)
             def iterate_stream():
                 chunks = []
                 for chunk in stream:
@@ -224,7 +221,8 @@ class ChatService:
             # Sources & save
             sources = self._to_sources(context_results)
             yield StreamChunk(type="sources", content=[s.model_dump() for s in sources], chat_id=session_id)
-            self.repo.add_message(session_id, "assistant", full_response, sources)
+            if not self.repo.add_message(session_id, "assistant", full_response, sources):
+                logger.error("Failed to save assistant response for session %s", session_id)
             yield StreamChunk(type="done", chat_id=session_id)
 
         except ValueError as e:

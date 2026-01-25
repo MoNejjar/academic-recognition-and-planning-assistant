@@ -92,22 +92,40 @@ export function useChat(): UseChatReturn {
             chatIdRef.current = data.chat_id;
           }
 
-          if (data.type === 'text' && typeof data.content === 'string') {
-            streamingTextRef.current += data.content;
-            updateLastAssistant({ content: streamingTextRef.current });
-          } else if (data.type === 'sources' && Array.isArray(data.content)) {
-            sources = data.content as SourceReference[];
-          } else if (data.type === 'done') {
-            updateLastAssistant({ sources });
-          } else if (data.type === 'error' && typeof data.content === 'string') {
-            setError(data.content);
-            updateLastAssistant({ content: `Fehler: ${data.content}` });
+          switch (data.type) {
+            case 'text':
+              if (typeof data.content === 'string') {
+                streamingTextRef.current += data.content;
+                updateLastAssistant({ content: streamingTextRef.current });
+              }
+              break;
+            case 'sources':
+              if (Array.isArray(data.content)) {
+                sources = data.content as SourceReference[];
+              }
+              break;
+            case 'done':
+              updateLastAssistant({ sources });
+              break;
+            case 'error':
+              if (typeof data.content === 'string') {
+                setError(data.content);
+                updateLastAssistant({ content: `Fehler: ${data.content}` });
+              }
+              break;
           }
         }
       }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return;
-      const msg = e instanceof Error ? e.message : 'Ein unbekannter Fehler ist aufgetreten';
+
+      let msg = 'Ein unbekannter Fehler ist aufgetreten';
+      if (e instanceof TypeError && e.message.includes('fetch')) {
+        msg = 'Netzwerkfehler: Server nicht erreichbar';
+      } else if (e instanceof Error) {
+        msg = e.message;
+      }
+
       setError(msg);
       updateLastAssistant({ content: `Fehler: ${msg}` });
     } finally {

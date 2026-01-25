@@ -13,10 +13,10 @@ export default function SourcesDisplay({ sources }: { sources: SourceReference[]
   if (!sources?.length) return null;
 
   return (
-    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <div style={{
         fontSize: 11,
-        color: '#888',
+        color: '#94a3b8',
         marginBottom: 12,
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
@@ -33,7 +33,7 @@ export default function SourcesDisplay({ sources }: { sources: SourceReference[]
             <div
               key={i}
               style={{
-                borderLeft: '3px solid #0051a2',
+                borderLeft: '3px solid #3b82f6',
                 paddingLeft: 12,
                 background: isExpanded ? '#f8fafc' : 'transparent',
                 borderRadius: isExpanded ? '0 8px 8px 0' : 0,
@@ -61,10 +61,10 @@ export default function SourcesDisplay({ sources }: { sources: SourceReference[]
                   <span style={{
                     fontSize: 13,
                     fontWeight: 600,
-                    color: '#0051a2',
+                    color: '#3b82f6',
                   }}>
                     {s.document}
-                    {s.page && <span style={{ fontWeight: 400, color: '#666' }}> · p. {s.page}</span>}
+                    {s.page && <span style={{ fontWeight: 400, color: '#64748b' }}> · p. {s.page}</span>}
                   </span>
                   <span style={{
                     fontSize: 10,
@@ -78,7 +78,7 @@ export default function SourcesDisplay({ sources }: { sources: SourceReference[]
                 {!isExpanded && (
                   <div style={{
                     fontSize: 12,
-                    color: '#666',
+                    color: '#64748b',
                     fontStyle: 'italic',
                     lineHeight: 1.4,
                   }}>
@@ -109,7 +109,7 @@ export default function SourcesDisplay({ sources }: { sources: SourceReference[]
                     <div style={{
                       fontSize: 13,
                       lineHeight: 1.7,
-                      color: '#444',
+                      color: '#475569',
                       fontStyle: 'italic',
                       paddingLeft: 16,
                       paddingRight: 8,
@@ -132,7 +132,7 @@ export default function SourcesDisplay({ sources }: { sources: SourceReference[]
                         gap: 4,
                         marginTop: 8,
                         fontSize: 12,
-                        color: '#0051a2',
+                        color: '#3b82f6',
                         textDecoration: 'none',
                         fontWeight: 500,
                       }}

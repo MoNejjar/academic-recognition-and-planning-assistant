@@ -62,10 +62,12 @@ SOCIAL_ENGINEERING_PATTERNS = re.compile(
 )
 
 # Code generation requests (off-topic for academic advisor)
+# More specific patterns to avoid blocking legitimate academic questions
 CODE_GENERATION_PATTERNS = re.compile(
-    r"\b(python|javascript|java|code|script|function|algorithm|"
-    r"implement|programming|bubble.?sort|hello.?world|"
-    r"write.*(code|script|program|function))\b",
+    r"(write|generate|create|implement|code).*(python|javascript|java|script|program|function|algorithm)|"
+    r"\b(bubble.?sort|hello.?world|fibonacci|quicksort)\b|"
+    r"(debug|fix).*(code|script|error)|"
+    r"how to (code|program|implement)",
     re.IGNORECASE,
 )
 
@@ -91,19 +93,12 @@ def check_guardrails(message: str) -> tuple[bool, str | None]:
     3. Code generation requests
     4. Off-topic content detection
     """
-    # Layer 1: Prompt injection attempts
-    if INJECTION_PATTERNS.search(message):
+    # Security checks (highest priority - same response for all)
+    security_patterns = [INJECTION_PATTERNS, SOCIAL_ENGINEERING_PATTERNS, CODE_GENERATION_PATTERNS]
+    if any(pattern.search(message) for pattern in security_patterns):
         return False, INJECTION_RESPONSE
 
-    # Layer 2: Social engineering / authority claims
-    if SOCIAL_ENGINEERING_PATTERNS.search(message):
-        return False, INJECTION_RESPONSE
-
-    # Layer 3: Code generation requests
-    if CODE_GENERATION_PATTERNS.search(message):
-        return False, INJECTION_RESPONSE
-
-    # Layer 4: General off-topic content
+    # Off-topic content (lower priority - different response)
     if OFF_TOPIC_WORDS.search(message) or OFF_TOPIC_COMMANDS.search(message):
         return False, OFF_TOPIC_RESPONSE
 

@@ -23,6 +23,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("app.main")
 
+# Startup status tracking for health checks
+_startup_errors: list[str] = []
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -46,16 +49,20 @@ async def lifespan(_: FastAPI):
             logger.info("Loaded %s TUM modules from cache", inserted)
         else:
             logger.info("No TUM modules loaded from cache (inserted=%r)", inserted)
-    except Exception:  # pragma: no cover - defensive logging only
+    except Exception as e:
+        error_msg = f"TUM module loading failed: {e}"
         logger.exception("Failed to load TUM modules during startup")
+        _startup_errors.append(error_msg)
     finally:
         db.close()
 
     # Initialize RAG vector store
     try:
         initialize_vector_store_if_needed()
-    except Exception:
+    except Exception as e:
+        error_msg = f"RAG initialization failed: {e}"
         logger.exception("Failed to initialize RAG vector store during startup")
+        _startup_errors.append(error_msg)
 
     yield
 
@@ -84,6 +91,11 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    if _startup_errors:
+        return {
+            "status": "degraded",
+            "errors": _startup_errors,
+        }
     return {"status": "healthy"}
 
 

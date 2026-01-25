@@ -23,11 +23,25 @@ export async function getChatbotHealth(): Promise<{
   document_count: number;
   error?: string;
 }> {
-  const response = await fetch(`${API_BASE_URL}/api/chatbot/health`);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/chatbot/health`);
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      return {
+        status: 'unhealthy',
+        rag_initialized: false,
+        document_count: 0,
+        error: `HTTP error: ${response.status}`,
+      };
+    }
+
+    return response.json();
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      rag_initialized: false,
+      document_count: 0,
+      error: error instanceof Error ? error.message : 'Network error',
+    };
   }
-
-  return response.json();
 }

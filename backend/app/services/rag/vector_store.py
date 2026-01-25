@@ -92,7 +92,9 @@ class VectorStore:
             self.client.delete_collection(COLLECTION_NAME)
             self._collection = None
         except ValueError:
-            pass  # Collection doesn't exist
+            pass  # Collection doesn't exist - expected
+        except Exception as e:
+            logger.warning("Failed to delete existing collection, continuing: %s", e)
 
         # Add documents in batches
         batch_size = 100
