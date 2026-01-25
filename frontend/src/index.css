@@ -1,24 +1,56 @@
-/* Global styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* TUM Corporate Design - Light Mode Only */
 :root {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #1e293b;
-  background-color: #f8fafc;
+  /* TUM Primary Colors */
+  --tum-blue: #0065BD;
+  --tum-white: #FFFFFF;
+  --tum-black: #000000;
+
+  /* TUM Secondary Blues */
+  --tum-blue-dark: #005293;
+  --tum-blue-darker: #003359;
+
+  /* TUM Grays */
+  --tum-gray-80: #333333;
+  --tum-gray-50: #808080;
+  --tum-gray-20: #CCCCCC;
+  --tum-gray-light: #DAD7CB;
+
+  /* TUM Accent Colors */
+  --tum-orange: #E37222;
+  --tum-green: #A2AD00;
+  --tum-lightblue-1: #98C6EA;
+  --tum-lightblue-2: #64A0C8;
 }
 
+/* Base Styles */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  border-color: var(--tum-gray-20);
+}
+
+html {
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
 }
 
 body {
-  min-height: 100vh;
+  background-color: var(--tum-white);
+  color: var(--tum-black);
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  line-height: 1.5;
+  margin: 0;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* TUM Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  font-weight: 700;
+  color: var(--tum-gray-80);
 }

@@ -8,13 +8,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import course_matching, reporting, chatbot, analytics
 
 from app.core.database import SessionLocal, init_db
 from app.services.storage.data_cache import load_tum_modules_from_cache
 from app.services.rag.vector_store import initialize_vector_store_if_needed
-
-# Import routers
-from app.routes import course_matching, reporting, chatbot
 
 logging.basicConfig(
     level=logging.INFO,
@@ -103,3 +101,4 @@ async def health_check():
 app.include_router(course_matching.router, prefix="/api/course-matching", tags=["PDF Extraction"])
 app.include_router(reporting.router, prefix="/api/reports", tags=["Reporting"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
