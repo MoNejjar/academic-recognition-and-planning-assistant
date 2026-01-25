@@ -1,7 +1,45 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ChatMessage, SourceReference, ChatStreamChunk } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const STORAGE_KEY = 'arip_chat_state';
+
+interface ChatState {
+  messages: ChatMessage[];
+  chatId: string | null;
+}
+
+function loadFromStorage(): ChatState {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        messages: parsed.messages || [],
+        chatId: parsed.chatId || null,
+      };
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return { messages: [], chatId: null };
+}
+
+function saveToStorage(state: ChatState): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Ignore storage errors (quota exceeded, etc.)
+  }
+}
+
+function clearStorage(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Ignore
+  }
+}
 
 interface UseChatReturn {
   messages: ChatMessage[];
@@ -13,13 +51,20 @@ interface UseChatReturn {
 }
 
 export function useChat(): UseChatReturn {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Initialize from localStorage
+  const initialState = loadFromStorage();
+  const [messages, setMessages] = useState<ChatMessage[]>(initialState.messages);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const chatIdRef = useRef<string | null>(null);
+  const chatIdRef = useRef<string | null>(initialState.chatId);
   const abortRef = useRef<AbortController | null>(null);
   const streamingTextRef = useRef('');
+
+  // Save to localStorage whenever messages or chatId changes
+  useEffect(() => {
+    saveToStorage({ messages, chatId: chatIdRef.current });
+  }, [messages]);
 
   const updateLastAssistant = useCallback((update: Partial<ChatMessage>) => {
     setMessages((prev) => {
@@ -90,6 +135,8 @@ export function useChat(): UseChatReturn {
 
           if (data.chat_id && !chatIdRef.current) {
             chatIdRef.current = data.chat_id;
+            // Save immediately when we get a chat_id
+            saveToStorage({ messages, chatId: chatIdRef.current });
           }
 
           switch (data.type) {
@@ -110,7 +157,7 @@ export function useChat(): UseChatReturn {
             case 'error':
               if (typeof data.content === 'string') {
                 setError(data.content);
-                updateLastAssistant({ content: `Fehler: ${data.content}` });
+                updateLastAssistant({ content: `Error: ${data.content}` });
               }
               break;
           }
@@ -119,19 +166,19 @@ export function useChat(): UseChatReturn {
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return;
 
-      let msg = 'Ein unbekannter Fehler ist aufgetreten';
+      let msg = 'An unknown error occurred';
       if (e instanceof TypeError && e.message.includes('fetch')) {
-        msg = 'Netzwerkfehler: Server nicht erreichbar';
+        msg = 'Network error: Server not reachable';
       } else if (e instanceof Error) {
         msg = e.message;
       }
 
       setError(msg);
-      updateLastAssistant({ content: `Fehler: ${msg}` });
+      updateLastAssistant({ content: `Error: ${msg}` });
     } finally {
       setIsStreaming(false);
     }
-  }, [isStreaming, updateLastAssistant]);
+  }, [isStreaming, updateLastAssistant, messages]);
 
   const clearChat = useCallback(() => {
     abortRef.current?.abort();
@@ -139,6 +186,7 @@ export function useChat(): UseChatReturn {
     chatIdRef.current = null;
     setError(null);
     setIsStreaming(false);
+    clearStorage();
   }, []);
 
   return {

@@ -2,150 +2,119 @@ import { useState } from 'react';
 import type { SourceReference } from '../../types';
 import { getDocumentUrl } from '../../services/chatbot';
 
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).trim() + '...';
-}
-
 export default function SourcesDisplay({ sources }: { sources: SourceReference[] }) {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   if (!sources?.length) return null;
 
   return (
-    <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <div style={{
-        fontSize: 11,
-        color: '#94a3b8',
-        marginBottom: 12,
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
-        fontWeight: 600,
-      }}>
-        Sources ({sources.length})
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {sources.map((s, i) => {
-          const isExpanded = expandedIndex === i;
-          const preview = truncateText(s.chunk_text, 120);
+    <div style={{
+      marginTop: 12,
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    }}>
+      {/* Collapsible Header */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '8px 12px',
+          background: '#f1f5f9',
+          border: '1px solid #e2e8f0',
+          borderRadius: 8,
+          cursor: 'pointer',
+          fontSize: 12,
+          color: '#64748b',
+          fontWeight: 600,
+          transition: 'all 0.15s',
+          width: '100%',
+          textAlign: 'left',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#e2e8f0';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = '#f1f5f9';
+        }}
+      >
+        <span style={{
+          fontSize: 10,
+          transform: isOpen ? 'rotate(90deg)' : 'rotate(0)',
+          transition: 'transform 0.15s',
+          display: 'inline-block',
+        }}>
+          ▶
+        </span>
+        <span>Sources ({sources.length})</span>
+      </button>
 
-          return (
+      {/* Expanded Content */}
+      {isOpen && (
+        <div style={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}>
+          {sources.map((s, i) => (
             <div
               key={i}
               style={{
                 borderLeft: '3px solid #3b82f6',
                 paddingLeft: 12,
-                background: isExpanded ? '#f8fafc' : 'transparent',
-                borderRadius: isExpanded ? '0 8px 8px 0' : 0,
-                transition: 'background 0.2s',
+                paddingTop: 4,
+                paddingBottom: 4,
               }}
             >
-              <button
-                onClick={() => setExpandedIndex(isExpanded ? null : i)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  background: 'none',
-                  border: 'none',
-                  padding: '8px 0',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 4,
-                }}>
-                  <span style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#3b82f6',
-                  }}>
-                    {s.document}
-                    {s.page && <span style={{ fontWeight: 400, color: '#64748b' }}> · p. {s.page}</span>}
-                  </span>
-                  <span style={{
-                    fontSize: 10,
-                    color: '#999',
-                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)',
-                    transition: 'transform 0.2s',
-                  }}>
-                    ▼
-                  </span>
-                </div>
-                {!isExpanded && (
-                  <div style={{
-                    fontSize: 12,
-                    color: '#64748b',
-                    fontStyle: 'italic',
-                    lineHeight: 1.4,
-                  }}>
-                    "{preview}"
-                  </div>
-                )}
-              </button>
+              <div style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#3b82f6',
+                marginBottom: 6,
+              }}>
+                {s.document}
+                {s.page && <span style={{ fontWeight: 400, color: '#64748b' }}> · p. {s.page}</span>}
+              </div>
 
-              {isExpanded && (
-                <div style={{ paddingBottom: 12 }}>
-                  <blockquote style={{
-                    margin: 0,
-                    padding: '12px 16px',
-                    background: 'white',
-                    borderRadius: 8,
-                    border: '1px solid #e5e7eb',
-                    position: 'relative',
-                  }}>
-                    <span style={{
-                      position: 'absolute',
-                      top: 8,
-                      left: 12,
-                      fontSize: 24,
-                      color: '#ddd',
-                      fontFamily: 'Georgia, serif',
-                      lineHeight: 1,
-                    }}>"</span>
-                    <div style={{
-                      fontSize: 13,
-                      lineHeight: 1.7,
-                      color: '#475569',
-                      fontStyle: 'italic',
-                      paddingLeft: 16,
-                      paddingRight: 8,
-                      maxHeight: 200,
-                      overflowY: 'auto',
-                      whiteSpace: 'pre-wrap',
-                      wordWrap: 'break-word',
-                    }}>
-                      {s.chunk_text}
-                    </div>
-                  </blockquote>
-                  {s.url && (
-                    <a
-                      href={getDocumentUrl(s.url)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        marginTop: 8,
-                        fontSize: 12,
-                        color: '#3b82f6',
-                        textDecoration: 'none',
-                        fontWeight: 500,
-                      }}
-                    >
-                      View original document →
-                    </a>
-                  )}
-                </div>
+              <div style={{
+                fontSize: 12,
+                lineHeight: 1.6,
+                color: '#475569',
+                fontStyle: 'italic',
+                background: '#f8fafc',
+                padding: '10px 12px',
+                borderRadius: 6,
+                border: '1px solid #e5e7eb',
+                maxHeight: 120,
+                overflowY: 'auto',
+              }}>
+                "{s.chunk_text}"
+              </div>
+
+              {s.url && (
+                <a
+                  href={getDocumentUrl(s.url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    marginTop: 6,
+                    fontSize: 11,
+                    color: '#3b82f6',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  View document →
+                </a>
               )}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
