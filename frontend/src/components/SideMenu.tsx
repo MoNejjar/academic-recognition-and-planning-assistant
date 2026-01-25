@@ -1,121 +1,144 @@
-// src/components/SideMenu.tsx
-import { Link, useLocation } from "react-router-dom";
 
-export default function SideMenu() {
+import { useLocation, useNavigate } from 'react-router-dom';
+import { User, Upload, BookOpen, CheckCircle2, LogOut } from 'lucide-react';
+
+
+interface SideMenuProps {
+  progress: {
+    personalData: boolean;
+    mapping: boolean;
+    catalogue: boolean;
+    review: boolean;
+  };
+}
+
+export default function SideMenu({ progress }: SideMenuProps) {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const isActive = (path: string) => location.pathname === path;
-
-  const getStepNumber = (path: string) => {
-    if (path === "/") return 0;
-    if (path === "/mapping") return 1;
-    if (path === "/catalogue") return 2;
-    if (path === "/review") return 3;
-    return -1;
+  // Helper to check if a step is accessible (previous step must be done)
+  const isAccessible = (step: string) => {
+    switch (step) {
+      case '': // Personal Data is always accessible
+        return true;
+      case 'mapping':
+        return progress.personalData;
+      case 'catalogue':
+        return progress.mapping;
+      case 'review':
+        return progress.catalogue;
+      default:
+        return false;
+    }
   };
 
-  const currentStep = getStepNumber(location.pathname);
+  // Helper to determine active state
+  const isActive = (path: string) => {
+    // Handle root path specially
+    if (path === '' && location.pathname === '/student') return true;
 
-  const linkStyle = (path: string): React.CSSProperties => {
-    const stepNum = getStepNumber(path);
-    const isPast = stepNum < currentStep;
-    const isCurrent = isActive(path);
-
-    return {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "12px 16px",
-      marginBottom: 8,
-      borderRadius: 10,
-      textDecoration: "none",
-      color: isCurrent ? "#3b82f6" : isPast ? "#22c55e" : "#9ca3af",
-      background: isCurrent ? "#eff6ff" : "transparent",
-      fontWeight: isCurrent ? 600 : 500,
-      transition: "all 0.2s",
-    };
+    // Handle sub-paths
+    return location.pathname.startsWith(`/student/${path}`) && path !== '';
   };
 
-  const stepCircleStyle = (path: string): React.CSSProperties => {
-    const stepNum = getStepNumber(path);
-    const isPast = stepNum < currentStep;
-    const isCurrent = isActive(path);
-
-    return {
-      width: 28,
-      height: 28,
-      borderRadius: "50%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 13,
-      fontWeight: 600,
-      background: isPast ? "#22c55e" : isCurrent ? "#3b82f6" : "#e5e7eb",
-      color: isPast || isCurrent ? "#fff" : "#9ca3af",
-    };
-  };
+  const menuItems = [
+    { id: '', label: 'Personal Data', icon: User },
+    { id: 'mapping', label: 'Mapping Upload', icon: Upload },
+    { id: 'catalogue', label: 'Catalogue Upload', icon: BookOpen },
+    { id: 'review', label: 'Final Review', icon: CheckCircle2 },
+  ];
 
   return (
     <div style={{
       width: 260,
-      minWidth: 260,
-      flexShrink: 0,
-      background: "linear-gradient(180deg, #f8fafc, #f1f5f9)",
-      padding: 24,
-      borderRight: "1px solid #e2e8f0",
-      fontFamily: "'Inter', sans-serif",
-      display: "flex",
-      flexDirection: "column",
+      backgroundColor: '#f8fafc', // Light background
+      height: '100vh',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      color: '#1e293b',
+      display: 'flex',
+      flexDirection: 'column',
+      zIndex: 50,
+      borderRight: '1px solid #e2e8f0'
     }}>
-      <div style={{ marginBottom: 32 }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 700,
-          color: "#1e293b",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}>
-          🎓 TUM Recognition
-        </h2>
+      {/* Header */}
+      <div style={{ padding: '24px 24px 12px', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px' }}>
+          <span style={{ color: '#0065BD' }}>TUM</span> Assistant
+        </div>
+        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Student Portal</div>
       </div>
 
-      <div style={{
-        fontSize: 11,
-        color: "#94a3b8",
-        textTransform: "uppercase",
-        letterSpacing: 1,
-        marginBottom: 16,
-        fontWeight: 600,
-      }}>
-        Progress
+      {/* Menu Items */}
+      <div style={{ padding: 16, flex: 1 }}>
+        <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#64748B', fontWeight: 600, letterSpacing: '0.5px', marginBottom: 12, paddingLeft: 12 }}>
+          Application Steps
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {menuItems.map((item) => {
+            const accessible = isAccessible(item.id);
+            const active = isActive(item.id);
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => accessible && navigate(item.id ? `/student/${item.id}` : '/student')}
+                disabled={!accessible}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 16px',
+                  borderRadius: 8,
+                  width: '100%',
+                  textAlign: 'left',
+                  border: 'none',
+                  cursor: accessible ? 'pointer' : 'not-allowed',
+                  backgroundColor: active ? '#0065BD' : 'transparent', // TUM Blue for active
+                  color: active ? 'white' : accessible ? '#1e293b' : '#94a3b8',
+                  transition: 'all 0.2s',
+                  opacity: accessible ? 1 : 0.5
+                }}
+              >
+                <Icon size={18} />
+                <span style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</span>
+                {!accessible && (
+                  <div style={{ marginLeft: 'auto', fontSize: 10, color: '#94a3b8' }}>🔒</div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <nav>
-        <Link to="/" style={linkStyle("/")}>
-          <span style={stepCircleStyle("/")}>
-            {currentStep > 0 ? "✓" : "1"}
-          </span>
-          Personal Data
-        </Link>
-        <Link to="/mapping" style={linkStyle("/mapping")}>
-          <span style={stepCircleStyle("/mapping")}>
-            {currentStep > 1 ? "✓" : "2"}
-          </span>
-          Mapping Table
-        </Link>
-        <Link to="/catalogue" style={linkStyle("/catalogue")}>
-          <span style={stepCircleStyle("/catalogue")}>
-            {currentStep > 2 ? "✓" : "3"}
-          </span>
-          Catalogues
-        </Link>
-        <Link to="/review" style={linkStyle("/review")}>
-          <span style={stepCircleStyle("/review")}>4</span>
-          Review & Submit
-        </Link>
-      </nav>
-
+      {/* Footer */}
+      <div style={{ padding: 16, borderTop: '1px solid #e2e8f0' }}>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '12px 16px',
+            borderRadius: 8,
+            width: '100%',
+            textAlign: 'left',
+            border: 'none',
+            cursor: 'pointer',
+            color: '#64748b',
+            backgroundColor: 'transparent',
+            transition: 'color 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = '#1e293b'}
+          onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+        >
+          <LogOut size={18} />
+          <span style={{ fontSize: 14, fontWeight: 500 }}>Logout</span>
+        </button>
+      </div>
     </div>
   );
 }

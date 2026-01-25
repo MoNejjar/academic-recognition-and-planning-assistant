@@ -115,22 +115,41 @@ class OpenAIClient(BaseLLMClient):
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def chat(self, messages: List[Dict[str, str]], max_tokens: Optional[int] = None, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
         """Generate chat completion with automatic retry"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         await self._apply_rate_limit()
         
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            **kwargs
-        )
-        
-        return {
-            "message": response.choices[0].message.content,
-            "tokens_used": response.usage.total_tokens,
-            "model": self.model,
-            "finish_reason": response.choices[0].finish_reason
-        }
+        try:
+            # Build request kwargs, only include max_tokens/max_completion_tokens if provided
+            request_kwargs = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": temperature,
+                **kwargs
+            }
+            
+            # For newer models (GPT-5+), use max_completion_tokens; for older models use max_tokens
+            if max_tokens is not None:
+                # Try max_completion_tokens for newer models, fallback to max_tokens
+                if "gpt-5" in self.model or "o1" in self.model or "o3" in self.model:
+                    request_kwargs["max_completion_tokens"] = max_tokens
+                else:
+                    request_kwargs["max_tokens"] = max_tokens
+            
+            logger.info(f"OpenAI chat request: model={self.model}, messages_count={len(messages)}")
+            response = await self.client.chat.completions.create(**request_kwargs)
+            
+            logger.info(f"OpenAI chat response: tokens_used={response.usage.total_tokens}")
+            return {
+                "message": response.choices[0].message.content,
+                "tokens_used": response.usage.total_tokens,
+                "model": self.model,
+                "finish_reason": response.choices[0].finish_reason
+            }
+        except Exception as e:
+            logger.error(f"OpenAI chat error: {type(e).__name__}: {str(e)}")
+            raise
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def chat_with_vision(
