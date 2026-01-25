@@ -13,7 +13,7 @@ COPY pyproject.toml .
 # Copy Readme
 COPY README.md .
 
-# Install Python dependencies (including chatbot with chromadb, sentence-transformers)
+# Install Python dependencies (including chatbot with chromadb)
 RUN pip install --no-cache-dir ".[extraction,llm,chatbot]"
 
 # Pre-download and initialize ChromaDB embedding model during build
