@@ -50,7 +50,11 @@ extraction = [
     "pdfplumber>=0.10.0",
     "pillow>=10.0.0",
 ]
-
+chatbot = [
+    "groq>=0.11.0",
+    "chromadb>=0.4.0",
+    "pypdf>=4.0.0",
+]
 
 [build-system]
 requires = ["hatchling"]

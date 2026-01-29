@@ -146,3 +146,30 @@ export interface TUMModuleLookup {
   module_outcome: string | null;
   message: string | null;
 }
+
+// ============================================
+// Chatbot Types
+// ============================================
+
+export interface SourceReference {
+  document: string;
+  page: number | null;
+  chunk_text: string;
+  url: string | null;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp?: string;
+  sources?: SourceReference[];
+}
+
+export type ChatChunkType = 'text' | 'sources' | 'done' | 'error';
+
+export interface ChatStreamChunk {
+  type: ChatChunkType;
+  content?: string | SourceReference[];
+  chat_id?: string;
+  retry_after?: number;
+}

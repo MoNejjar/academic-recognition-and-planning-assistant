@@ -29,6 +29,8 @@ logs/
 # Database
 *.db
 *.sqlite
+*.sqlite3
+backend/data/chroma_db/
 
 # Uploads
 uploads/
@@ -37,6 +39,7 @@ uploads/
 # Build outputs
 frontend/dist/
 backend/*.egg-info/
+*.tsbuildinfo
 
 # Coverage
 coverage/

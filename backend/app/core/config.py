@@ -5,10 +5,9 @@ Environment variables and settings
 """
 
 from typing import Optional
-from dotenv import load_dotenv
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
 
 class Settings(BaseSettings):
     """Application settings"""
@@ -30,15 +29,14 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: Optional[str] = None
     POSTGRES_DB: Optional[str] = None
     POSTGRES_PORT: int = 5432
-	
+
     # LLM settings
-    # Defaults to OpenAI gpt-4o, but can be overridden in .env:
-    #   LLM_PROVIDER=gemini, openrouter, ollama, groq
-    #   LLM_MODEL=gemini-2.5-flash, llava, etc.
-    # For PDF extraction, use vision-capable models (see pdf_extraction/README.md)
-    LLM_PROVIDER: str = "groq"  # Options: openai, gemini, groq, openrouter, ollama
+    # Provider-specific defaults are used if LLM_MODEL/CHATBOT_MODEL not set
+    # See llm_service/client.py PROVIDER_DEFAULTS for default models
+    LLM_PROVIDER: str = "openai"  # Options: openai, gemini, groq, openrouter, ollama
     LLM_API_KEY: Optional[str] = None
-    LLM_MODEL: str = "llama-3.3-70b-versatile"  # Default to vision-capable model
+    LLM_MODEL: Optional[str] = None  # If None, uses provider-specific default (e.g. gpt-4o for openai)
+    CHATBOT_MODEL: Optional[str] = None  # If None, uses provider-specific default (e.g. gpt-4o-mini for openai)
     LLM_BASE_URL: Optional[str] = None  # For Ollama: http://localhost:11434
     LLM_RATE_LIMIT_RPM: int = 60
     LLM_MAX_RETRIES: int = 3
@@ -53,9 +51,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-print("=" * 50)
-print("⚙️  Configuration loaded:")
-print(f"   LLM_PROVIDER: {settings.LLM_PROVIDER}")
-print(f"   LLM_API_KEY: {'✅ Set' if settings.LLM_API_KEY else '❌ NOT SET'}")
-print(f"   LLM_MODEL: {settings.LLM_MODEL}")
-print("=" * 50)

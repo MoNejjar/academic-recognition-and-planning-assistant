@@ -3,10 +3,17 @@ import axios from "axios";
 
 const API_URL = "http://127.0.0.1:8000";
 
+const STATUS_COLORS = {
+  success: { bg: "#e8f5e9", border: "#4CAF50" },
+  error: { bg: "#ffebee", border: "#f44336" },
+  loading: { bg: "#fff3e0", border: "#ff9800" },
+};
+
 export default function HealthCheck() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
   const [details, setDetails] = useState<any>(null);
+  const colors = STATUS_COLORS[status];
 
   const checkHealth = async () => {
     setStatus("loading");
@@ -35,9 +42,9 @@ export default function HealthCheck() {
       style={{
         position: "fixed",
         bottom: 16,
-        right: 16,
-        background: status === "success" ? "#e8f5e9" : status === "error" ? "#ffebee" : "#fff3e0",
-        border: `2px solid ${status === "success" ? "#4CAF50" : status === "error" ? "#f44336" : "#ff9800"}`,
+        left: 16,
+        background: colors.bg,
+        border: `2px solid ${colors.border}`,
         borderRadius: 8,
         padding: 12,
         maxWidth: 300,

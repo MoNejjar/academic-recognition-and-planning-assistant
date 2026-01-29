@@ -5,6 +5,7 @@ import StaffDashboard from "./pages/StaffDashboard";
 import Layout from "./components/layout/Layout";
 import { ErrorBoundary } from "./utils/debug";
 import HealthCheck from "./components/HealthCheck";
+import FloatingChat from "./components/chatbot/FloatingChat";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <HealthCheck />
+        <FloatingChat />
       </BrowserRouter>
     </ErrorBoundary>
   );
