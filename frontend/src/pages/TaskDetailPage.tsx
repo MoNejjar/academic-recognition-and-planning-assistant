@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle } from 'lucide-react';
-import { getTaskById, TaskItem } from '../data/taskManager';
+import { getTaskDetail, TaskItem } from '../data/taskManager';
 import ModuleCard from '../components/analytics/ModuleCard';
 import { TUM_COLORS } from '../styles/tumStyles';
 
@@ -20,7 +20,7 @@ export default function TaskDetailPage() {
     const loadTask = async () => {
         setLoading(true);
         try {
-            const foundTask = await getTaskById(taskId || '');
+            const foundTask = await getTaskDetail(taskId || '');
             setTask(foundTask || null);
         } catch (error) {
             console.error('Failed to load task:', error);
@@ -30,14 +30,15 @@ export default function TaskDetailPage() {
     };
 
     const handleStatusUpdate = async (newStatus: string) => {
-        if (!task || !task.submissionId || !task.tumModuleNr || !confirm(`Change status to ${newStatus}?`)) return;
+        if (!task || !confirm(`Change status to ${newStatus}?`)) return;
 
         setUpdating(true);
         try {
             const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
-            // Update individual module status, not entire submission
+            
+            // Use the tasks API endpoint to update status
             const response = await fetch(
-                `${API_URL}/api/submissions/submissions/${task.submissionId}/modules/${task.tumModuleNr}/status?status=${newStatus}`,
+                `${API_URL}/api/tasks/tasks/${task.id}/status?status=${newStatus}`,
                 { method: 'PATCH' }
             );
 
@@ -45,7 +46,7 @@ export default function TaskDetailPage() {
                 throw new Error('Failed to update status');
             }
 
-            alert(`Module ${task.tumModuleNr} status updated to ${newStatus}`);
+            alert(`Task status updated to ${newStatus}`);
             // Reload task
             await loadTask();
         } catch (error) {

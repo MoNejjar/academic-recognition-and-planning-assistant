@@ -21,7 +21,7 @@ from app.models.analytics_models import (
     TUMModuleInput, 
     SourceCourseInput
 )
-from app.services.storage.submission_service import SubmissionService
+from app.services.submission.submission_service import SubmissionService
 from app.services.analytics.analytics_service import AnalyticsService
 from app.utils.llm_utils import get_llm_client
 
@@ -217,56 +217,6 @@ async def get_submission_detail(
         )
 
 
-@router.patch("/submissions/{submission_id}/status")
-async def update_submission_status(
-    submission_id: str,
-    status: str,
-    db: Session = Depends(get_db)
-):
-    """
-    Update submission status.
-    
-    Valid statuses:
-    - pending: Initial state after submission
-    - in_review: Staff is reviewing the submission
-    - approved: Submission approved for credit recognition
-    - rejected: Submission rejected
-    """
-    valid_statuses = ["pending", "in_review", "approved", "rejected"]
-    
-    if status not in valid_statuses:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
-        )
-    
-    try:
-        submission_service = SubmissionService(db)
-        submission = submission_service.update_submission_status(submission_id, status)
-        
-        if not submission:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"Submission {submission_id} not found"
-            )
-        
-        logger.info(f"Updated submission {submission_id} to status: {status}")
-        
-        return {
-            "submission_id": submission_id,
-            "status": status,
-            "message": f"Status updated to {status}"
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Failed to update submission {submission_id}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to update status: {str(e)}"
-        )
-
-
 @router.patch("/submissions/{submission_id}/modules/{tum_module_nr}/status")
 async def update_module_status(
     submission_id: str,
@@ -294,6 +244,8 @@ async def update_module_status(
     
     try:
         submission_service = SubmissionService(db)
+        
+        # Update module status (this also updates the corresponding task)
         updated_module = submission_service.update_module_status(
             submission_id, 
             tum_module_nr, 
@@ -305,6 +257,10 @@ async def update_module_status(
                 status_code=404,
                 detail=f"Module {tum_module_nr} in submission {submission_id} not found"
             )
+        
+        # Also update the task status to keep them in sync
+        task_id = f"{submission_id}-{tum_module_nr}"
+        submission_service.update_task_status(task_id, status)
         
         logger.info(f"Updated module {tum_module_nr} in submission {submission_id} to status: {status}")
         

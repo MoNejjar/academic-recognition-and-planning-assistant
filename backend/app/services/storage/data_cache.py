@@ -9,7 +9,7 @@ from typing import Optional, Sequence
 
 from sqlalchemy.orm import Session
 
-from app.services.storage.repository import TUMCoursesRepository
+from app.repositories.tum_courses import TUMCoursesRepository
 
 logger = logging.getLogger(__name__)
 

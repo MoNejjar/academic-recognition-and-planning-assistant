@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import course_matching, reporting, chatbot, analytics, submissions
+from app.routes import course_matching, reporting, chatbot, analytics, submissions, tasks
 
 from app.core.database import SessionLocal, init_db
 from app.services.storage.data_cache import load_tum_modules_from_cache
@@ -103,3 +103,4 @@ app.include_router(reporting.router, prefix="/api/reports", tags=["Reporting"])
 app.include_router(chatbot.router, prefix="/api/chatbot", tags=["Chatbot"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(submissions.router, prefix="/api/submissions", tags=["Submissions"])
+app.include_router(tasks.router, prefix="/api/tasks", tags=["Tasks"])

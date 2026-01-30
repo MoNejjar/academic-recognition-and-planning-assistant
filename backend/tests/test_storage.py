@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.services.storage.data_cache import load_tum_modules_from_cache
 from app.services.storage.file_storage import FileStorage
-from app.services.storage.repository import DocumentRepository, TUMCoursesRepository
+from app.repositories.document import DocumentRepository
+from app.repositories.tum_courses import TUMCoursesRepository
 
 
 def test_file_storage_roundtrip(storage: FileStorage, tmp_path: Path):

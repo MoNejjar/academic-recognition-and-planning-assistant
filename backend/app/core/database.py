@@ -44,6 +44,6 @@ def init_db() -> None:
 	from app.models.document import Document  # noqa: F401
 	from app.models.tum_course import TUMCourse  # noqa: F401
 	from app.models.chat_history import ChatSession  # noqa: F401
-	from app.models.db_models import StudentSubmission, AnalyticsResult  # noqa: F401
+	from app.models.db_models import StudentSubmission, AnalyticsResult, Task  # noqa: F401
 
 	Base.metadata.create_all(bind=engine)

@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.pdf_extraction import ExtractionResult
 from app.models.course_info import CourseContentResult
-from app.services.storage.repository import DocumentRepository
+from app.repositories.document import DocumentRepository
 from app.services.storage.file_storage import FileStorage
 from app.services.pdf_extraction.mapping_table_extractor import MappingTableExtractor
 from app.services.pdf_extraction.course_content_extractor import CourseContentExtractor
@@ -125,7 +125,7 @@ async def extract_course_content(
 
 from pydantic import BaseModel
 from typing import Optional
-from app.services.storage.repository import TUMCoursesRepository
+from app.repositories.tum_courses import TUMCoursesRepository
 
 # TUM Module lookup models
 class TUMModuleLookup(BaseModel):
