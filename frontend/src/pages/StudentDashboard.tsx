@@ -29,17 +29,61 @@ export default function StudentDashboard() {
         setTumModules(updatedModules);
     };
 
-    const handleSubmit = () => {
-        // Basic submission logic
-        alert("Data successfully sent to TUM staff!");
+    const handleSubmit = async () => {
+        try {
+            // Prepare submission data
+            const submissionData = {
+                personalData: personalData,
+                mappingFile: mappingFile?.name || null,
+                tumModules: tumModules.map(mod => ({
+                    tum_module_nr: mod.tum_module_nr,
+                    tum_module_title: mod.tum_module_title,
+                    tum_ects: mod.tum_ects,
+                    tum_content: mod.tum_content,
+                    tum_outcome: mod.tum_outcome,
+                    source_courses: mod.source_courses.map(sc => ({
+                        source_course_no: sc.source_course_no,
+                        source_course_name: sc.source_course_name,
+                        source_credits: sc.source_credits,
+                        source_grade: sc.source_grade,
+                        source_content: sc.source_content
+                    }))
+                }))
+            };
 
-        // Reset state
-        setPersonalData(emptyPersonalData);
-        setMappingFile(null);
-        setTumModules([]);
+            console.log('Submitting data:', JSON.stringify(submissionData, null, 2));
 
-        // Redirect to home
-        navigate('/student');
+            const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${API_URL}/api/submissions/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(submissionData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('Backend error:', error);
+                const errorMessage = typeof error.detail === 'string' 
+                    ? error.detail 
+                    : JSON.stringify(error.detail, null, 2);
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+            
+            alert(`Application submitted successfully!\nSubmission ID: ${result.submission_id}`);
+
+            // Reset state
+            setPersonalData(emptyPersonalData);
+            setMappingFile(null);
+            setTumModules([]);
+
+            // Redirect to home
+            navigate('/student');
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert(`Submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     };
 
 

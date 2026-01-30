@@ -1,17 +1,33 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, ArrowRight, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
-import { getTasks } from '../data/taskManager';
+import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
 
 export default function TasksPage() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [allTasks, setAllTasks] = useState<TaskItem[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Get all tasks (mock + custom)
-    const allTasks = getTasks();
+    // Fetch tasks on mount
+    useEffect(() => {
+        loadTasks();
+    }, []);
+
+    const loadTasks = async () => {
+        setLoading(true);
+        try {
+            const tasks = await getTasks();
+            setAllTasks(tasks);
+        } catch (error) {
+            console.error('Failed to load tasks:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Filter tasks
     const filteredTasks = allTasks.filter(task => {
@@ -49,16 +65,22 @@ export default function TasksPage() {
                 </p>
             </div>
 
-            {/* Filters */}
-            <div style={{
-                display: 'flex',
-                gap: 16,
-                marginBottom: 24,
-                backgroundColor: 'white',
-                padding: 16,
-                borderRadius: 8,
-                border: '1px solid #E5E7EB'
-            }}>
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: 48, color: TUM_COLORS.gray50 }}>
+                    Loading tasks...
+                </div>
+            ) : (
+                <>
+                    {/* Filters */}
+                    <div style={{
+                        display: 'flex',
+                        gap: 16,
+                        marginBottom: 24,
+                        backgroundColor: 'white',
+                        padding: 16,
+                        borderRadius: 8,
+                        border: '1px solid #E5E7EB'
+                    }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                     <Search size={20} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
                     <input
@@ -178,6 +200,8 @@ export default function TasksPage() {
                     </tbody>
                 </table>
             </div>
+                </>
+            )}
         </div>
     );
 }

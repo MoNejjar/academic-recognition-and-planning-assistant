@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, MoreHorizontal } from 'lucide-react';
@@ -106,10 +107,27 @@ const KanbanColumn = ({ title, tasks, color, navigate }: { title: string, tasks:
 
 export default function KanbanPage() {
     const navigate = useNavigate();
+    const [allTasks, setAllTasks] = useState<TaskItem[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch tasks on mount
+    useEffect(() => {
+        loadTasks();
+    }, []);
+
+    const loadTasks = async () => {
+        setLoading(true);
+        try {
+            const tasks = await getTasks();
+            setAllTasks(tasks);
+        } catch (error) {
+            console.error('Failed to load tasks:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Get all tasks and group by status/decision
-    const allTasks = getTasks();
-
     const pendingTasks = allTasks.filter(t => t.status === 'pending');
     const reviewedTasks = allTasks.filter(t => t.status === 'reviewed');
     const approvedTasks = allTasks.filter(t => t.status === 'approved' || t.decision === 'highly_equivalent');
@@ -126,35 +144,41 @@ export default function KanbanPage() {
                 </p>
             </div>
 
-            <div style={{ flex: 1, display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 16 }}>
-                <KanbanColumn
-                    title="Pending Review"
-                    tasks={pendingTasks}
-                    color="#64748B"
-                    navigate={navigate}
-                />
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: 48, color: TUM_COLORS.gray50 }}>
+                    Loading tasks...
+                </div>
+            ) : (
+                <div style={{ flex: 1, display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 16 }}>
+                    <KanbanColumn
+                        title="Pending Review"
+                        tasks={pendingTasks}
+                        color="#64748B"
+                        navigate={navigate}
+                    />
 
-                <KanbanColumn
-                    title="Under Review"
-                    tasks={reviewedTasks}
-                    color="#E37222"
-                    navigate={navigate}
-                />
+                    <KanbanColumn
+                        title="Under Review"
+                        tasks={reviewedTasks}
+                        color="#E37222"
+                        navigate={navigate}
+                    />
 
-                <KanbanColumn
-                    title="Approved"
-                    tasks={approvedTasks}
-                    color="#22c55e"
-                    navigate={navigate}
-                />
+                    <KanbanColumn
+                        title="Approved"
+                        tasks={approvedTasks}
+                        color="#22c55e"
+                        navigate={navigate}
+                    />
 
-                <KanbanColumn
-                    title="Rejected"
-                    tasks={rejectedTasks}
-                    color="#ef4444"
-                    navigate={navigate}
-                />
-            </div>
+                    <KanbanColumn
+                        title="Rejected"
+                        tasks={rejectedTasks}
+                        color="#ef4444"
+                        navigate={navigate}
+                    />
+                </div>
+            )}
         </div>
     );
 }

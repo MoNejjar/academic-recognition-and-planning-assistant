@@ -17,21 +17,21 @@ const TaskAnalyticsDetail = () => {
 export default function StaffDashboard() {
     return (
         <Routes>
-            {/* Default route goes to Kanban dashboard */}
-            <Route path="/" element={<Navigate to="kanban" replace />} />
-            <Route path="dashboard" element={<Navigate to="kanban" replace />} />
+            {/* Default route goes to tasks list */}
+            <Route path="/" element={<Navigate to="tasks" replace />} />
+            <Route path="dashboard" element={<Navigate to="tasks" replace />} />
 
-            {/* Main dashboard views */}
-            <Route path="kanban" element={<KanbanPage />} />
-            <Route path="testing" element={<TestingPage />} />
-
-            {/* Task management */}
+            {/* Task management - shows both submissions and manual tests */}
             <Route path="tasks" element={<TasksPage />} />
             <Route path="tasks/:taskId" element={<TaskDetailPage />} />
             <Route path="tasks/:taskId/analytics" element={<TaskAnalyticsDetail />} />
 
+            {/* Other dashboard views */}
+            <Route path="kanban" element={<KanbanPage />} />
+            <Route path="testing" element={<TestingPage />} />
+
             {/* Fallback */}
-            <Route path="*" element={<Navigate to="kanban" replace />} />
+            <Route path="*" element={<Navigate to="tasks" replace />} />
         </Routes>
     );
 }

@@ -19,9 +19,7 @@ from app.services.storage.repository import DocumentRepository
 from app.services.storage.file_storage import FileStorage
 from app.services.pdf_extraction.mapping_table_extractor import MappingTableExtractor
 from app.services.pdf_extraction.course_content_extractor import CourseContentExtractor
-from app.services.llm_service.client import (
-    LLMProvider, create_llm_client, BaseLLMClient, get_default_model
-)
+from app.utils.llm_utils import get_llm_client
 
 router = APIRouter()
 
@@ -39,50 +37,6 @@ file_storage = FileStorage(upload_dir=settings.UPLOAD_DIR)
 # │ OpenRouter  │ openai/gpt-4o, anthropic/claude-3-opus                       │
 # │ Ollama      │ llava, bakllava, llava-llama3 (local)                        │
 # └─────────────┴──────────────────────────────────────────────────────────────┘
-
-def get_llm_client() -> BaseLLMClient:
-    """
-    Get configured LLM client based on LLM_PROVIDER setting.
-    
-    Set in .env:
-        LLM_PROVIDER=openai  # or gemini, openrouter, ollama
-        LLM_API_KEY=your-key
-        LLM_MODEL=gpt-4o
-    """
-    # Map provider string to enum
-    provider_map = {
-        "openai": LLMProvider.OPENAI,
-        "gemini": LLMProvider.GEMINI,
-        "groq": LLMProvider.GROQ,
-        "openrouter": LLMProvider.OPENROUTER,
-        "ollama": LLMProvider.OLLAMA,
-    }
-    
-    provider = provider_map.get(settings.LLM_PROVIDER.lower())
-    if not provider:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unknown LLM_PROVIDER: {settings.LLM_PROVIDER}"
-        )
-    
-    # Ollama doesn't require API key
-    if provider != LLMProvider.OLLAMA and not settings.LLM_API_KEY:
-        raise HTTPException(
-            status_code=500,
-            detail="LLM_API_KEY not configured"
-        )
-    
-    # Build kwargs - only pass base_url for Ollama
-    model = settings.LLM_MODEL or get_default_model(settings.LLM_PROVIDER, "vision")
-    kwargs = {
-        "provider": provider,
-        "api_key": settings.LLM_API_KEY,
-        "model": model,
-    }
-    if provider == LLMProvider.OLLAMA and settings.LLM_BASE_URL:
-        kwargs["base_url"] = settings.LLM_BASE_URL
-    
-    return create_llm_client(**kwargs)
 
 
 @router.post("/extract-mapping-table", response_model=ExtractionResult)
@@ -117,7 +71,7 @@ async def extract_mapping_table(
     )
     
     try:
-        llm_client = get_llm_client()
+        llm_client = get_llm_client(use_case="vision")
         extractor = MappingTableExtractor(llm_client)
         result = await extractor.extract_from_bytes(pdf_bytes=content, filename=file.filename)
         return result
@@ -162,7 +116,7 @@ async def extract_course_content(
     )
     
     try:
-        llm_client = get_llm_client()
+        llm_client = get_llm_client(use_case="vision")
         extractor = CourseContentExtractor(llm_client)
         result = await extractor.extract_from_bytes(pdf_bytes=content, filename=file.filename)
         return result

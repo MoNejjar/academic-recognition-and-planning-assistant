@@ -1,23 +1,73 @@
 
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle } from 'lucide-react';
-import { getTaskById } from '../data/taskManager';
+import { getTaskById, TaskItem } from '../data/taskManager';
 import ModuleCard from '../components/analytics/ModuleCard';
 import { TUM_COLORS } from '../styles/tumStyles';
 
 export default function TaskDetailPage() {
     const { taskId } = useParams();
     const navigate = useNavigate();
+    const [task, setTask] = useState<TaskItem | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
 
-    const task = getTaskById(taskId || '');
+    useEffect(() => {
+        loadTask();
+    }, [taskId]);
 
-    // For mock data, we might need the moduleResult. For custom tasks, it's attached.
-    // The getTaskById already returns the 'result' property on the item.
+    const loadTask = async () => {
+        setLoading(true);
+        try {
+            const foundTask = await getTaskById(taskId || '');
+            setTask(foundTask || null);
+        } catch (error) {
+            console.error('Failed to load task:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStatusUpdate = async (newStatus: string) => {
+        if (!task || !task.submissionId || !task.tumModuleNr || !confirm(`Change status to ${newStatus}?`)) return;
+
+        setUpdating(true);
+        try {
+            const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+            // Update individual module status, not entire submission
+            const response = await fetch(
+                `${API_URL}/api/submissions/submissions/${task.submissionId}/modules/${task.tumModuleNr}/status?status=${newStatus}`,
+                { method: 'PATCH' }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            alert(`Module ${task.tumModuleNr} status updated to ${newStatus}`);
+            // Reload task
+            await loadTask();
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            alert('Failed to update status');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    if (loading) {
+        return <div style={{ padding: 40, textAlign: 'center' }}>Loading task...</div>;
+    }
+
     const moduleResult = task?.result;
 
     if (!task || !moduleResult) {
         return <div style={{ padding: 40, textAlign: 'center' }}>Task not found</div>;
     }
+
+    // Check if this is a real submission (not a manual test)
+    const isRealSubmission = !!task.submissionId;
 
     return (
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: 32, fontFamily: 'Arial, sans-serif' }}>
@@ -59,38 +109,53 @@ export default function TaskDetailPage() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 12 }}>
-                        <button style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#22c55e',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8
-                        }}>
-                            <CheckCircle2 size={18} />
-                            Approve Recognition
-                        </button>
-                        <button style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8
-                        }}>
-                            <XCircle size={18} />
-                            Reject
-                        </button>
-                    </div>
+                    {isRealSubmission && (
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button 
+                                onClick={() => handleStatusUpdate('approved')}
+                                disabled={updating}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: updating ? '#9ca3af' : '#22c55e',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 6,
+                                    fontWeight: 600,
+                                    cursor: updating ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8
+                                }}
+                            >
+                                <CheckCircle2 size={18} />
+                                Approve Recognition
+                            </button>
+                            <button 
+                                onClick={() => handleStatusUpdate('rejected')}
+                                disabled={updating}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: updating ? '#9ca3af' : '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 6,
+                                    fontWeight: 600,
+                                    cursor: updating ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8
+                                }}
+                            >
+                                <XCircle size={18} />
+                                Reject
+                            </button>
+                        </div>
+                    )}
+                    {!isRealSubmission && (
+                        <div style={{ padding: '10px 20px', backgroundColor: '#f3f4f6', borderRadius: 6, fontSize: 14, color: TUM_COLORS.gray50 }}>
+                            Test Task (No Actions Available)
+                        </div>
+                    )}
                 </div>
             </div>
 

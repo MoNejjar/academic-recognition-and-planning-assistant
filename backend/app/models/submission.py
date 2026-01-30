@@ -59,7 +59,7 @@ class SubmissionData(BaseModel):
     """
     personal_data: PersonalData = Field(..., alias="personalData")
     mapping_file: Optional[str] = Field(None, alias="mappingFile")
-    tum_modules: List[TUMModuleSubmission]
+    tum_modules: List[TUMModuleSubmission] = Field(..., alias="tumModules")
 
     class Config:
         populate_by_name = True
