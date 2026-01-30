@@ -57,7 +57,6 @@ class SubmissionService:
                 previous_country=submission_data.personal_data.country_of_previous_university,
                 personal_data=submission_data.personal_data.dict(),
                 mapping_file_name=submission_data.mapping_file,
-                status="pending",
             )
 
             self.submission_repo.create(db_submission)
@@ -102,7 +101,7 @@ class SubmissionService:
             raise
 
     def get_all_submissions(
-        self, skip: int = 0, limit: int = 100, status: Optional[str] = None
+        self, skip: int = 0, limit: int = 100
     ) -> List[StudentSubmission]:
         """
         Get all submissions for staff view.
@@ -110,16 +109,15 @@ class SubmissionService:
         Args:
             skip: Number of records to skip (pagination)
             limit: Maximum number of records to return
-            status: Optional filter by status
 
         Returns:
             List of StudentSubmission objects
         """
-        return self.submission_repo.get_all(skip, limit, status)
+        return self.submission_repo.get_all(skip, limit)
 
-    def get_submission_count(self, status: Optional[str] = None) -> int:
+    def get_submission_count(self) -> int:
         """Get total count of submissions."""
-        return self.submission_repo.count(status)
+        return self.submission_repo.count()
 
     def get_submission_by_id(self, submission_id: str) -> Optional[StudentSubmission]:
         """
@@ -147,27 +145,6 @@ class SubmissionService:
             AnalyticsResult object or None if not found
         """
         return self.analytics_repo.get_by_submission_and_module(submission_id, tum_module_nr)
-
-    def update_submission_status(self, submission_id: str, status: str) -> Optional[StudentSubmission]:
-        """
-        Update submission status.
-
-        Args:
-            submission_id: Unique identifier for the submission
-            status: New status (pending, in_review, approved, rejected)
-
-        Returns:
-            Updated StudentSubmission object or None if not found
-        """
-        try:
-            submission = self.submission_repo.update_status(submission_id, status)
-            if submission:
-                self.db.commit()
-            return submission
-        except Exception as e:
-            logger.exception(f"Failed to update submission status for {submission_id}")
-            self.db.rollback()
-            raise
 
     def update_module_status(
         self, submission_id: str, tum_module_nr: str, status: str

@@ -111,7 +111,6 @@ async def get_task_detail(
             "result": task.analytics_result.analysis_data,
             "submission": {
                 "personalData": task.submission.personal_data,
-                "status": task.submission.status
             }
         }
         

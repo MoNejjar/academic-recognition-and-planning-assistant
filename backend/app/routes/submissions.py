@@ -110,7 +110,6 @@ async def submit_application(
 async def get_submissions(
     skip: int = 0,
     limit: int = 100,
-    status: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -119,14 +118,13 @@ async def get_submissions(
     Query parameters:
     - skip: Number of records to skip (for pagination)
     - limit: Maximum number of records to return
-    - status: Filter by status (pending, in_review, approved, rejected)
     
     Returns list of submissions with summary information.
     """
     try:
         submission_service = SubmissionService(db)
-        submissions = submission_service.get_all_submissions(skip, limit, status)
-        total_count = submission_service.get_submission_count(status)
+        submissions = submission_service.get_all_submissions(skip, limit)
+        total_count = submission_service.get_submission_count()
         
         return {
             "total": total_count,
@@ -140,7 +138,6 @@ async def get_submissions(
                     "previous_university": sub.previous_university,
                     "previous_country": sub.previous_country,
                     "submission_date": sub.submission_date.isoformat(),
-                    "status": sub.status,
                     "modules_count": len(sub.analytics_results),
                     "average_score": sum(r.overall_score for r in sub.analytics_results) / len(sub.analytics_results) if sub.analytics_results else 0
                 }
@@ -189,7 +186,6 @@ async def get_submission_detail(
         return {
             "submission_id": submission.submission_id,
             "personal_data": submission.personal_data,
-            "status": submission.status,
             "submission_date": submission.submission_date.isoformat(),
             "student_name": submission.student_name,
             "tum_email": submission.tum_email,

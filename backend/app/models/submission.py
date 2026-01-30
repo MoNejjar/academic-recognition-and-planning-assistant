@@ -86,7 +86,6 @@ class StudentSubmission(Base):
     previous_university = Column(String(255))
     previous_country = Column(String(100))
     submission_date = Column(DateTime, default=datetime.utcnow, nullable=False)
-    status = Column(String(50), default="pending", nullable=False)  # pending, in_review, approved, rejected
     
     # Store personal data as JSON
     personal_data = Column(JSON, nullable=False)
