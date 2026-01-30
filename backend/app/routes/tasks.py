@@ -48,13 +48,13 @@ async def get_tasks(
             "tasks": [
                 {
                     "id": task.task_id,
-                    "studentName": task.student_name,
-                    "university": task.university,
-                    "tumModuleNr": task.tum_module_nr,
-                    "tumModuleTitle": task.tum_module_title,
-                    "tumEcts": task.tum_ects,
-                    "score": task.score,
-                    "decision": task.decision,
+                    "studentName": task.submission.student_name,
+                    "university": task.submission.previous_university,
+                    "tumModuleNr": task.analytics_result.tum_module_nr,
+                    "tumModuleTitle": task.analytics_result.tum_module_title,
+                    "tumEcts": task.analytics_result.tum_ects,
+                    "score": task.analytics_result.overall_score,
+                    "decision": task.analytics_result.decision_hint,
                     "status": task.status,
                     "submissionId": task.submission_id,
                     "submissionDate": task.submission_date.isoformat(),
@@ -94,33 +94,25 @@ async def get_task_detail(
                 detail=f"Task {task_id} not found"
             )
         
-        # Get the analytics result
-        module_result = submission_service.get_module_result(
-            task.submission_id,
-            task.tum_module_nr
-        )
-        
-        # Get submission for personal data
-        submission = submission_service.get_submission_by_id(task.submission_id)
-        
+        # Analytics result and submission already loaded via relationships
         return {
             "id": task.task_id,
-            "studentName": task.student_name,
-            "university": task.university,
-            "tumModuleNr": task.tum_module_nr,
-            "tumModuleTitle": task.tum_module_title,
-            "tumEcts": task.tum_ects,
-            "score": task.score,
-            "decision": task.decision,
+            "studentName": task.submission.student_name,
+            "university": task.submission.previous_university,
+            "tumModuleNr": task.analytics_result.tum_module_nr,
+            "tumModuleTitle": task.analytics_result.tum_module_title,
+            "tumEcts": task.analytics_result.tum_ects,
+            "score": task.analytics_result.overall_score,
+            "decision": task.analytics_result.decision_hint,
             "status": task.status,
             "submissionId": task.submission_id,
             "submissionDate": task.submission_date.isoformat(),
             "isManualTest": bool(task.is_manual_test),
-            "result": module_result.analysis_data if module_result else None,
+            "result": task.analytics_result.analysis_data,
             "submission": {
-                "personalData": submission.personal_data,
-                "status": submission.status
-            } if submission else None
+                "personalData": task.submission.personal_data,
+                "status": task.submission.status
+            }
         }
         
     except HTTPException:

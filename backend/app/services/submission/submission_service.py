@@ -11,9 +11,9 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.analytics_models import AnalyticsResponse
-from app.models.db_models import AnalyticsResult, StudentSubmission, Task
-from app.models.submission import SubmissionData
+from app.models.analytics import AnalyticsResponse, AnalyticsResult
+from app.models.submission import SubmissionData, StudentSubmission
+from app.models.task import Task
 from app.repositories.analytics_result import AnalyticsResultRepository
 from app.repositories.student_submission import StudentSubmissionRepository
 from app.repositories.task import TaskRepository
@@ -76,19 +76,12 @@ class SubmissionService:
                 )
                 self.analytics_repo.create(db_result)
 
-                # Create a task for this module
+                # Create a task for this module (lightweight - data fetched via joins)
                 task_id = f"{submission_id}-{result.tum_module_nr}"
                 db_task = Task(
                     task_id=task_id,
                     submission_id=submission_id,
                     analytics_result_id=db_result.id,
-                    student_name=db_submission.student_name,
-                    university=db_submission.previous_university,
-                    tum_module_nr=result.tum_module_nr,
-                    tum_module_title=result.tum_module_title,
-                    tum_ects=result.tum_ects,
-                    score=result.overall_score,
-                    decision=result.decision_hint.value,
                     status="pending",
                     is_manual_test=0,
                     submission_date=db_submission.submission_date,
@@ -268,7 +261,12 @@ class SubmissionService:
 
             if task:
                 # Also update the corresponding analytics result status
-                self.analytics_repo.update_status(task.submission_id, task.tum_module_nr, status)
+                # Access module_nr via the analytics_result relationship
+                self.analytics_repo.update_status(
+                    task.submission_id, 
+                    task.analytics_result.tum_module_nr, 
+                    status
+                )
                 self.db.commit()
 
             return task

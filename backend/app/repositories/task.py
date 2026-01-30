@@ -6,9 +6,9 @@ import logging
 from typing import List, Optional
 
 from sqlalchemy import desc, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
-from app.models.db_models import Task
+from app.models.task import Task
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +26,29 @@ class TaskRepository:
         return task
 
     def get_by_id(self, task_id: str) -> Optional[Task]:
-        """Get a task by ID."""
-        stmt = select(Task).where(Task.task_id == task_id)
+        """Get a task by ID with relationships loaded."""
+        stmt = (
+            select(Task)
+            .where(Task.task_id == task_id)
+            .options(
+                joinedload(Task.submission),
+                joinedload(Task.analytics_result)
+            )
+        )
         return self.db.execute(stmt).scalar_one_or_none()
 
     def get_all(
         self, skip: int = 0, limit: int = 100, status: Optional[str] = None
     ) -> List[Task]:
-        """Get all tasks with optional filtering."""
-        stmt = select(Task).order_by(desc(Task.submission_date))
+        """Get all tasks with optional filtering and relationships loaded."""
+        stmt = (
+            select(Task)
+            .order_by(desc(Task.submission_date))
+            .options(
+                joinedload(Task.submission),
+                joinedload(Task.analytics_result)
+            )
+        )
 
         if status:
             stmt = stmt.where(Task.status == status)

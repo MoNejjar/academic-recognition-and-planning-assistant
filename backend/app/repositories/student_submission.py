@@ -8,7 +8,7 @@ from typing import List, Optional
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.models.db_models import StudentSubmission
+from app.models.submission import StudentSubmission
 
 logger = logging.getLogger(__name__)
 

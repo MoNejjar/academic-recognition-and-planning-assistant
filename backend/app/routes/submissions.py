@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.submission import SubmissionData
-from app.models.analytics_models import (
+from app.models.analytics import (
     AnalysisRequest, 
     AnalyticsResponse,
     TUMModuleInput, 

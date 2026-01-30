@@ -8,7 +8,7 @@ Endpoints for credit recognition analysis:
 import logging
 from fastapi import APIRouter, HTTPException
 
-from app.models.analytics_models import AnalysisRequest, AnalyticsResponse
+from app.models.analytics import AnalysisRequest, AnalyticsResponse
 from app.services.analytics.analytics_service import AnalyticsService
 from app.utils.llm_utils import get_llm_client
 

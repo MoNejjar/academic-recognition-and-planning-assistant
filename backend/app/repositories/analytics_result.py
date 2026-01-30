@@ -8,7 +8,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.db_models import AnalyticsResult
+from app.models.analytics import AnalyticsResult
 
 logger = logging.getLogger(__name__)
 
