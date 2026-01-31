@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import AnalyticsPage from "./AnalyticsPage";
 import TasksPage from "./TasksPage";
-import TaskDetailPage from "./TaskDetailPage";
+import TaskDetailPageModern from "./TaskDetailPageModern";
 import KanbanPage from "./KanbanPage";
 import TestingPage from "./TestingPage";
 import ArchivePage from "./ArchivePage";
@@ -49,7 +49,7 @@ export default function StaffDashboard() {
 
             {/* Task management - shows both submissions and manual tests */}
             <Route path="tasks" element={<TasksPage />} />
-            <Route path="tasks/:taskId" element={<TaskDetailPage />} />
+            <Route path="tasks/:taskId" element={<TaskDetailPageModern />} />
             <Route path="tasks/:taskId/analytics" element={<TaskAnalyticsDetail />} />
 
             {/* Archive - searchable list of tasks and submissions */}

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Users, BookOpen, ArrowRight } from 'lucide-react';
 import { TUM_COLORS } from '../styles/tumStyles';
+import { useUser, UserRole } from '../context/UserContext';
 
 interface RoleCardProps {
     title: string;
@@ -98,6 +99,12 @@ function RoleCard({ title, description, icon, onClick, accentColor, bgGradient }
 
 export default function LandingPage() {
     const navigate = useNavigate();
+    const { setUserRole } = useUser();
+
+    const handleRoleSelect = (role: UserRole, path: string) => {
+        setUserRole(role);
+        navigate(path);
+    };
 
     return (
         <div style={{
@@ -222,7 +229,7 @@ export default function LandingPage() {
                             title="Student Portal"
                             description="Submit your course recognition application and track its progress"
                             icon={<GraduationCap size={26} />}
-                            onClick={() => navigate('/student')}
+                            onClick={() => handleRoleSelect('student', '/student')}
                             accentColor={TUM_COLORS.blue}
                             bgGradient={`linear-gradient(135deg, ${TUM_COLORS.blue} 0%, ${TUM_COLORS.blueDark} 100%)`}
                         />
@@ -230,7 +237,7 @@ export default function LandingPage() {
                             title="Staff Portal"
                             description="Review and manage student recognition applications"
                             icon={<Users size={26} />}
-                            onClick={() => navigate('/staff/dashboard')}
+                            onClick={() => handleRoleSelect('staff', '/staff/dashboard')}
                             accentColor={TUM_COLORS.orange}
                             bgGradient={`linear-gradient(135deg, ${TUM_COLORS.orange} 0%, #c45d1a 100%)`}
                         />
@@ -238,7 +245,7 @@ export default function LandingPage() {
                             title="Professor Portal"
                             description="Evaluate course equivalencies and make recognition decisions"
                             icon={<BookOpen size={26} />}
-                            onClick={() => navigate('/staff/dashboard')}
+                            onClick={() => handleRoleSelect('professor', '/staff/dashboard')}
                             accentColor={TUM_COLORS.green}
                             bgGradient={`linear-gradient(135deg, ${TUM_COLORS.green} 0%, #7a8200 100%)`}
                         />
