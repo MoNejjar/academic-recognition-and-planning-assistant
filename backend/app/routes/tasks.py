@@ -170,3 +170,31 @@ async def update_task_status(
             status_code=500,
             detail=f"Failed to update task status: {str(e)}"
         )
+
+
+@router.delete("/clear-all")
+async def clear_all_data(db: Session = Depends(get_db)):
+    """
+    ⚠️ DANGER: Clear all submissions, analytics results, and tasks from the database.
+    
+    This is a destructive operation intended for development/testing only.
+    Use with caution!
+    """
+    try:
+        submission_service = SubmissionService(db)
+        deleted_count = submission_service.clear_all_data()
+        
+        logger.warning(f"Database cleared: {deleted_count} records deleted")
+        
+        return {
+            "status": "success",
+            "message": f"Database cleared successfully",
+            "deleted": deleted_count
+        }
+        
+    except Exception as e:
+        logger.exception("Failed to clear database")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to clear database: {str(e)}"
+        )

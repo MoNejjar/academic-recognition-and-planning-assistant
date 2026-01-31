@@ -72,9 +72,9 @@ export default function Layout() {
                 {/* Logo Area */}
                 <div style={{ padding: '24px 24px 12px', borderBottom: '1px solid #334155' }}>
                     <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px' }}>
-                        <span style={{ color: '#3B82F6' }}>TUM</span> Assistant
+                        <span style={{ color: '#3B82F6' }}>TUM</span> ARIP
                     </div>
-                    <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Staff Portal</div>
+                    <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Academic Recognition Intelligence Portal</div>
                 </div>
 
                 {/* Navigation */}

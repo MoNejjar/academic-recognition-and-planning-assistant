@@ -16,7 +16,11 @@ import {
     Loader2,
     Save,
     AlertTriangle,
-    Eye
+    Eye,
+    Info,
+    GraduationCap,
+    Building2,
+    BarChart3
 } from "lucide-react";
 import { TUM_COLORS } from "../styles/tumStyles";
 
@@ -29,26 +33,26 @@ type Props = {
     onAnalyticsReady?: (data: AnalyticsResponse) => void;
 };
 
-// Field configuration for display
-const personalDataFields: { key: keyof PersonalData; label: string }[] = [
-    { key: "firstName", label: "First Name" },
-    { key: "surname", label: "Surname" },
-    { key: "streetAndHouseNumber", label: "Street & House No." },
-    { key: "zipLocationCountry", label: "ZIP, Location, Country" },
-    { key: "phoneNumber", label: "Phone Number" },
-    { key: "tumEmail", label: "TUM Email" },
+// Field groups for organized display
+const tumInfoFields: { key: keyof PersonalData; label: string }[] = [
+    { key: "registrationNumberAtTUM", label: "Matriculation Number" },
     { key: "courseAtTUM", label: "Course at TUM" },
     { key: "aimedDegree", label: "Aimed Degree" },
-    { key: "registrationNumberAtTUM", label: "Registration No. at TUM" },
     { key: "semesterAtTUM", label: "Semester at TUM" },
-    { key: "nameOfPreviousUniversity", label: "Previous University" },
-    { key: "countryOfPreviousUniversity", label: "Country of Prev. University" },
-    { key: "previousDegreeProgram", label: "Previous Degree Program" },
-    { key: "diploma", label: "Diploma" },
-    { key: "numberOfSemestersInPreviousCourse", label: "Semesters in Prev. Course" },
-    { key: "workloadOfOneCredit", label: "Workload per Credit" },
-    { key: "maximumGradeAtFormerUniversity", label: "Max Grade (Former Uni)" },
-    { key: "minimumPassingGradeAtFormerUniversity", label: "Min Passing Grade" },
+];
+
+const previousUniversityFields: { key: keyof PersonalData; label: string }[] = [
+    { key: "nameOfPreviousUniversity", label: "University Name" },
+    { key: "countryOfPreviousUniversity", label: "Country" },
+    { key: "previousDegreeProgram", label: "Degree Program" },
+    { key: "diploma", label: "Diploma/Degree" },
+    { key: "numberOfSemestersInPreviousCourse", label: "Total Semesters" },
+    { key: "workloadOfOneCredit", label: "Credit Workload" },
+];
+
+const gradingSystemFields: { key: keyof PersonalData; label: string }[] = [
+    { key: "maximumGradeAtFormerUniversity", label: "Maximum Grade" },
+    { key: "minimumPassingGradeAtFormerUniversity", label: "Minimum Passing Grade" },
 ];
 
 export default function FinalReviewPage({
@@ -156,8 +160,8 @@ export default function FinalReviewPage({
     };
 
     const handleSavePersonalData = () => {
-        if (!tempPersonalData.firstName.trim() || !tempPersonalData.surname.trim()) {
-            alert("First name and surname are required.");
+        if (!tempPersonalData.registrationNumberAtTUM.trim()) {
+            alert("Matriculation number is required.");
             return;
         }
         onPersonalDataChange(tempPersonalData);
@@ -263,20 +267,87 @@ export default function FinalReviewPage({
                             </button>
                         </div>
                         <div style={styles.modalContentScroll}>
-                            <div style={styles.editFormGrid}>
-                                {personalDataFields.map(({ key, label }) => (
-                                    <div key={key} style={styles.fieldGroup}>
-                                        <label style={styles.label}>{label}</label>
-                                        <input
-                                            type="text"
-                                            value={tempPersonalData[key]}
-                                            onChange={(e) =>
-                                                setTempPersonalData({ ...tempPersonalData, [key]: e.target.value })
-                                            }
-                                            style={styles.input}
-                                        />
-                                    </div>
-                                ))}
+                            {/* TUM Information Section */}
+                            <div style={styles.editSection}>
+                                <h3 style={styles.editSectionTitle}>
+                                    <GraduationCap size={18} color={TUM_COLORS.blue} />
+                                    Your Information at TUM
+                                </h3>
+                                <div style={styles.editFormGrid}>
+                                    {tumInfoFields.map(({ key, label }) => (
+                                        <div key={key} style={styles.fieldGroup}>
+                                            <label style={styles.label}>{label}</label>
+                                            {key === 'semesterAtTUM' ? (
+                                                <select
+                                                    value={tempPersonalData[key]}
+                                                    onChange={(e) =>
+                                                        setTempPersonalData({ ...tempPersonalData, [key]: e.target.value })
+                                                    }
+                                                    style={styles.input}
+                                                >
+                                                    <option value="">Select semester</option>
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                </select>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    value={tempPersonalData[key]}
+                                                    onChange={(e) =>
+                                                        setTempPersonalData({ ...tempPersonalData, [key]: e.target.value })
+                                                    }
+                                                    style={styles.input}
+                                                />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Previous University Section */}
+                            <div style={styles.editSection}>
+                                <h3 style={styles.editSectionTitle}>
+                                    <Building2 size={18} color={TUM_COLORS.blue} />
+                                    Previous University
+                                </h3>
+                                <div style={styles.editFormGrid}>
+                                    {previousUniversityFields.map(({ key, label }) => (
+                                        <div key={key} style={styles.fieldGroup}>
+                                            <label style={styles.label}>{label}</label>
+                                            <input
+                                                type="text"
+                                                value={tempPersonalData[key]}
+                                                onChange={(e) =>
+                                                    setTempPersonalData({ ...tempPersonalData, [key]: e.target.value })
+                                                }
+                                                style={styles.input}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Grading System Section */}
+                            <div style={styles.editSection}>
+                                <h3 style={styles.editSectionTitle}>
+                                    <BarChart3 size={18} color={TUM_COLORS.blue} />
+                                    Grading System at Previous University
+                                </h3>
+                                <div style={styles.editFormGrid}>
+                                    {gradingSystemFields.map(({ key, label }) => (
+                                        <div key={key} style={styles.fieldGroup}>
+                                            <label style={styles.label}>{label}</label>
+                                            <input
+                                                type="text"
+                                                value={tempPersonalData[key]}
+                                                onChange={(e) =>
+                                                    setTempPersonalData({ ...tempPersonalData, [key]: e.target.value })
+                                                }
+                                                style={styles.input}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div style={styles.modalActions}>
@@ -332,13 +403,54 @@ export default function FinalReviewPage({
                             <Pencil size={14} /> Edit
                         </button>
                     </div>
-                    <div style={styles.dataGrid}>
-                        {personalDataFields.map(({ key, label }) => (
-                            <div key={key} style={styles.dataItem}>
-                                <div style={styles.dataLabel}>{label}</div>
-                                <div style={styles.dataValue}>{displayValue(personalData[key])}</div>
+                    <div style={styles.personalDataContent}>
+                        {/* TUM Information */}
+                        <div style={styles.dataSection}>
+                            <h3 style={styles.dataSectionTitle}>
+                                <GraduationCap size={16} color={TUM_COLORS.blue} />
+                                Your Information at TUM
+                            </h3>
+                            <div style={styles.dataGrid}>
+                                {tumInfoFields.map(({ key, label }) => (
+                                    <div key={key} style={styles.dataItem}>
+                                        <div style={styles.dataLabel}>{label}</div>
+                                        <div style={styles.dataValue}>{displayValue(personalData[key])}</div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Previous University */}
+                        <div style={styles.dataSection}>
+                            <h3 style={styles.dataSectionTitle}>
+                                <Building2 size={16} color={TUM_COLORS.blue} />
+                                Previous University
+                            </h3>
+                            <div style={styles.dataGrid}>
+                                {previousUniversityFields.map(({ key, label }) => (
+                                    <div key={key} style={styles.dataItem}>
+                                        <div style={styles.dataLabel}>{label}</div>
+                                        <div style={styles.dataValue}>{displayValue(personalData[key])}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Grading System */}
+                        <div style={styles.dataSection}>
+                            <h3 style={styles.dataSectionTitle}>
+                                <BarChart3 size={16} color={TUM_COLORS.blue} />
+                                Grading System at Previous University
+                            </h3>
+                            <div style={styles.dataGrid}>
+                                {gradingSystemFields.map(({ key, label }) => (
+                                    <div key={key} style={styles.dataItem}>
+                                        <div style={styles.dataLabel}>{label}</div>
+                                        <div style={styles.dataValue}>{displayValue(personalData[key])}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -407,6 +519,28 @@ export default function FinalReviewPage({
                 </div>
             </div>
 
+            {/* Pre-submission tip message */}
+            <div style={styles.tipBox}>
+                <div style={styles.tipHeader}>
+                    <Info size={20} color={TUM_COLORS.blue} />
+                    <strong>Before you submit your application, please carefully check the following:</strong>
+                </div>
+                <ul style={styles.tipList}>
+                    <li style={styles.tipListItem}>
+                        <span style={styles.tipBullet}>•</span>
+                        <span>Did I obtain all the necessary documents (module descriptions, transcript, etc.) and do they meet the formal requirements for the application?</span>
+                    </li>
+                    <li style={styles.tipListItem}>
+                        <span style={styles.tipBullet}>•</span>
+                        <span>Did I list all modules I want to apply for and does my transcript prove that I successfully passed them?</span>
+                    </li>
+                    <li style={styles.tipListItem}>
+                        <span style={styles.tipBullet}>•</span>
+                        <span>Do the learning outcomes and skills match? Please review the TUM module descriptions in detail and compare them with your module descriptions. The contents of your modules should match the contents of the TUM modules.</span>
+                    </li>
+                </ul>
+            </div>
+
             <div style={styles.actions}>
                 <button onClick={() => navigate("/student/catalogue")} style={styles.secondaryBtn}>
                     <ArrowLeft size={16} />
@@ -453,6 +587,46 @@ const styles: { [key: string]: React.CSSProperties } = {
         borderRadius: 8,
         color: TUM_COLORS.error,
         marginBottom: 24
+    },
+
+    tipBox: {
+        padding: 20,
+        background: "rgba(0, 101, 189, 0.05)",
+        border: `1px solid ${TUM_COLORS.blue}`,
+        borderRadius: 8,
+        marginBottom: 24,
+        borderLeftWidth: 4,
+    },
+    tipHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 16,
+        color: TUM_COLORS.gray80,
+        fontSize: 15,
+    },
+    tipList: {
+        margin: 0,
+        padding: 0,
+        listStyle: 'none',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: 12,
+    },
+    tipListItem: {
+        display: 'flex',
+        gap: 12,
+        color: TUM_COLORS.gray50,
+        fontSize: 14,
+        lineHeight: 1.6,
+        alignItems: 'flex-start',
+    },
+    tipBullet: {
+        color: TUM_COLORS.blue,
+        fontSize: 20,
+        fontWeight: 'bold' as const,
+        flexShrink: 0,
+        lineHeight: 1.4,
     },
 
     reviewGrid: { display: "flex", flexDirection: "column" as const, gap: 24, marginBottom: 32 },
@@ -502,11 +676,27 @@ const styles: { [key: string]: React.CSSProperties } = {
         fontWeight: 500
     },
 
-    // Personal Data Grid
-    dataGrid: {
+    // Personal Data Content
+    personalDataContent: {
         padding: 20,
+    },
+    dataSection: {
+        marginBottom: 24,
+    },
+    dataSectionTitle: {
+        fontSize: 14,
+        fontWeight: 600,
+        color: TUM_COLORS.gray70,
+        marginBottom: 12,
+        paddingBottom: 8,
+        borderBottom: `1px solid ${TUM_COLORS.gray20}`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+    },
+    dataGrid: {
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
         gap: 16
     },
     dataItem: { marginBottom: 8 },
@@ -699,9 +889,23 @@ const styles: { [key: string]: React.CSSProperties } = {
         flexDirection: "column" as const
     },
     modalContentScroll: { overflowY: "auto" as const, flex: 1, paddingRight: 8 },
+    editSection: {
+        marginBottom: 28,
+    },
+    editSectionTitle: {
+        fontSize: 15,
+        fontWeight: 600,
+        color: TUM_COLORS.gray70,
+        marginBottom: 16,
+        paddingBottom: 10,
+        borderBottom: `2px solid ${TUM_COLORS.blue}`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+    },
     editFormGrid: {
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
         gap: 20
     },
     fieldGroup: { display: "flex", flexDirection: "column" as const, gap: 6 },

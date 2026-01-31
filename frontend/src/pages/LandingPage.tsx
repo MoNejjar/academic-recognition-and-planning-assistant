@@ -46,7 +46,7 @@ export default function LandingPage() {
                 </div>
 
                 <h1 style={{ fontSize: 24, fontWeight: 700, color: TUM_COLORS.gray80, marginBottom: 8 }}>
-                    TUM Academic Assistant
+                    TUM ARIP
                 </h1>
                 <p style={{ color: '#6B7280', marginBottom: 48 }}>
                     Please select your role to continue

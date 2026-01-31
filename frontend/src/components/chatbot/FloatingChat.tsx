@@ -110,6 +110,17 @@ export default function FloatingChat() {
     }
   }, [maxHeight, chatHeight]);
 
+  // Listen for external open chatbot event
+  useEffect(() => {
+    const handleOpenChatbot = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener('openChatbot', handleOpenChatbot);
+    return () => {
+      window.removeEventListener('openChatbot', handleOpenChatbot);
+    };
+  }, []);
+
   const baseStyle: React.CSSProperties = {
     position: 'fixed',
     zIndex: 1000,

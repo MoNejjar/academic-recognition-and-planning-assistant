@@ -251,3 +251,41 @@ class SubmissionService:
             logger.exception(f"Failed to update task status for {task_id}")
             self.db.rollback()
             raise
+
+    def clear_all_data(self) -> dict:
+        """
+        ⚠️ DANGER: Clear all submissions, analytics results, and tasks.
+        
+        This is a destructive operation for development/testing purposes only.
+        
+        Returns:
+            Dictionary with count of deleted records
+        """
+        try:
+            # Delete in correct order due to foreign key constraints:
+            # 1. Tasks (references analytics_results and submissions)
+            # 2. Analytics results (references submissions)
+            # 3. Submissions
+            
+            tasks_count = self.task_repo.delete_all()
+            analytics_count = self.analytics_repo.delete_all()
+            submissions_count = self.submission_repo.delete_all()
+            
+            self.db.commit()
+            
+            logger.warning(
+                f"Database cleared: {submissions_count} submissions, "
+                f"{analytics_count} analytics results, {tasks_count} tasks"
+            )
+            
+            return {
+                "tasks": tasks_count,
+                "analytics_results": analytics_count,
+                "submissions": submissions_count,
+                "total": tasks_count + analytics_count + submissions_count
+            }
+            
+        except Exception as e:
+            logger.exception("Failed to clear database")
+            self.db.rollback()
+            raise

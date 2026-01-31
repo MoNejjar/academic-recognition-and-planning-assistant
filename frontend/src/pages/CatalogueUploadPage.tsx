@@ -241,17 +241,35 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 
                                 {mod.source_courses.map((sc) => (
                                     <div key={sc.id} style={{ marginBottom: 16, paddingLeft: 12, borderLeft: `3px solid ${TUM_COLORS.blue}` }}>
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: TUM_COLORS.gray80, marginBottom: 6 }}>
-                                            {sc.source_course_no} - {sc.source_course_name}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                            <div style={{ fontSize: 13, fontWeight: 600, color: TUM_COLORS.gray80 }}>
+                                                {sc.source_course_no} - {sc.source_course_name}
+                                            </div>
+                                            {sc.source_content && (
+                                                <span style={{
+                                                    fontSize: 11,
+                                                    color: TUM_COLORS.blue,
+                                                    background: '#e3f2fd',
+                                                    padding: '2px 8px',
+                                                    borderRadius: 4,
+                                                    fontWeight: 600
+                                                }}>
+                                                    AI Extracted
+                                                </span>
+                                            )}
                                         </div>
                                         <textarea
                                             value={sc.source_content || ""}
                                             onChange={(e) => handleSourceContentChange(mod.id, sc.id, e.target.value)}
-                                            placeholder={`Enter content/outcomes for ${sc.source_course_name}...`}
+                                            placeholder="Upload catalogue PDF files to automatically extract content"
+                                            disabled={true}
                                             style={{
                                                 ...styles.textarea,
                                                 minHeight: 100,
-                                                borderColor: sc.source_content ? TUM_COLORS.gray20 : TUM_COLORS.orange,
+                                                borderColor: TUM_COLORS.gray20,
+                                                backgroundColor: '#f9fafb',
+                                                cursor: 'not-allowed',
+                                                color: TUM_COLORS.gray60,
                                             }}
                                         />
                                     </div>

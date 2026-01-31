@@ -54,3 +54,11 @@ class AnalyticsResultRepository:
             self.db.flush()
 
         return result
+
+    def delete_all(self) -> int:
+        """Delete all analytics results. Returns count of deleted records."""
+        count = len(list(self.db.query(AnalyticsResult).all()))
+        self.db.query(AnalyticsResult).delete()
+        self.db.flush()
+        logger.warning(f"Deleted {count} analytics results")
+        return count

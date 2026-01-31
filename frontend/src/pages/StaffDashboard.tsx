@@ -4,14 +4,38 @@ import TasksPage from "./TasksPage";
 import TaskDetailPage from "./TaskDetailPage";
 import KanbanPage from "./KanbanPage";
 import TestingPage from "./TestingPage";
-import { mockAnalyticsData } from "../data/mockAnalyticsData";
+import { useState, useEffect } from "react";
+import { getTaskDetail } from "../data/taskManager";
 
 // Wrapper to inject data based on task ID
 const TaskAnalyticsDetail = () => {
-    const { } = useParams();
-    // In a real app, fetch analytics by task ID
-    // For now, use default mock data
-    return <AnalyticsPage data={mockAnalyticsData} isLoading={false} />;
+    const { taskId } = useParams();
+    const [data, setData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (taskId) {
+            setIsLoading(true);
+            getTaskDetail(taskId).then(task => {
+                if (task?.result) {
+                    // Convert task result to analytics format
+                    setData({
+                        moduleAnalyses: [task.result],
+                        summary: {
+                            totalModules: 1,
+                            highlyEquivalent: task.result.decisionHint === 'highly_equivalent' ? 1 : 0,
+                            partiallyEquivalent: task.result.decisionHint === 'partial' ? 1 : 0,
+                            insufficient: task.result.decisionHint === 'insufficient' ? 1 : 0,
+                            averageScore: task.result.overallScore
+                        }
+                    });
+                }
+                setIsLoading(false);
+            });
+        }
+    }, [taskId]);
+
+    return <AnalyticsPage data={data} isLoading={isLoading} />;
 };
 
 export default function StaffDashboard() {
