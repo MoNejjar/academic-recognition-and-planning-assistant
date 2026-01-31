@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2, Home, FileCheck, UserCheck, Mail } from 'lucide-react';
 import { TUM_COLORS } from '../styles/tumStyles';
@@ -15,6 +15,7 @@ export default function SubmissionStatusPage() {
     const [state, setState] = useState<SubmissionState>('loading');
     const [submissionId, setSubmissionId] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string>('');
+    const submissionAttempted = useRef(false);
 
     useEffect(() => {
         const locationState = location.state as LocationState;
@@ -24,6 +25,12 @@ export default function SubmissionStatusPage() {
             navigate('/student');
             return;
         }
+
+        // Prevent duplicate submissions in React StrictMode or on re-renders
+        if (submissionAttempted.current) {
+            return;
+        }
+        submissionAttempted.current = true;
 
         submitApplication(locationState.submissionData);
     }, []);

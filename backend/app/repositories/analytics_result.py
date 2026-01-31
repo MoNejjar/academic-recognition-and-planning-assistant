@@ -39,26 +39,3 @@ class AnalyticsResultRepository:
         """Get all analytics results for a submission."""
         stmt = select(AnalyticsResult).where(AnalyticsResult.submission_id == submission_id)
         return list(self.db.scalars(stmt).all())
-
-    def update_status(
-        self, submission_id: str, tum_module_nr: str, status: str
-    ) -> Optional[AnalyticsResult]:
-        """Update the status of an analytics result."""
-        result = self.get_by_submission_and_module(submission_id, tum_module_nr)
-
-        if result:
-            logger.info(
-                f"Updating analytics result for {submission_id}/{tum_module_nr}: {result.status} -> {status}"
-            )
-            result.status = status
-            self.db.flush()
-
-        return result
-
-    def delete_all(self) -> int:
-        """Delete all analytics results. Returns count of deleted records."""
-        count = len(list(self.db.query(AnalyticsResult).all()))
-        self.db.query(AnalyticsResult).delete()
-        self.db.flush()
-        logger.warning(f"Deleted {count} analytics results")
-        return count

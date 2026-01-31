@@ -24,7 +24,7 @@ class Task(Base):
     analytics_result_id = Column(Integer, ForeignKey("analytics_results.id", ondelete="CASCADE"), nullable=False, index=True)
     
     # Task-specific fields
-    status = Column(String(50), default="pending", nullable=False)  # pending, approved, rejected
+    status = Column(String(50), default="pending", nullable=False)  # pending, approved, rejected, on_hold
     is_manual_test = Column(Integer, default=0, nullable=False)  # 0=real submission, 1=manual test
     
     # Timestamps

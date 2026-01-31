@@ -139,10 +139,11 @@ async def update_task_status(
     
     Valid statuses:
     - pending: Initial state
+    - on_hold: Task put on hold
     - approved: Task approved
     - rejected: Task rejected
     """
-    valid_statuses = ["pending", "approved", "rejected"]
+    valid_statuses = ["pending", "on_hold", "approved", "rejected"]
     
     if status not in valid_statuses:
         raise HTTPException(
@@ -177,22 +178,24 @@ async def update_task_status(
 
 
 @router.delete("/clear-all")
-async def clear_all_data(db: Session = Depends(get_db)):
+async def clear_all_database(
+    db: Session = Depends(get_db)
+):
     """
-    ⚠️ DANGER: Clear all submissions, analytics results, and tasks from the database.
+    Clear ALL data from the database.
     
-    This is a destructive operation intended for development/testing only.
-    Use with caution!
+    ⚠️ WARNING: This deletes all submissions, analytics results, and tasks.
+    This is intended for testing/development only.
     """
     try:
         submission_service = SubmissionService(db)
         deleted_count = submission_service.clear_all_data()
         
-        logger.warning(f"Database cleared: {deleted_count} records deleted")
+        logger.warning(f"Database cleared: {deleted_count['total']} records deleted")
         
         return {
             "status": "success",
-            "message": f"Database cleared successfully",
+            "message": "All database entries cleared successfully",
             "deleted": deleted_count
         }
         

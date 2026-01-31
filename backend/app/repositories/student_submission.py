@@ -52,11 +52,3 @@ class StudentSubmissionRepository:
             return True
 
         return False
-
-    def delete_all(self) -> int:
-        """Delete all submissions. Returns count of deleted records."""
-        count = self.count()
-        self.db.query(StudentSubmission).delete()
-        self.db.flush()
-        logger.warning(f"Deleted {count} submissions")
-        return count

@@ -55,9 +55,7 @@ class TaskRepository:
             stmt = stmt.where(Task.status == status)
 
         stmt = stmt.offset(skip).limit(limit)
-        
-        # Use unique() to prevent duplicates from joinedload
-        return list(self.db.scalars(stmt).unique().all())
+        return list(self.db.scalars(stmt).all())
 
     def count(self, status: Optional[str] = None) -> int:
         """Get total count of tasks."""
@@ -86,11 +84,3 @@ class TaskRepository:
             self.db.flush()
 
         return task
-
-    def delete_all(self) -> int:
-        """Delete all tasks. Returns count of deleted records."""
-        count = self.count()
-        self.db.query(Task).delete()
-        self.db.flush()
-        logger.warning(f"Deleted {count} tasks")
-        return count

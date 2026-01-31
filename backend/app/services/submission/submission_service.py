@@ -72,6 +72,7 @@ class SubmissionService:
                     analysis_data=result.dict(),
                     overall_score=result.overall_score,
                     decision_hint=result.decision_hint.value,
+                    status="pending",
                 )
                 self.analytics_repo.create(db_result)
 
@@ -250,35 +251,33 @@ class SubmissionService:
 
     def clear_all_data(self) -> dict:
         """
-        ⚠️ DANGER: Clear all submissions, analytics results, and tasks.
+        Clear ALL data from the database (submissions, analytics, tasks).
         
-        This is a destructive operation for development/testing purposes only.
+        ⚠️ WARNING: This is a destructive operation intended for testing/development only.
         
         Returns:
-            Dictionary with count of deleted records
+            Dictionary with count of deleted records by type
         """
         try:
-            # Delete in correct order due to foreign key constraints:
-            # 1. Tasks (references analytics_results and submissions)
-            # 2. Analytics results (references submissions)
-            # 3. Submissions
-            
-            tasks_count = self.task_repo.delete_all()
-            analytics_count = self.analytics_repo.delete_all()
-            submissions_count = self.submission_repo.delete_all()
+            # Delete in reverse dependency order: tasks -> analytics -> submissions
+            tasks_deleted = self.db.query(Task).delete()
+            analytics_deleted = self.db.query(AnalyticsResult).delete()
+            submissions_deleted = self.db.query(StudentSubmission).delete()
             
             self.db.commit()
             
+            total_deleted = tasks_deleted + analytics_deleted + submissions_deleted
+            
             logger.warning(
-                f"Database cleared: {submissions_count} submissions, "
-                f"{analytics_count} analytics results, {tasks_count} tasks"
+                f"Database cleared: {submissions_deleted} submissions, "
+                f"{analytics_deleted} analytics, {tasks_deleted} tasks"
             )
             
             return {
-                "tasks": tasks_count,
-                "analytics_results": analytics_count,
-                "submissions": submissions_count,
-                "total": tasks_count + analytics_count + submissions_count
+                "submissions": submissions_deleted,
+                "analytics": analytics_deleted,
+                "tasks": tasks_deleted,
+                "total": total_deleted
             }
             
         except Exception as e:
