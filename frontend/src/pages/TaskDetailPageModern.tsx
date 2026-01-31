@@ -11,6 +11,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
     ArrowLeft, 
@@ -23,6 +24,9 @@ import {
     FileText,
     AlertCircle,
     Pause,
+    Crown,
+    Pin,
+    X,
 } from 'lucide-react';
 import { getTaskDetail, TaskItem } from '../data/taskManager';
 import ModuleCardModern from '../components/analytics/ModuleCardModern';
@@ -61,6 +65,290 @@ function StatusBadge({ status }: { status: string }) {
             <Icon size={14} />
             {label}
         </span>
+    );
+}
+
+// ============================================
+// Final Verdict Display Component
+// ============================================
+
+interface FinalVerdictDisplayProps {
+    verdict: {
+        content: string;
+        author_name: string;
+        author_role: string;
+        created_at: string;
+    };
+    status: string;
+}
+
+function FinalVerdictDisplay({ verdict, status }: FinalVerdictDisplayProps) {
+    const isApproved = status === 'approved';
+    
+    return (
+        <div style={{
+            backgroundColor: isApproved ? '#F0FDF4' : '#FEF2F2',
+            border: `2px solid ${isApproved ? '#22c55e' : '#ef4444'}`,
+            borderRadius: 12,
+            padding: 20,
+            marginBottom: 24,
+        }}>
+            <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 8, 
+                marginBottom: 12,
+            }}>
+                <Pin size={16} style={{ color: isApproved ? '#22c55e' : '#ef4444' }} />
+                <span style={{ 
+                    fontSize: 14, 
+                    fontWeight: 700, 
+                    color: isApproved ? '#166534' : '#991B1B',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                }}>
+                    Final Decision: {isApproved ? 'Approved' : 'Rejected'}
+                </span>
+            </div>
+            
+            <p style={{ 
+                margin: '0 0 12px 0', 
+                fontSize: 15, 
+                lineHeight: 1.6, 
+                color: TUM_COLORS.gray80,
+                whiteSpace: 'pre-wrap',
+            }}>
+                {verdict.content}
+            </p>
+            
+            <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 8,
+                fontSize: 12,
+                color: TUM_COLORS.gray50,
+            }}>
+                <Crown size={12} style={{ color: '#6366f1' }} />
+                <span style={{ fontWeight: 500 }}>{verdict.author_name}</span>
+                <span>•</span>
+                <span>{new Date(verdict.created_at).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                })}</span>
+            </div>
+        </div>
+    );
+}
+
+// ============================================
+// Final Verdict Modal Component
+// ============================================
+
+interface FinalVerdictModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (message: string) => void;
+    actionType: 'approved' | 'rejected';
+    submitting: boolean;
+}
+
+function FinalVerdictModal({ isOpen, onClose, onSubmit, actionType, submitting }: FinalVerdictModalProps) {
+    const [message, setMessage] = useState('');
+    
+    if (!isOpen) return null;
+    
+    const isApprove = actionType === 'approved';
+    
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (message.trim()) {
+            onSubmit(message.trim());
+        }
+    };
+    
+    return createPortal(
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+        }}>
+            <div style={{
+                backgroundColor: TUM_COLORS.white,
+                borderRadius: 16,
+                width: '100%',
+                maxWidth: 520,
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                overflow: 'hidden',
+            }}>
+                {/* Header */}
+                <div style={{
+                    padding: '20px 24px',
+                    borderBottom: `1px solid ${TUM_COLORS.gray20}`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: isApprove ? '#F0FDF4' : '#FEF2F2',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        {isApprove ? (
+                            <CheckCircle2 size={24} style={{ color: '#22c55e' }} />
+                        ) : (
+                            <XCircle size={24} style={{ color: '#ef4444' }} />
+                        )}
+                        <div>
+                            <h2 style={{ 
+                                margin: 0, 
+                                fontSize: 18, 
+                                fontWeight: 700, 
+                                color: TUM_COLORS.gray80,
+                            }}>
+                                {isApprove ? 'Approve Recognition' : 'Reject Recognition'}
+                            </h2>
+                            <p style={{ 
+                                margin: 0, 
+                                fontSize: 13, 
+                                color: TUM_COLORS.gray50,
+                            }}>
+                                Provide your final verdict message
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        disabled={submitting}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: submitting ? 'not-allowed' : 'pointer',
+                            padding: 8,
+                            borderRadius: 8,
+                            color: TUM_COLORS.gray50,
+                        }}
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+                
+                {/* Content */}
+                <form onSubmit={handleSubmit} style={{ padding: 24 }}>
+                    <label style={{
+                        display: 'block',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: TUM_COLORS.gray80,
+                        marginBottom: 8,
+                    }}>
+                        Final Verdict Message <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <p style={{
+                        fontSize: 12,
+                        color: TUM_COLORS.gray50,
+                        marginBottom: 12,
+                    }}>
+                        This message will be displayed at the top of the application and communicated to the student.
+                    </p>
+                    <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder={isApprove 
+                            ? "e.g., The submitted course demonstrates sufficient equivalence to the TUM module. Full credit recognition is granted..."
+                            : "e.g., The submitted course does not meet the required learning outcomes. The following gaps were identified..."
+                        }
+                        disabled={submitting}
+                        style={{
+                            width: '100%',
+                            minHeight: 150,
+                            padding: 14,
+                            border: `1px solid ${TUM_COLORS.gray20}`,
+                            borderRadius: 8,
+                            fontSize: 14,
+                            fontFamily: 'inherit',
+                            resize: 'vertical',
+                            outline: 'none',
+                            boxSizing: 'border-box',
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = TUM_COLORS.blue}
+                        onBlur={(e) => e.target.style.borderColor = TUM_COLORS.gray20}
+                        autoFocus
+                    />
+                    
+                    {/* Actions */}
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'flex-end', 
+                        gap: 12,
+                        marginTop: 20,
+                    }}>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={submitting}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: 'transparent',
+                                color: TUM_COLORS.gray80,
+                                border: `1px solid ${TUM_COLORS.gray20}`,
+                                borderRadius: 8,
+                                fontWeight: 500,
+                                fontSize: 14,
+                                cursor: submitting ? 'not-allowed' : 'pointer',
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={!message.trim() || submitting}
+                            style={{
+                                padding: '10px 24px',
+                                backgroundColor: !message.trim() || submitting 
+                                    ? '#9ca3af' 
+                                    : isApprove ? '#22c55e' : '#ef4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 8,
+                                fontWeight: 600,
+                                fontSize: 14,
+                                cursor: !message.trim() || submitting ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                            }}
+                        >
+                            {submitting ? (
+                                <>
+                                    <div style={{
+                                        width: 16,
+                                        height: 16,
+                                        border: '2px solid rgba(255,255,255,0.3)',
+                                        borderTopColor: 'white',
+                                        borderRadius: '50%',
+                                        animation: 'spin 1s linear infinite',
+                                    }} />
+                                    Submitting...
+                                </>
+                            ) : (
+                                <>
+                                    {isApprove ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+                                    Confirm {isApprove ? 'Approval' : 'Rejection'}
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>,
+        document.body
     );
 }
 
@@ -201,6 +489,13 @@ function StudentInfoCard({ task }: StudentInfoProps) {
 // Main TaskDetailPage Component
 // ============================================
 
+interface FinalVerdict {
+    content: string;
+    author_name: string;
+    author_role: string;
+    created_at: string;
+}
+
 export default function TaskDetailPage() {
     const { taskId } = useParams();
     const navigate = useNavigate();
@@ -208,6 +503,11 @@ export default function TaskDetailPage() {
     const [task, setTask] = useState<TaskItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [finalVerdict, setFinalVerdict] = useState<FinalVerdict | null>(null);
+    
+    // Modal state
+    const [showVerdictModal, setShowVerdictModal] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'approved' | 'rejected'>('approved');
     
     // Determine navigation context
     const from = (location.state as any)?.from || 'tasks';
@@ -220,6 +520,7 @@ export default function TaskDetailPage() {
 
     useEffect(() => {
         loadTask();
+        loadFinalVerdict();
     }, [taskId]);
 
     const loadTask = async () => {
@@ -234,22 +535,87 @@ export default function TaskDetailPage() {
         }
     };
 
-    const handleStatusUpdate = async (newStatus: string) => {
+    const loadFinalVerdict = async () => {
+        try {
+            const API_URL = getApiUrl();
+            const response = await fetch(`${API_URL}/api/tasks/${taskId}/comments`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.final_verdict) {
+                    setFinalVerdict(data.final_verdict);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load final verdict:', error);
+        }
+    };
+
+    const handleApproveClick = () => {
+        setPendingAction('approved');
+        setShowVerdictModal(true);
+    };
+
+    const handleRejectClick = () => {
+        setPendingAction('rejected');
+        setShowVerdictModal(true);
+    };
+
+    const handleVerdictSubmit = async (message: string) => {
+        if (!task) return;
+
+        setUpdating(true);
+        try {
+            const API_URL = getApiUrl();
+            
+            // First, post the final verdict comment
+            const commentResponse = await fetch(`${API_URL}/api/tasks/${task.id}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: message,
+                    author_role: currentUserRole,
+                    author_name: currentUserName,
+                    is_final_verdict: true,
+                }),
+            });
+
+            if (!commentResponse.ok) {
+                throw new Error('Failed to post final verdict');
+            }
+
+            const newVerdict = await commentResponse.json();
+            setFinalVerdict(newVerdict);
+            
+            // Then update the status
+            const statusResponse = await fetch(
+                `${API_URL}/api/tasks/tasks/${task.id}/status?status=${pendingAction}`,
+                { method: 'PATCH' }
+            );
+
+            if (!statusResponse.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            setShowVerdictModal(false);
+            await loadTask();
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            alert('Failed to submit decision. Please try again.');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleHoldStatus = async () => {
         if (!task) return;
         
-        const confirmMessages: Record<string, string> = {
-            approved: 'Are you sure you want to APPROVE this recognition request? This decision will be communicated to the student.',
-            rejected: 'Are you sure you want to REJECT this recognition request? Please ensure you have documented the reasons.',
-            on_hold: 'Put this task on hold? You can return to it later.',
-        };
-
-        if (!confirm(confirmMessages[newStatus] || `Change status to ${newStatus}?`)) return;
+        if (!confirm('Put this task on hold? You can return to it later.')) return;
 
         setUpdating(true);
         try {
             const API_URL = getApiUrl();
             const response = await fetch(
-                `${API_URL}/api/tasks/tasks/${task.id}/status?status=${newStatus}`,
+                `${API_URL}/api/tasks/tasks/${task.id}/status?status=on_hold`,
                 { method: 'PATCH' }
             );
 
@@ -445,9 +811,9 @@ export default function TaskDetailPage() {
                     {isRealSubmission && !isDecided && (
                         <ActionButtons
                             updating={updating}
-                            onApprove={() => handleStatusUpdate('approved')}
-                            onReject={() => handleStatusUpdate('rejected')}
-                            onHold={() => handleStatusUpdate('on_hold')}
+                            onApprove={handleApproveClick}
+                            onReject={handleRejectClick}
+                            onHold={handleHoldStatus}
                         />
                     )}
                     
@@ -456,6 +822,11 @@ export default function TaskDetailPage() {
                     )}
                 </div>
             </div>
+
+            {/* Final Verdict Display - At Top of Content */}
+            {finalVerdict && (task.status === 'approved' || task.status === 'rejected') && (
+                <FinalVerdictDisplay verdict={finalVerdict} status={task.status} />
+            )}
 
             {/* Main Content - Single Column Layout */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -480,6 +851,15 @@ export default function TaskDetailPage() {
                     to { transform: rotate(360deg); }
                 }
             `}</style>
+
+            {/* Final Verdict Modal */}
+            <FinalVerdictModal
+                isOpen={showVerdictModal}
+                onClose={() => setShowVerdictModal(false)}
+                onSubmit={handleVerdictSubmit}
+                actionType={pendingAction}
+                submitting={updating}
+            />
         </div>
     );
 }
