@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle } from 'lucide-react';
 import { getTaskDetail, TaskItem } from '../data/taskManager';
 import ModuleCard from '../components/analytics/ModuleCard';
@@ -9,9 +9,14 @@ import { TUM_COLORS } from '../styles/tumStyles';
 export default function TaskDetailPage() {
     const { taskId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [task, setTask] = useState<TaskItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    
+    // Determine where the user came from
+    const from = (location.state as any)?.from || 'tasks';
+    const submissionId = (location.state as any)?.submissionId;
 
     useEffect(() => {
         loadTask();
@@ -75,7 +80,17 @@ export default function TaskDetailPage() {
             {/* Header / Nav */}
             <div style={{ marginBottom: 24 }}>
                 <button
-                    onClick={() => navigate('/staff/tasks')}
+                    onClick={() => {
+                        if (from === 'submission' && submissionId) {
+                            navigate(`/staff/submissions/${submissionId}`);
+                        } else if (from === 'archive') {
+                            navigate('/staff/archive');
+                        } else if (from === 'kanban') {
+                            navigate('/staff/kanban');
+                        } else {
+                            navigate('/staff/tasks');
+                        }
+                    }}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -89,7 +104,9 @@ export default function TaskDetailPage() {
                     }}
                 >
                     <ArrowLeft size={16} />
-                    Back to Tasks
+                    {from === 'submission' ? 'Back to Submission' : 
+                     from === 'archive' ? 'Back to Archive' :
+                     from === 'kanban' ? 'Back to Kanban' : 'Back to Tasks'}
                 </button>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>

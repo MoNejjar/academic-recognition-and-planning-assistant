@@ -4,6 +4,8 @@ import TasksPage from "./TasksPage";
 import TaskDetailPage from "./TaskDetailPage";
 import KanbanPage from "./KanbanPage";
 import TestingPage from "./TestingPage";
+import ArchivePage from "./ArchivePage";
+import SubmissionDetailPage from "./SubmissionDetailPage";
 import { mockAnalyticsData } from "../data/mockAnalyticsData";
 
 // Wrapper to inject data based on task ID
@@ -25,6 +27,12 @@ export default function StaffDashboard() {
             <Route path="tasks" element={<TasksPage />} />
             <Route path="tasks/:taskId" element={<TaskDetailPage />} />
             <Route path="tasks/:taskId/analytics" element={<TaskAnalyticsDetail />} />
+
+            {/* Archive - searchable list of tasks and submissions */}
+            <Route path="archive" element={<ArchivePage />} />
+            
+            {/* Submission details - view individual submission with all modules */}
+            <Route path="submissions/:submissionId" element={<SubmissionDetailPage />} />
 
             {/* Other dashboard views */}
             <Route path="kanban" element={<KanbanPage />} />

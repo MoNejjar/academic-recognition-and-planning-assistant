@@ -140,7 +140,7 @@ export default function TasksPage() {
                                 <tr
                                     key={task.id}
                                     style={{ borderBottom: '1px solid #E5E7EB', cursor: 'pointer', transition: 'background-color 0.1s' }}
-                                    onClick={() => navigate(`/staff/tasks/${task.id}`)}
+                                    onClick={() => navigate(`/staff/tasks/${task.id}`, { state: { from: 'tasks' } })}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
