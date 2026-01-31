@@ -6,6 +6,7 @@ import PersonalDataPage from "./PersonalDataPage";
 import MappingUploadPage from "./MappingUploadPage";
 import CatalogueUploadPage from "./CatalogueUploadPage";
 import FinalReviewPage from "./FinalReviewPage";
+import SubmissionStatusPage from "./SubmissionStatusPage";
 import HealthCheck from "../components/HealthCheck";
 import { useState } from "react";
 import { TUMModuleMapping, PersonalData, emptyPersonalData } from "../types";
@@ -29,17 +30,36 @@ export default function StudentDashboard() {
         setTumModules(updatedModules);
     };
 
-    const handleSubmit = () => {
-        // Basic submission logic
-        alert("Data successfully sent to TUM staff!");
+    const handleSubmit = async () => {
+        // Prepare submission data
+        const submissionData = {
+            personalData: personalData,
+            mappingFile: mappingFile?.name || null,
+            tumModules: tumModules.map(mod => ({
+                tum_module_nr: mod.tum_module_nr,
+                tum_module_title: mod.tum_module_title,
+                tum_ects: mod.tum_ects,
+                tum_content: mod.tum_content,
+                tum_outcome: mod.tum_outcome,
+                source_courses: mod.source_courses.map(sc => ({
+                    source_course_no: sc.source_course_no,
+                    source_course_name: sc.source_course_name,
+                    source_credits: sc.source_credits,
+                    source_grade: sc.source_grade,
+                    source_content: sc.source_content
+                }))
+            }))
+        };
 
-        // Reset state
+        console.log('Submitting data:', JSON.stringify(submissionData, null, 2));
+
+        // Reset state immediately before navigating
         setPersonalData(emptyPersonalData);
         setMappingFile(null);
         setTumModules([]);
 
-        // Redirect to home
-        navigate('/student');
+        // Navigate to submission status page which will handle the API call
+        navigate('/student/submission-status', { state: { submissionData } });
     };
 
 
@@ -96,6 +116,10 @@ export default function StudentDashboard() {
                                 onSubmit={handleSubmit}
                             />
                         }
+                    />
+                    <Route
+                        path="/submission-status"
+                        element={<SubmissionStatusPage />}
                     />
 
                     <Route path="*" element={<Navigate to="/student" replace />} />

@@ -8,11 +8,17 @@ These models define the data structures for:
 - Bloom's taxonomy levels
 - Coverage metrics
 - Full analysis results
+
+Also contains the SQLAlchemy database model for storing analytics results.
 """
 
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
+from sqlalchemy import Column, String, Float, JSON, DateTime, Integer, ForeignKey
+from sqlalchemy.orm import relationship
+from app.core.database import Base
 
 
 # ============================================
@@ -225,3 +231,33 @@ class AnalyticsResponse(BaseModel):
     # Metadata
     analysis_timestamp: str
     llm_model_used: Optional[str] = None
+
+
+# ============================================
+# Database Models
+# ============================================
+
+class AnalyticsResult(Base):
+    """Stores analytics results for each module in a submission."""
+    __tablename__ = "analytics_results"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    submission_id = Column(String(100), ForeignKey("student_submissions.submission_id"), nullable=False, index=True)
+    
+    # Module identification
+    tum_module_nr = Column(String(50), nullable=False)
+    tum_module_title = Column(String(255), nullable=False)
+    tum_ects = Column(String(20))
+    
+    # Store complete analysis results as JSON
+    analysis_data = Column(JSON, nullable=False)
+    
+    # Quick access fields for filtering/sorting
+    overall_score = Column(Float, nullable=False)
+    decision_hint = Column(String(50), nullable=False)  # highly_equivalent, partial, insufficient
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    submission = relationship("StudentSubmission", back_populates="analytics_results")

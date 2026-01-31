@@ -4,10 +4,8 @@
  * Handles communication with the backend analytics endpoint.
  */
 
-import {
-    AnalyticsResponse,
-    snakeToCamel
-} from '../types/analyticsTypes';
+import { AnalyticsResponse } from '../types/analyticsTypes';
+import { snakeToCamel } from '../utils/caseConversion';
 import { TUMModuleMapping } from '../types';
 
 // @ts-ignore - Vite injects import.meta.env

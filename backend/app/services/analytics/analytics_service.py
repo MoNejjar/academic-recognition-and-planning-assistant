@@ -11,7 +11,7 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from app.models.analytics_models import (
+from app.models.analytics import (
     AnalysisRequest,
     AnalyticsResponse,
     ModuleAnalysisResult,

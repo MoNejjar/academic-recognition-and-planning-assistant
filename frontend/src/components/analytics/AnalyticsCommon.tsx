@@ -1,7 +1,6 @@
 
-import { CheckCircle2, AlertTriangle, XCircle, HelpCircle } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { TUM_COLORS } from '../../styles/tumStyles';
-import { DecisionHint } from '../../types/analyticsTypes';
 import { useState } from 'react';
 
 // Status colors (kept consistent for severity)
@@ -93,32 +92,5 @@ export function ScoreDisplay({ score }: { score: number }) {
                 <span style={{ fontSize: 20, fontWeight: 700, color }}>{Math.round(score)}%</span>
             </div>
         </div>
-    );
-}
-
-export function DecisionBadge({ hint }: { hint: DecisionHint }) {
-    const config = {
-        highly_equivalent: { label: 'Highly Equivalent', bg: STATUS_COLORS.success, icon: CheckCircle2 },
-        partial: { label: 'Partial Match', bg: STATUS_COLORS.warning, icon: AlertTriangle },
-        insufficient: { label: 'Insufficient', bg: STATUS_COLORS.error, icon: XCircle }
-    };
-
-    const { label, bg, icon: Icon } = config[hint];
-
-    return (
-        <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '4px 12px',
-            borderRadius: 9999,
-            backgroundColor: bg,
-            color: '#FFFFFF',
-            fontSize: 13,
-            fontWeight: 500,
-        }}>
-            <Icon size={14} />
-            {label}
-        </span>
     );
 }

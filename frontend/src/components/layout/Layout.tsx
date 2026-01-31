@@ -4,6 +4,7 @@ import {
     CheckSquare,
     LayoutDashboard,
     FlaskConical,
+    Archive,
     LogOut
 } from 'lucide-react';
 
@@ -53,6 +54,7 @@ export default function Layout() {
     const menuItems = [
         { icon: LayoutDashboard, label: 'Overview', path: '/staff/kanban' },
         { icon: CheckSquare, label: 'Tasks', path: '/staff/tasks' },
+        { icon: Archive, label: 'Archive', path: '/staff/archive' },
         { icon: FlaskConical, label: 'Testing', path: '/staff/testing' },
     ];
 

@@ -6,54 +6,14 @@ Endpoints for credit recognition analysis:
 """
 
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 
-from app.core.config import settings
-from app.models.analytics_models import AnalysisRequest, AnalyticsResponse
+from app.models.analytics import AnalysisRequest, AnalyticsResponse
 from app.services.analytics.analytics_service import AnalyticsService
-from app.services.llm_service.client import (
-    LLMProvider, create_llm_client, BaseLLMClient
-)
+from app.utils.llm_utils import get_llm_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-def get_llm_client() -> BaseLLMClient:
-    """
-    Get configured LLM client for analytics.
-    Uses same configuration as other LLM services.
-    """
-    provider_map = {
-        "openai": LLMProvider.OPENAI,
-        "gemini": LLMProvider.GEMINI,
-        "groq": LLMProvider.GROQ,
-        "openrouter": LLMProvider.OPENROUTER,
-        "ollama": LLMProvider.OLLAMA,
-    }
-    
-    provider = provider_map.get(settings.LLM_PROVIDER.lower())
-    if not provider:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unknown LLM_PROVIDER: {settings.LLM_PROVIDER}"
-        )
-    
-    if provider != LLMProvider.OLLAMA and not settings.LLM_API_KEY:
-        raise HTTPException(
-            status_code=500,
-            detail="LLM_API_KEY not configured"
-        )
-    
-    kwargs = {
-        "provider": provider,
-        "api_key": settings.LLM_API_KEY,
-        "model": settings.LLM_MODEL,
-    }
-    if provider == LLMProvider.OLLAMA and settings.LLM_BASE_URL:
-        kwargs["base_url"] = settings.LLM_BASE_URL
-    
-    return create_llm_client(**kwargs)
 
 
 @router.post("/analyze", response_model=AnalyticsResponse)
