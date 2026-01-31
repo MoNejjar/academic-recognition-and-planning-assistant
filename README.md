@@ -399,7 +399,3 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 **Group 24** - TUM Foundations and Applications of Generative AI Course
 
 ---
-
-<p align="center">
-  <sub>Built with ❤️ at the Technical University of Munich</sub>
-</p>
