@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, ArrowRight } from 'lucide-react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
 import { getTaskAgeColor, formatDate } from '../utils/staffUtils';
@@ -181,17 +181,36 @@ export default function TasksPage() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <span style={{
+                                        <div style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 6,
+                                            padding: '8px 16px',
+                                            borderRadius: 6,
+                                            backgroundColor: 'transparent',
+                                            border: `2px solid ${TUM_COLORS.blue}`,
+                                            color: TUM_COLORS.blue,
                                             fontSize: 13,
-                                            color: '#9CA3AF',
-                                            fontWeight: 500,
-                                            transition: 'color 0.15s'
+                                            fontWeight: 600,
+                                            transition: 'all 0.2s',
+                                            cursor: 'pointer'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.color = TUM_COLORS.blue}
-                                        onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = TUM_COLORS.blue;
+                                            e.currentTarget.style.color = 'white';
+                                            e.currentTarget.style.transform = 'translateX(4px)';
+                                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.15)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                            e.currentTarget.style.color = TUM_COLORS.blue;
+                                            e.currentTarget.style.transform = 'translateX(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
+                                        }}
                                         >
-                                            Review →
-                                        </span>
+                                            Review
+                                            <ArrowRight size={16} />
+                                        </div>
                                     </td>
                                 </tr>
                             ))
