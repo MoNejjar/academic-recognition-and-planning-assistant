@@ -1,9 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowRight, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Search, Filter, ArrowRight } from 'lucide-react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
+import { DecisionBadge } from '../components/common/StatusBadges';
+import { getTaskAgeColor, formatDate } from '../utils/staffUtils';
 
 export default function TasksPage() {
     const navigate = useNavigate();
@@ -11,20 +12,6 @@ export default function TasksPage() {
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [allTasks, setAllTasks] = useState<TaskItem[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // Get color based on task age
-    const getTaskAgeColor = (createdAt: string | undefined) => {
-        if (!createdAt) return '#6B7280';
-        
-        const now = new Date();
-        const created = new Date(createdAt);
-        const diffMs = now.getTime() - created.getTime();
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-        
-        if (diffDays <= 7) return '#22c55e'; // Green - up to 1 week
-        if (diffDays <= 30) return '#f59e0b'; // Orange - up to 1 month
-        return '#ef4444'; // Red - over 1 month
-    };
 
     // Fetch tasks on mount
     useEffect(() => {
@@ -56,19 +43,6 @@ export default function TasksPage() {
 
         return matchesSearch && matchesStatus;
     });
-
-    const getDecisionBadge = (decision: string) => {
-        switch (decision) {
-            case 'highly_equivalent':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700"><CheckCircle2 size={12} /> High Match</span>;
-            case 'partial':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700"><AlertTriangle size={12} /> Partial</span>;
-            case 'insufficient':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><XCircle size={12} /> Insufficient</span>;
-            default:
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Unknown</span>;
-        }
-    };
 
     return (
         <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
@@ -185,17 +159,11 @@ export default function TasksPage() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        {getDecisionBadge(task.decision)}
+                                        <DecisionBadge decision={task.decision} />
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ fontSize: 13, color: getTaskAgeColor(task.createdAt), fontWeight: 500 }}>
-                                            {task.createdAt ? new Date(task.createdAt).toLocaleDateString('en-US', { 
-                                                year: 'numeric', 
-                                                month: 'short', 
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            }) : 'N/A'}
+                                            {task.createdAt ? formatDate(task.createdAt) : 'N/A'}
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>

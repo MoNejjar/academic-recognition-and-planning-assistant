@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
     Search, 
     Filter, 
-    CheckCircle2, 
-    AlertTriangle, 
-    XCircle,
     ChevronDown,
     Calendar,
     User,
@@ -13,12 +10,9 @@ import {
     FileText
 } from 'lucide-react';
 import { TaskItem } from '../data/taskManager';
-
-const TUM_COLORS = {
-    blue: '#3070b3',
-    gray80: '#1F2937',
-    gray50: '#6B7280',
-};
+import { TUM_COLORS } from '../styles/tumStyles';
+import { DecisionBadge, StatusBadge } from '../components/common/StatusBadges';
+import { getApiUrl, formatDate } from '../utils/staffUtils';
 
 interface SubmissionItem {
     submission_id: string;
@@ -95,7 +89,7 @@ export default function ArchivePage() {
     const loadTasks = async () => {
         setLoading(true);
         try {
-            const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+            const API_URL = getApiUrl();
             const response = await fetch(`${API_URL}/api/tasks/tasks?limit=1000`);
             
             if (response.ok) {
@@ -112,7 +106,7 @@ export default function ArchivePage() {
     const loadSubmissions = async () => {
         setLoading(true);
         try {
-            const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+            const API_URL = getApiUrl();
             const response = await fetch(`${API_URL}/api/submissions/submissions?limit=1000`);
             
             if (response.ok) {
@@ -209,37 +203,6 @@ export default function ArchivePage() {
     const uniqueUniversities = Array.from(new Set(allTasks.map(t => t.university).filter(Boolean)));
     const uniqueSubmissionUniversities = Array.from(new Set(allSubmissions.map(s => s.previous_university).filter(Boolean)));
     const uniqueCountries = Array.from(new Set(allSubmissions.map(s => s.previous_country).filter(Boolean)));
-
-    const getDecisionBadge = (decision: string) => {
-        switch (decision) {
-            case 'highly_equivalent':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700"><CheckCircle2 size={12} /> High Match</span>;
-            case 'partial':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700"><AlertTriangle size={12} /> Partial</span>;
-            case 'insufficient':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><XCircle size={12} /> Insufficient</span>;
-            default:
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Unknown</span>;
-        }
-    };
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>;
-            case 'rejected':
-                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>;
-            case 'pending':
-                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Pending</span>;
-            default:
-                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{status}</span>;
-        }
-    };
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    };
 
     const resetFilters = () => {
         if (viewMode === 'tasks') {
@@ -659,8 +622,8 @@ export default function ArchivePage() {
                                                         {task.score.toFixed(0)}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '16px 24px' }}>{getDecisionBadge(task.decision)}</td>
-                                                <td style={{ padding: '16px 24px' }}>{getStatusBadge(task.status)}</td>
+                                                <td style={{ padding: '16px 24px' }}><DecisionBadge decision={task.decision} /></td>
+                                                <td style={{ padding: '16px 24px' }}><StatusBadge status={task.status} /></td>
                                                 <td style={{ padding: '16px 24px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: TUM_COLORS.gray50 }}>
                                                         <Calendar size={14} />

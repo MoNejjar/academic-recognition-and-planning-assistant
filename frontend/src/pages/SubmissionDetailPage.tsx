@@ -8,18 +8,13 @@ import {
     Globe, 
     Calendar,
     FileText,
-    CheckCircle2,
-    AlertTriangle,
-    XCircle,
-    ExternalLink
+    ExternalLink,
+    XCircle
 } from 'lucide-react';
 import { PersonalData } from '../types';
-
-const TUM_COLORS = {
-    blue: '#3070b3',
-    gray80: '#1F2937',
-    gray50: '#6B7280',
-};
+import { TUM_COLORS } from '../styles/tumStyles';
+import { DecisionBadge } from '../components/common/StatusBadges';
+import { getApiUrl, formatDateTime } from '../utils/staffUtils';
 
 interface ModuleResult {
     tum_module_nr: string;
@@ -61,6 +56,7 @@ export default function SubmissionDetailPage() {
 
     useEffect(() => {
         loadSubmission();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [submissionId]);
 
     const loadSubmission = async () => {
@@ -74,7 +70,7 @@ export default function SubmissionDetailPage() {
         setError(null);
         
         try {
-            const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+            const API_URL = getApiUrl();
             const response = await fetch(`${API_URL}/api/submissions/submissions/${submissionId}`);
             
             if (!response.ok) {
@@ -88,30 +84,6 @@ export default function SubmissionDetailPage() {
             setError(error instanceof Error ? error.message : 'Failed to load submission');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-    const getDecisionBadge = (decision: string) => {
-        switch (decision) {
-            case 'highly_equivalent':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700"><CheckCircle2 size={12} /> High Match</span>;
-            case 'partial':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700"><AlertTriangle size={12} /> Partial</span>;
-            case 'insufficient':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><XCircle size={12} /> Insufficient</span>;
-            default:
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Unknown</span>;
         }
     };
 
@@ -254,7 +226,7 @@ export default function SubmissionDetailPage() {
                         <div>
                             <div style={{ fontSize: 12, color: TUM_COLORS.gray50, marginBottom: 4 }}>Submission Date</div>
                             <div style={{ fontSize: 15, fontWeight: 500, color: TUM_COLORS.gray80 }}>
-                                {formatDate(submission.submission_date)}
+                                {formatDateTime(submission.submission_date)}
                             </div>
                         </div>
                     </div>
@@ -393,7 +365,7 @@ export default function SubmissionDetailPage() {
                                     </div>
                                 </td>
                                 <td style={{ padding: '16px 24px' }}>
-                                    {getDecisionBadge(module.decision_hint)}
+                                    <DecisionBadge decision={module.decision_hint} />
                                 </td>
                                 <td style={{ padding: '16px 24px' }}>
                                     <button

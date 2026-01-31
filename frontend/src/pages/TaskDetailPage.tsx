@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { getTaskDetail, TaskItem } from '../data/taskManager';
 import ModuleCard from '../components/analytics/ModuleCard';
 import { TUM_COLORS } from '../styles/tumStyles';
+import { getApiUrl, getTaskAgeColor } from '../utils/staffUtils';
 
 export default function TaskDetailPage() {
     const { taskId } = useParams();
@@ -18,22 +18,9 @@ export default function TaskDetailPage() {
     const from = (location.state as any)?.from || 'tasks';
     const submissionId = (location.state as any)?.submissionId;
 
-    // Get color based on task age
-    const getTaskAgeColor = (createdAt: string | undefined) => {
-        if (!createdAt) return '#6B7280';
-        
-        const now = new Date();
-        const created = new Date(createdAt);
-        const diffMs = now.getTime() - created.getTime();
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-        
-        if (diffDays <= 7) return '#22c55e'; // Green - up to 1 week
-        if (diffDays <= 30) return '#f59e0b'; // Orange - up to 1 month
-        return '#ef4444'; // Red - over 1 month
-    };
-
     useEffect(() => {
         loadTask();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskId]);
 
     const loadTask = async () => {
@@ -53,7 +40,7 @@ export default function TaskDetailPage() {
 
         setUpdating(true);
         try {
-            const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+            const API_URL = getApiUrl();
             
             // Use the tasks API endpoint to update status
             const response = await fetch(
