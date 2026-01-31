@@ -24,7 +24,8 @@ import {
 
 import { ModuleAnalysisResult } from '../../types/analyticsTypes';
 import { TUM_COLORS } from '../../styles/tumStyles';
-import { ScoreDisplay, DecisionBadge, ExplanationTooltip, STATUS_COLORS } from './AnalyticsCommon';
+import { ScoreDisplay, ExplanationTooltip, STATUS_COLORS } from './AnalyticsCommon';
+import { CourseMatchBadge } from '../common/StatusBadges';
 
 // Custom sharp/modern tooltip
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -93,7 +94,7 @@ export default function ModuleCard({ result, defaultExpanded = false }: { result
                             }}>
                                 {result.tumModuleNr}
                             </span>
-                            <DecisionBadge hint={result.decisionHint} />
+                            <CourseMatchBadge decision={result.decisionHint} />
                         </div>
                         <h3 style={{ fontSize: 18, fontWeight: 700, color: TUM_COLORS.gray80, marginBottom: 4 }}>
                             {result.tumModuleTitle}

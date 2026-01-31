@@ -168,44 +168,69 @@ export default function TaskDetailPage() {
 
                     {isRealSubmission && (
                         <div style={{ display: 'flex', gap: 12 }}>
-                            <button 
-                                onClick={() => handleStatusUpdate('approved')}
-                                disabled={updating}
-                                style={{
-                                    padding: '10px 20px',
-                                    backgroundColor: updating ? '#9ca3af' : '#22c55e',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: 6,
-                                    fontWeight: 600,
-                                    cursor: updating ? 'not-allowed' : 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8
-                                }}
-                            >
-                                <CheckCircle2 size={18} />
-                                Approve Recognition
-                            </button>
-                            <button 
-                                onClick={() => handleStatusUpdate('rejected')}
-                                disabled={updating}
-                                style={{
-                                    padding: '10px 20px',
-                                    backgroundColor: updating ? '#9ca3af' : '#ef4444',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: 6,
-                                    fontWeight: 600,
-                                    cursor: updating ? 'not-allowed' : 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 8
-                                }}
-                            >
-                                <XCircle size={18} />
-                                Reject
-                            </button>
+                            {task.status === 'pending' && (
+                                <button 
+                                    onClick={() => handleStatusUpdate('on_hold')}
+                                    disabled={updating}
+                                    style={{
+                                        padding: '10px 20px',
+                                        backgroundColor: updating ? '#9ca3af' : TUM_COLORS.orange,
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: 6,
+                                        fontWeight: 600,
+                                        cursor: updating ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8
+                                    }}
+                                >
+                                    <Clock size={18} />
+                                    Put On Hold
+                                </button>
+                            )}
+                            {(task.status === 'pending' || task.status === 'on_hold') && (
+                                <>
+                                    <button 
+                                        onClick={() => handleStatusUpdate('approved')}
+                                        disabled={updating}
+                                        style={{
+                                            padding: '10px 20px',
+                                            backgroundColor: updating ? '#9ca3af' : '#22c55e',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: 6,
+                                            fontWeight: 600,
+                                            cursor: updating ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 8
+                                        }}
+                                    >
+                                        <CheckCircle2 size={18} />
+                                        Approve Recognition
+                                    </button>
+                                    <button 
+                                        onClick={() => handleStatusUpdate('rejected')}
+                                        disabled={updating}
+                                        style={{
+                                            padding: '10px 20px',
+                                            backgroundColor: updating ? '#9ca3af' : '#ef4444',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: 6,
+                                            fontWeight: 600,
+                                            cursor: updating ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 8
+                                        }}
+                                    >
+                                        <XCircle size={18} />
+                                        Reject
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
                     {!isRealSubmission && (

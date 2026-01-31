@@ -139,10 +139,11 @@ async def update_task_status(
     
     Valid statuses:
     - pending: Initial state
+    - on_hold: Task put on hold
     - approved: Task approved
     - rejected: Task rejected
     """
-    valid_statuses = ["pending", "approved", "rejected"]
+    valid_statuses = ["pending", "on_hold", "approved", "rejected"]
     
     if status not in valid_statuses:
         raise HTTPException(

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, ArrowRight } from 'lucide-react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
-import { DecisionBadge } from '../components/common/StatusBadges';
 import { getTaskAgeColor, formatDate } from '../utils/staffUtils';
 
 export default function TasksPage() {
@@ -30,16 +29,16 @@ export default function TasksPage() {
         }
     };
 
-    // Filter tasks - only show pending tasks
-    const pendingTasks = allTasks.filter(task => task.status === 'pending');
+    // Filter tasks - show pending and on_hold tasks
+    const activeTasks = allTasks.filter(task => task.status === 'pending' || task.status === 'on_hold');
     
-    const filteredTasks = pendingTasks.filter(task => {
+    const filteredTasks = activeTasks.filter(task => {
         const matchesSearch =
             task.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.tumModuleTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.tumModuleNr.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesStatus = statusFilter === 'all' || task.decision === statusFilter;
+        const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
 
         return matchesSearch && matchesStatus;
     });
@@ -105,9 +104,8 @@ export default function TasksPage() {
                         }}
                     >
                         <option value="all">All Statuses</option>
-                        <option value="highly_equivalent">High Match</option>
-                        <option value="partial">Partial Match</option>
-                        <option value="insufficient">Insufficient</option>
+                        <option value="pending">Pending Review</option>
+                        <option value="on_hold">On Hold</option>
                     </select>
                 </div>
             </div>
@@ -159,7 +157,16 @@ export default function TasksPage() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <DecisionBadge decision={task.decision} />
+                                        <span style={{
+                                            fontSize: 12,
+                                            fontWeight: 600,
+                                            padding: '4px 12px',
+                                            borderRadius: 12,
+                                            backgroundColor: task.status === 'pending' ? '#EFF6FF' : '#FFF7ED',
+                                            color: task.status === 'pending' ? '#1e40af' : TUM_COLORS.orange
+                                        }}>
+                                            {task.status === 'pending' ? 'Pending Review' : 'On Hold'}
+                                        </span>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ fontSize: 13, color: getTaskAgeColor(task.createdAt), fontWeight: 500 }}>
@@ -189,7 +196,7 @@ export default function TasksPage() {
                         ) : (
                             <tr>
                                 <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#6B7280' }}>
-                                    No pending tasks found matching your filters.
+                                    No tasks found matching your filters.
                                 </td>
                             </tr>
                         )}

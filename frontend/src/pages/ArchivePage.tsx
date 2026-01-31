@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
-import { DecisionBadge, StatusBadge } from '../components/common/StatusBadges';
+import { StatusBadge } from '../components/common/StatusBadges';
 import { getApiUrl, formatDate } from '../utils/staffUtils';
 
 interface SubmissionItem {
@@ -583,7 +583,6 @@ export default function ArchivePage() {
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Student</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>University</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Score</th>
-                                        <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Decision</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Date</th>
                                     </tr>
@@ -622,7 +621,6 @@ export default function ArchivePage() {
                                                         {task.score.toFixed(0)}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '16px 24px' }}><DecisionBadge decision={task.decision} /></td>
                                                 <td style={{ padding: '16px 24px' }}><StatusBadge status={task.status} /></td>
                                                 <td style={{ padding: '16px 24px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: TUM_COLORS.gray50 }}>
@@ -634,7 +632,7 @@ export default function ArchivePage() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={7} style={{ padding: 48, textAlign: 'center', color: TUM_COLORS.gray50 }}>
+                                            <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: TUM_COLORS.gray50 }}>
                                                 No tasks found matching your filters.
                                             </td>
                                         </tr>
