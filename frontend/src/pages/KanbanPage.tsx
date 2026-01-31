@@ -128,7 +128,7 @@ export default function KanbanPage() {
 
     // Get all tasks and group by status/decision
     const pendingTasks = allTasks.filter(t => t.status === 'pending');
-    const reviewedTasks = allTasks.filter(t => t.status === 'reviewed');
+    const onHoldTasks = allTasks.filter(t => t.status === 'on_hold');
     const approvedTasks = allTasks.filter(t => t.status === 'approved' || t.decision === 'highly_equivalent');
     const rejectedTasks = allTasks.filter(t => t.status === 'rejected' || t.decision === 'insufficient');
 
@@ -157,8 +157,8 @@ export default function KanbanPage() {
                     />
 
                     <KanbanColumn
-                        title="Under Review"
-                        tasks={reviewedTasks}
+                        title="On Hold"
+                        tasks={onHoldTasks}
                         color="#E37222"
                         navigate={navigate}
                     />

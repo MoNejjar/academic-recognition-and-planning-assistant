@@ -1,6 +1,6 @@
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
-export const DecisionBadge = ({ decision }: { decision: string }) => {
+export const CourseMatchBadge = ({ decision }: { decision: string }) => {
     switch (decision) {
         case 'highly_equivalent':
             return (
@@ -49,10 +49,10 @@ export const StatusBadge = ({ status }: { status: string }) => {
                     Pending
                 </span>
             );
-        case 'reviewed':
+        case 'on_hold':
             return (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    Reviewed
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                    On Hold
                 </span>
             );
         default:

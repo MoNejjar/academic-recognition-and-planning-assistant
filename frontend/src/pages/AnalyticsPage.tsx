@@ -35,7 +35,8 @@ import {
     Legend
 } from 'recharts';
 
-import { AnalyticsResponse, ModuleAnalysisResult, DecisionHint } from '../types/analyticsTypes';
+import { AnalyticsResponse, ModuleAnalysisResult } from '../types/analyticsTypes';
+import { CourseMatchBadge } from '../components/common/StatusBadges';
 
 interface Props {
     data: AnalyticsResponse | null;
@@ -151,33 +152,6 @@ function ScoreDisplay({ score }: { score: number }) {
     );
 }
 
-function DecisionBadge({ hint }: { hint: DecisionHint }) {
-    const config = {
-        highly_equivalent: { label: 'Highly Equivalent', bg: STATUS_COLORS.success, icon: CheckCircle2 },
-        partial: { label: 'Partial Match', bg: STATUS_COLORS.warning, icon: AlertTriangle },
-        insufficient: { label: 'Insufficient', bg: STATUS_COLORS.error, icon: XCircle }
-    };
-
-    const { label, bg, icon: Icon } = config[hint];
-
-    return (
-        <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '4px 12px',
-            borderRadius: 9999,
-            backgroundColor: bg,
-            color: '#FFFFFF',
-            fontSize: 13,
-            fontWeight: 500,
-        }}>
-            <Icon size={14} />
-            {label}
-        </span>
-    );
-}
-
 function ModuleCard({ result }: { result: ModuleAnalysisResult }) {
     const [expanded, setExpanded] = useState(false);
 
@@ -212,7 +186,7 @@ function ModuleCard({ result }: { result: ModuleAnalysisResult }) {
                             }}>
                                 {result.tumModuleNr}
                             </span>
-                            <DecisionBadge hint={result.decisionHint} />
+                            <CourseMatchBadge decision={result.decisionHint} />
                         </div>
                         <h3 style={{ fontSize: 18, fontWeight: 700, color: TUM_COLORS.gray80, marginBottom: 4 }}>
                             {result.tumModuleTitle}

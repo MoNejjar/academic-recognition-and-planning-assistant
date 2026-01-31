@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { PersonalData } from '../types';
 import { TUM_COLORS } from '../styles/tumStyles';
-import { DecisionBadge } from '../components/common/StatusBadges';
+import { CourseMatchBadge } from '../components/common/StatusBadges';
 import { getApiUrl, formatDateTime } from '../utils/staffUtils';
 
 interface ModuleResult {
@@ -365,7 +365,7 @@ export default function SubmissionDetailPage() {
                                     </div>
                                 </td>
                                 <td style={{ padding: '16px 24px' }}>
-                                    <DecisionBadge decision={module.decision_hint} />
+                                    <CourseMatchBadge decision={module.decision_hint} />
                                 </td>
                                 <td style={{ padding: '16px 24px' }}>
                                     <button

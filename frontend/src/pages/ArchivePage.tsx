@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
-import { DecisionBadge, StatusBadge } from '../components/common/StatusBadges';
+import { StatusBadge } from '../components/common/StatusBadges';
 import { getApiUrl, formatDate } from '../utils/staffUtils';
 
 interface SubmissionItem {
@@ -163,6 +163,7 @@ export default function ArchivePage() {
     const filteredSubmissions = allSubmissions.filter(submission => {
         // Search filter
         const matchesSearch =
+            submission.submission_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             submission.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             submission.tum_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             submission.previous_university.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -307,7 +308,7 @@ export default function ArchivePage() {
                                 <Search size={20} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
                                 <input
                                     type="text"
-                                    placeholder={viewMode === 'tasks' ? "Search student, module, or university..." : "Search student, email, university, or country..."}
+                                    placeholder={viewMode === 'tasks' ? "Search student, module, or university..." : "Search submission ID, student, email, university, or country..."}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     style={{
@@ -582,8 +583,6 @@ export default function ArchivePage() {
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Module</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Student</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>University</th>
-                                        <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Score</th>
-                                        <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Decision</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Date</th>
                                     </tr>
@@ -609,20 +608,6 @@ export default function ArchivePage() {
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: '16px 24px', fontSize: 14, color: TUM_COLORS.gray80 }}>{task.university}</td>
-                                                <td style={{ padding: '16px 24px' }}>
-                                                    <div style={{
-                                                        display: 'inline-block',
-                                                        padding: '4px 12px',
-                                                        borderRadius: 6,
-                                                        fontSize: 14,
-                                                        fontWeight: 600,
-                                                        backgroundColor: task.score >= 80 ? '#DCFCE7' : task.score >= 60 ? '#FEF3C7' : '#FEE2E2',
-                                                        color: task.score >= 80 ? '#166534' : task.score >= 60 ? '#854D0E' : '#991B1B'
-                                                    }}>
-                                                        {task.score.toFixed(0)}
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '16px 24px' }}><DecisionBadge decision={task.decision} /></td>
                                                 <td style={{ padding: '16px 24px' }}><StatusBadge status={task.status} /></td>
                                                 <td style={{ padding: '16px 24px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: TUM_COLORS.gray50 }}>
@@ -634,7 +619,7 @@ export default function ArchivePage() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={7} style={{ padding: 48, textAlign: 'center', color: TUM_COLORS.gray50 }}>
+                                            <td colSpan={5} style={{ padding: 48, textAlign: 'center', color: TUM_COLORS.gray50 }}>
                                                 No tasks found matching your filters.
                                             </td>
                                         </tr>
@@ -654,7 +639,6 @@ export default function ArchivePage() {
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>University</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Country</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Modules</th>
-                                        <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Avg Score</th>
                                         <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Date</th>
                                     </tr>
                                 </thead>
@@ -688,19 +672,6 @@ export default function ArchivePage() {
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: '16px 24px' }}>
-                                                    <div style={{
-                                                        display: 'inline-block',
-                                                        padding: '4px 12px',
-                                                        borderRadius: 6,
-                                                        fontSize: 14,
-                                                        fontWeight: 600,
-                                                        backgroundColor: submission.average_score >= 80 ? '#DCFCE7' : submission.average_score >= 60 ? '#FEF3C7' : '#FEE2E2',
-                                                        color: submission.average_score >= 80 ? '#166534' : submission.average_score >= 60 ? '#854D0E' : '#991B1B'
-                                                    }}>
-                                                        {submission.average_score.toFixed(0)}
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '16px 24px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: TUM_COLORS.gray50 }}>
                                                         <Calendar size={14} />
                                                         {formatDate(submission.submission_date)}
@@ -710,7 +681,7 @@ export default function ArchivePage() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: TUM_COLORS.gray50 }}>
+                                            <td colSpan={5} style={{ padding: 48, textAlign: 'center', color: TUM_COLORS.gray50 }}>
                                                 No submissions found matching your filters.
                                             </td>
                                         </tr>

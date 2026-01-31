@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, ArrowRight } from 'lucide-react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
-import { DecisionBadge } from '../components/common/StatusBadges';
 import { getTaskAgeColor, formatDate } from '../utils/staffUtils';
 
 export default function TasksPage() {
@@ -30,16 +29,16 @@ export default function TasksPage() {
         }
     };
 
-    // Filter tasks - only show pending tasks
-    const pendingTasks = allTasks.filter(task => task.status === 'pending');
+    // Filter tasks - show pending and on_hold tasks
+    const activeTasks = allTasks.filter(task => task.status === 'pending' || task.status === 'on_hold');
     
-    const filteredTasks = pendingTasks.filter(task => {
+    const filteredTasks = activeTasks.filter(task => {
         const matchesSearch =
             task.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.tumModuleTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.tumModuleNr.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesStatus = statusFilter === 'all' || task.decision === statusFilter;
+        const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
 
         return matchesSearch && matchesStatus;
     });
@@ -105,9 +104,8 @@ export default function TasksPage() {
                         }}
                     >
                         <option value="all">All Statuses</option>
-                        <option value="highly_equivalent">High Match</option>
-                        <option value="partial">Partial Match</option>
-                        <option value="insufficient">Insufficient</option>
+                        <option value="pending">Pending Review</option>
+                        <option value="on_hold">On Hold</option>
                     </select>
                 </div>
             </div>
@@ -122,7 +120,7 @@ export default function TasksPage() {
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>AI Score</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Created</th>
-                            <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Action</th>
+                            <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -131,7 +129,14 @@ export default function TasksPage() {
                                 <tr
                                     key={task.id}
                                     style={{ borderBottom: '1px solid #E5E7EB', cursor: 'pointer', transition: 'background-color 0.1s' }}
-                                    onClick={() => navigate(`/staff/tasks/${task.id}`, { state: { from: 'tasks' } })}
+                                    onClick={() => {
+                                        // Prevent navigation if user is selecting text
+                                        const selection = window.getSelection();
+                                        if (selection && selection.toString().length > 0) {
+                                            return;
+                                        }
+                                        navigate(`/staff/tasks/${task.id}`, { state: { from: 'tasks' } });
+                                    }}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
@@ -159,7 +164,16 @@ export default function TasksPage() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <DecisionBadge decision={task.decision} />
+                                        <span style={{
+                                            fontSize: 12,
+                                            fontWeight: 600,
+                                            padding: '4px 12px',
+                                            borderRadius: 12,
+                                            backgroundColor: task.status === 'pending' ? '#EFF6FF' : '#FFF7ED',
+                                            color: task.status === 'pending' ? '#1e40af' : TUM_COLORS.orange
+                                        }}>
+                                            {task.status === 'pending' ? 'Pending Review' : 'On Hold'}
+                                        </span>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{ fontSize: 13, color: getTaskAgeColor(task.createdAt), fontWeight: 500 }}>
@@ -167,29 +181,43 @@ export default function TasksPage() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <button style={{
-                                            display: 'flex',
+                                        <div style={{
+                                            display: 'inline-flex',
                                             alignItems: 'center',
-                                            gap: 4,
-                                            padding: '6px 12px',
+                                            gap: 6,
+                                            padding: '8px 16px',
                                             borderRadius: 6,
-                                            border: `1px solid ${TUM_COLORS.blue}`,
+                                            backgroundColor: 'transparent',
+                                            border: `2px solid ${TUM_COLORS.blue}`,
                                             color: TUM_COLORS.blue,
                                             fontSize: 13,
-                                            fontWeight: 500,
-                                            backgroundColor: 'transparent',
+                                            fontWeight: 600,
+                                            transition: 'all 0.2s',
                                             cursor: 'pointer'
-                                        }}>
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = TUM_COLORS.blue;
+                                            e.currentTarget.style.color = 'white';
+                                            e.currentTarget.style.transform = 'translateX(4px)';
+                                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.15)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                            e.currentTarget.style.color = TUM_COLORS.blue;
+                                            e.currentTarget.style.transform = 'translateX(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
+                                        }}
+                                        >
                                             Review
-                                            <ArrowRight size={14} />
-                                        </button>
+                                            <ArrowRight size={16} />
+                                        </div>
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
                                 <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#6B7280' }}>
-                                    No pending tasks found matching your filters.
+                                    No tasks found matching your filters.
                                 </td>
                             </tr>
                         )}
