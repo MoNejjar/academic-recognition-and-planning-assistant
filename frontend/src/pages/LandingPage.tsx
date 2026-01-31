@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Users, BookOpen, ArrowRight } from 'lucide-react';
 import { TUM_COLORS } from '../styles/tumStyles';
 import { useUser, UserRole } from '../context/UserContext';
+import tumLogo from '../assets/tum-logo.svg';
 
 interface RoleCardProps {
     title: string;
@@ -138,17 +139,21 @@ export default function LandingPage() {
                     <div style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: 8,
-                        backgroundColor: 'rgba(255,255,255,0.15)',
-                        padding: '8px 16px',
+                        gap: 12,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        padding: '10px 20px',
                         borderRadius: 100,
                         marginBottom: 24,
                     }}>
-                        <BookOpen size={16} color={TUM_COLORS.white} />
+                        <img 
+                            src={tumLogo} 
+                            alt="TUM Logo" 
+                            style={{ height: 24 }} 
+                        />
                         <span style={{ 
-                            color: TUM_COLORS.white, 
+                            color: TUM_COLORS.blueDarker, 
                             fontSize: 13, 
-                            fontWeight: 500,
+                            fontWeight: 600,
                             letterSpacing: 0.5,
                         }}>
                             Technical University of Munich

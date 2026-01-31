@@ -5,7 +5,7 @@
  * and makes it available throughout the application.
  */
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 
 export type UserRole = 'student' | 'staff' | 'professor' | null;
 

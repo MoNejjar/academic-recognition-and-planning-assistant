@@ -7,6 +7,7 @@ import {
     Archive,
     LogOut
 } from 'lucide-react';
+import tumLogo from '../../assets/tum-logo.svg';
 
 
 
@@ -73,10 +74,16 @@ export default function Layout() {
             }}>
                 {/* Logo Area */}
                 <div style={{ padding: '24px 24px 12px', borderBottom: '1px solid #334155' }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px' }}>
-                        <span style={{ color: '#3B82F6' }}>TUM</span> ARIP
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                        <img 
+                            src={tumLogo} 
+                            alt="TUM Logo" 
+                            style={{ height: 28, filter: 'brightness(0) invert(1)' }} 
+                        />
                     </div>
-                    <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Academic Recognition Intelligence Portal</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.3px', lineHeight: 1.3 }}>
+                        Academic Recognition<br />Intelligence Platform
+                    </div>
                 </div>
 
                 {/* Navigation */}

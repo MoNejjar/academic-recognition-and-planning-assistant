@@ -1,4 +1,4 @@
-# ARIP - Academic Recognition and Planning Assistant
+# ARIP - Academic Recognition Intelligence Platform
 
 A web application to assist with course credit transfer evaluation at TUM (Technical University of Munich).
 
@@ -7,9 +7,19 @@ A web application to assist with course credit transfer evaluation at TUM (Techn
 ## 🎯 Project Overview
 
 ARIP helps students, staff, and professors in the credit transfer process by:
-- Matching external university courses to TUM modules using AI
-- Generating transferability reports with match scores
-- Providing a chatbot for user assistance
+- **Students**: Submit recognition applications with course documents
+- **Staff**: Review applications, communicate with professors, manage workflow
+- **Professors**: Evaluate course equivalencies and make final decisions
+- **AI-Powered**: Automatic course matching, learning outcome analysis, and recommendations
+
+### Key Features
+- Multi-role portal (Student, Staff, Professor)
+- AI-based course equivalence analysis with detailed explanations
+- Professor-Staff discussion threads on applications
+- Final verdict system with decision documentation
+- Kanban-style task management for staff
+- PDF report generation
+- Context-aware chatbot for user assistance
 
 ## 🏗️ Project Structure
 
@@ -18,17 +28,22 @@ academic-recognition-and-planning-assistant/
 ├── frontend/                    # React + TypeScript + Vite
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/         # Shared UI components
-│   │   │   ├── layout/         # Layout components
-│   │   │   ├── course-matching/ # Course matching UI
-│   │   │   ├── reporting/      # Report display/export
-│   │   │   └── chatbot/        # Chatbot widget
+│   │   │   ├── common/         # Shared UI (CommentThread, SharedComponents)
+│   │   │   ├── layout/         # Staff sidebar layout
+│   │   │   ├── analytics/      # ModuleCardModern, AnalyticsCommon
+│   │   │   ├── chatbot/        # FloatingChat widget
+│   │   │   └── ui/             # Radix UI wrappers
 │   │   ├── pages/              # Page components
+│   │   │   ├── LandingPage.tsx       # Role selection portal
+│   │   │   ├── StudentDashboard.tsx  # Student wizard flow
+│   │   │   ├── StaffDashboard.tsx    # Staff routing
+│   │   │   ├── TaskDetailPageModern.tsx  # Task review with analytics
+│   │   │   └── ...
+│   │   ├── context/            # UserContext (role management)
 │   │   ├── services/           # API service calls
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── types/              # TypeScript types
-│   │   ├── utils/              # Utility functions
-│   │   └── constants/          # App constants
+│   │   ├── data/               # Task manager, mock data
+│   │   ├── styles/             # TUM brand colors
+│   │   └── utils/              # Utilities
 │   ├── Dockerfile
 │   └── package.json
 │
@@ -36,31 +51,32 @@ academic-recognition-and-planning-assistant/
 │   ├── app/
 │   │   ├── main.py             # FastAPI entrypoint
 │   │   ├── routes/             # API endpoints
-│   │   │   ├── course_matching.py
-│   │   │   ├── reporting.py
-│   │   │   └── chatbot.py
-│   │   ├── models/             # Pydantic models
-│   │   ├── core/               # Core config & utilities
-│   │   │   ├── config.py
-│   │   │   ├── database.py
-│   │   │   ├── security.py
-│   │   │   ├── logging.py
-│   │   │   └── exceptions.py
+│   │   │   ├── tasks.py        # Task management
+│   │   │   ├── comments.py     # Discussion threads
+│   │   │   ├── submissions.py  # Student submissions
+│   │   │   ├── analytics.py    # AI analysis
+│   │   │   ├── chatbot.py      # Chatbot API
+│   │   │   └── reporting.py    # PDF reports
+│   │   ├── models/             # SQLAlchemy + Pydantic models
+│   │   │   ├── task.py, comment.py, submission.py
+│   │   │   └── analytics.py, chatbot.py
+│   │   ├── repositories/       # Database access layer
+│   │   ├── core/               # Config, database, security
 │   │   └── services/           # Business logic
+│   │       ├── analytics/      # LLM-based analysis
 │   │       ├── llm_service/    # LLM API integration
-│   │       ├── course_recognition/ # Matching & assessment
-│   │       ├── reporting/      # Report generation & PDF
-│   │       ├── chatbot/        # Chatbot engine
-│   │       └── storage/        # File & DB storage
-│   ├── tests/                  # Test files
+│   │       ├── chatbot/        # RAG chatbot engine
+│   │       ├── pdf_extraction/ # Document parsing
+│   │       ├── reporting/      # PDF generation
+│   │       └── storage/        # File & cache storage
+│   ├── tests/                  # Pytest test files
+│   ├── data/                   # SQLite database
 │   ├── uploads/                # Uploaded documents
 │   ├── Dockerfile
 │   └── pyproject.toml
 │
 ├── docker-compose.yml          # Docker orchestration
 ├── .env.example                # Environment variables template
-├── .gitignore
-├── LICENSE
 └── README.md
 ```
 
@@ -70,11 +86,13 @@ academic-recognition-and-planning-assistant/
 
 | Module | Description | Frontend | Backend |
 |--------|-------------|----------|---------|
-| **Course Matching** | Credit transfer evaluation, matching, grading | `components/course-matching/` | `services/course_recognition/` |
-| **Reporting** | Match results visualization & PDF export | `components/reporting/` | `services/reporting/` |
-| **LLM Services** | LLM API integration | - | `services/llm_service/` |
-| **Chatbot** | User assistance chatbot | `components/chatbot/` | `services/chatbot/` |
-| **Storage** | Document & data storage | - | `services/storage/` |
+| **Task Management** | Review workflow, status updates | `pages/TasksPage`, `TaskDetailPageModern` | `routes/tasks.py`, `repositories/task.py` |
+| **Analytics** | AI-powered course equivalence analysis | `components/analytics/ModuleCardModern` | `services/analytics/`, `routes/analytics.py` |
+| **Comments** | Professor-Staff discussion threads | `components/common/CommentThread` | `routes/comments.py`, `models/comment.py` |
+| **Submissions** | Student application handling | `pages/StudentDashboard` | `routes/submissions.py`, `services/submission/` |
+| **Chatbot** | Context-aware user assistance | `components/chatbot/FloatingChat` | `services/chatbot/`, `routes/chatbot.py` |
+| **Reporting** | PDF report generation | `services/reporting/` | `services/reporting/` |
+| **LLM Services** | OpenAI/Ollama integration | - | `services/llm_service/` |
 
 ## 🚀 Getting Started
 
@@ -137,29 +155,37 @@ npm test
 
 ## 👥 User Roles
 
-- **Student**: Submit applications, upload documents
-- **Staff**: Review applications, intermediate between students and professors
-- **Professor**: Make final decisions on credit transfers
+| Role | Access | Capabilities |
+|------|--------|--------------|
+| **Student** | `/student/*` | Submit applications, upload documents, track status |
+| **Staff** | `/staff/*` | Review applications, manage workflow, communicate with professors |
+| **Professor** | `/staff/*` | Evaluate equivalencies, make final decisions, write verdicts |
 
 ## 📋 Key Features
 
-### Minimal Requirements
-- [ ] Course matching form
-- [ ] One-to-one course matching
-- [ ] Credit matching
-- [ ] Simple grade calculation (passing/not passing)
-- [ ] Match score display in UI
-- [ ] PDF report generation
-- [ ] Callable LLM via API
-- [ ] Context-based chatbot
-- [ ] Persistent database
+### Implemented ✅
+- [x] Multi-role portal with role-based navigation
+- [x] Student submission wizard (4-step process)
+- [x] AI-powered course equivalence analysis
+- [x] Learning outcome matching with confidence scores
+- [x] Assessment Quality indicators (merged confidence + input quality)
+- [x] Collapsible, tooltip-enhanced UI sections
+- [x] Professor-Staff discussion threads
+- [x] Final verdict system with decision documentation
+- [x] Task status management (pending, approved, rejected, on hold)
+- [x] Kanban board view for task overview
+- [x] Archive for decided applications
+- [x] PDF document extraction
+- [x] Comprehensive LLM prompts for detailed analysis
+- [x] Context-aware RAG chatbot
+- [x] Persistent SQLite database
+- [x] TUM brand styling throughout
 
-### Extra Requirements
-- [ ] Multiple-to-one course matching
-- [ ] Explainable matching (why it matches/doesn't match)
-- [ ] Complex grade calculation
-- [ ] Credit matching in reports
-- [ ] Model specification for LLM
+### Potential Enhancements
+- [ ] Email notifications for status changes
+- [ ] Batch processing for multiple applications
+- [ ] Historical analytics and trends
+- [ ] Integration with TUM course catalog API
 
 ## 🔧 Configuration
 

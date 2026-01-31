@@ -10,7 +10,6 @@
  * - TUM brand colors and modern design
  */
 
-import { useState } from 'react';
 import {
     CheckCircle2,
     XCircle,
@@ -208,20 +207,9 @@ function MatchDistribution({ matches }: MatchDistributionProps) {
 
 interface ModuleCardModernProps {
     result: ModuleAnalysisResult;
-    defaultExpanded?: boolean;
 }
 
-export default function ModuleCardModern({ result, defaultExpanded = false }: ModuleCardModernProps) {
-    const [sectionsExpanded, setSectionsExpanded] = useState({
-        overview: defaultExpanded,
-        quality: defaultExpanded,
-        outcomes: false,
-        suggestions: false,
-    });
-
-    const toggleSection = (section: keyof typeof sectionsExpanded) => {
-        setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
-    };
+export default function ModuleCardModern({ result }: ModuleCardModernProps) {
 
     return (
         <div style={{

@@ -16,7 +16,6 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
     ArrowLeft, 
     User, 
-    GraduationCap, 
     CheckCircle2, 
     XCircle, 
     Clock,
@@ -834,7 +833,7 @@ export default function TaskDetailPage() {
                 <StudentInfoCard task={task} />
                 
                 {/* Module Recognition Analysis */}
-                <ModuleCardModern result={moduleResult} defaultExpanded={true} />
+                <ModuleCardModern result={moduleResult} />
                 
                 {/* Discussion Thread - Below Module Overview */}
                 <CommentThread
