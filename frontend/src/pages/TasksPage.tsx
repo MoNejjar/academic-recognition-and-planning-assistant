@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowRight } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
 import { getTaskAgeColor, formatDate } from '../utils/staffUtils';
@@ -120,7 +120,7 @@ export default function TasksPage() {
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>AI Score</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Created</th>
-                            <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Action</th>
+                            <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -129,7 +129,14 @@ export default function TasksPage() {
                                 <tr
                                     key={task.id}
                                     style={{ borderBottom: '1px solid #E5E7EB', cursor: 'pointer', transition: 'background-color 0.1s' }}
-                                    onClick={() => navigate(`/staff/tasks/${task.id}`, { state: { from: 'tasks' } })}
+                                    onClick={() => {
+                                        // Prevent navigation if user is selecting text
+                                        const selection = window.getSelection();
+                                        if (selection && selection.toString().length > 0) {
+                                            return;
+                                        }
+                                        navigate(`/staff/tasks/${task.id}`, { state: { from: 'tasks' } });
+                                    }}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
@@ -174,22 +181,17 @@ export default function TasksPage() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        <button style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 4,
-                                            padding: '6px 12px',
-                                            borderRadius: 6,
-                                            border: `1px solid ${TUM_COLORS.blue}`,
-                                            color: TUM_COLORS.blue,
+                                        <span style={{
                                             fontSize: 13,
+                                            color: '#9CA3AF',
                                             fontWeight: 500,
-                                            backgroundColor: 'transparent',
-                                            cursor: 'pointer'
-                                        }}>
-                                            Review
-                                            <ArrowRight size={14} />
-                                        </button>
+                                            transition: 'color 0.15s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = TUM_COLORS.blue}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+                                        >
+                                            Review →
+                                        </span>
                                     </td>
                                 </tr>
                             ))
