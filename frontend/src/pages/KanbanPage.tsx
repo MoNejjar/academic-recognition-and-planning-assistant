@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { useNavigate } from 'react-router-dom';
@@ -38,7 +37,7 @@ const KanbanColumn = ({ title, tasks, color, navigate }: { title: string, tasks:
                     tasks.map(task => (
                         <div
                             key={task.id}
-                            onClick={() => navigate(`/staff/tasks/${task.id}`)}
+                            onClick={() => navigate(`/staff/tasks/${task.id}`, { state: { from: 'kanban' } })}
                             style={{
                                 backgroundColor: 'white',
                                 padding: 16,

@@ -58,6 +58,8 @@ async def get_tasks(
                     "status": task.status,
                     "submissionId": task.submission_id,
                     "submissionDate": task.submission_date.isoformat(),
+                    "createdAt": task.created_at.isoformat(),
+                    "decisionDate": task.decision_date.isoformat() if task.decision_date else None,
                     "isManualTest": bool(task.is_manual_test)
                 }
                 for task in tasks
@@ -107,6 +109,8 @@ async def get_task_detail(
             "status": task.status,
             "submissionId": task.submission_id,
             "submissionDate": task.submission_date.isoformat(),
+            "createdAt": task.created_at.isoformat(),
+            "decisionDate": task.decision_date.isoformat() if task.decision_date else None,
             "isManualTest": bool(task.is_manual_test),
             "result": task.analytics_result.analysis_data,
             "submission": {

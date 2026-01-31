@@ -1,9 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowRight, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Search, Filter, ArrowRight } from 'lucide-react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
+import { DecisionBadge } from '../components/common/StatusBadges';
+import { getTaskAgeColor, formatDate } from '../utils/staffUtils';
 
 export default function TasksPage() {
     const navigate = useNavigate();
@@ -29,8 +30,10 @@ export default function TasksPage() {
         }
     };
 
-    // Filter tasks
-    const filteredTasks = allTasks.filter(task => {
+    // Filter tasks - only show pending tasks
+    const pendingTasks = allTasks.filter(task => task.status === 'pending');
+    
+    const filteredTasks = pendingTasks.filter(task => {
         const matchesSearch =
             task.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.tumModuleTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,19 +43,6 @@ export default function TasksPage() {
 
         return matchesSearch && matchesStatus;
     });
-
-    const getDecisionBadge = (decision: string) => {
-        switch (decision) {
-            case 'highly_equivalent':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700"><CheckCircle2 size={12} /> High Match</span>;
-            case 'partial':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700"><AlertTriangle size={12} /> Partial</span>;
-            case 'insufficient':
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><XCircle size={12} /> Insufficient</span>;
-            default:
-                return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Unknown</span>;
-        }
-    };
 
     return (
         <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
@@ -131,6 +121,7 @@ export default function TasksPage() {
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Student</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>AI Score</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
+                            <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Created</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Action</th>
                         </tr>
                     </thead>
@@ -140,7 +131,7 @@ export default function TasksPage() {
                                 <tr
                                     key={task.id}
                                     style={{ borderBottom: '1px solid #E5E7EB', cursor: 'pointer', transition: 'background-color 0.1s' }}
-                                    onClick={() => navigate(`/staff/tasks/${task.id}`)}
+                                    onClick={() => navigate(`/staff/tasks/${task.id}`, { state: { from: 'tasks' } })}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
@@ -168,7 +159,12 @@ export default function TasksPage() {
                                         </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
-                                        {getDecisionBadge(task.decision)}
+                                        <DecisionBadge decision={task.decision} />
+                                    </td>
+                                    <td style={{ padding: '16px 24px' }}>
+                                        <div style={{ fontSize: 13, color: getTaskAgeColor(task.createdAt), fontWeight: 500 }}>
+                                            {task.createdAt ? formatDate(task.createdAt) : 'N/A'}
+                                        </div>
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         <button style={{
@@ -192,8 +188,8 @@ export default function TasksPage() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={5} style={{ padding: 48, textAlign: 'center', color: '#6B7280' }}>
-                                    No modules found matching your filters.
+                                <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#6B7280' }}>
+                                    No pending tasks found matching your filters.
                                 </td>
                             </tr>
                         )}

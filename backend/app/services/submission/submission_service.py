@@ -150,7 +150,7 @@ class SubmissionService:
         self, submission_id: str, tum_module_nr: str, status: str
     ) -> Optional[AnalyticsResult]:
         """
-        Update individual module status.
+        Update individual module status (now only updates the task status).
 
         Args:
             submission_id: Unique identifier for the submission
@@ -158,11 +158,14 @@ class SubmissionService:
             status: New status (pending, approved, rejected)
 
         Returns:
-            Updated AnalyticsResult object or None if not found
+            AnalyticsResult object or None if not found
         """
         try:
-            result = self.analytics_repo.update_status(submission_id, tum_module_nr, status)
+            result = self.analytics_repo.get_by_submission_and_module(submission_id, tum_module_nr)
             if result:
+                # Update only the corresponding task status
+                task_id = f"{submission_id}-{tum_module_nr}"
+                self.task_repo.update_status(task_id, status)
                 self.db.commit()
             return result
         except Exception as e:
@@ -237,13 +240,6 @@ class SubmissionService:
             task = self.task_repo.update_status(task_id, status)
 
             if task:
-                # Also update the corresponding analytics result status
-                # Access module_nr via the analytics_result relationship
-                self.analytics_repo.update_status(
-                    task.submission_id, 
-                    task.analytics_result.tum_module_nr, 
-                    status
-                )
                 self.db.commit()
 
             return task

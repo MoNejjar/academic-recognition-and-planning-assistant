@@ -1,20 +1,26 @@
-
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { getTaskDetail, TaskItem } from '../data/taskManager';
 import ModuleCard from '../components/analytics/ModuleCard';
 import { TUM_COLORS } from '../styles/tumStyles';
+import { getApiUrl, getTaskAgeColor } from '../utils/staffUtils';
 
 export default function TaskDetailPage() {
     const { taskId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [task, setTask] = useState<TaskItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    
+    // Determine where the user came from
+    const from = (location.state as any)?.from || 'tasks';
+    const submissionId = (location.state as any)?.submissionId;
 
     useEffect(() => {
         loadTask();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskId]);
 
     const loadTask = async () => {
@@ -34,7 +40,7 @@ export default function TaskDetailPage() {
 
         setUpdating(true);
         try {
-            const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+            const API_URL = getApiUrl();
             
             // Use the tasks API endpoint to update status
             const response = await fetch(
@@ -75,7 +81,17 @@ export default function TaskDetailPage() {
             {/* Header / Nav */}
             <div style={{ marginBottom: 24 }}>
                 <button
-                    onClick={() => navigate('/staff/tasks')}
+                    onClick={() => {
+                        if (from === 'submission' && submissionId) {
+                            navigate(`/staff/submissions/${submissionId}`);
+                        } else if (from === 'archive') {
+                            navigate('/staff/archive');
+                        } else if (from === 'kanban') {
+                            navigate('/staff/kanban');
+                        } else {
+                            navigate('/staff/tasks');
+                        }
+                    }}
                     style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -89,7 +105,9 @@ export default function TaskDetailPage() {
                     }}
                 >
                     <ArrowLeft size={16} />
-                    Back to Tasks
+                    {from === 'submission' ? 'Back to Submission' : 
+                     from === 'archive' ? 'Back to Archive' :
+                     from === 'kanban' ? 'Back to Kanban' : 'Back to Tasks'}
                 </button>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -97,7 +115,7 @@ export default function TaskDetailPage() {
                         <h1 style={{ fontSize: 24, fontWeight: 700, color: TUM_COLORS.gray80, marginBottom: 8 }}>
                             Verify Module Recognition
                         </h1>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, color: TUM_COLORS.gray50, fontSize: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, color: TUM_COLORS.gray50, fontSize: 14, flexWrap: 'wrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <User size={16} />
                                 <span style={{ fontWeight: 500, color: TUM_COLORS.gray80 }}>{task.studentName}</span>
@@ -107,6 +125,44 @@ export default function TaskDetailPage() {
                                 <GraduationCap size={16} />
                                 <span>{task.university}</span>
                             </div>
+                            {task.createdAt && (
+                                <>
+                                    <div style={{ width: 1, height: 16, backgroundColor: '#D1D5DB' }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <Clock size={16} style={{ color: task.status !== 'pending' ? '#000' : getTaskAgeColor(task.createdAt) }} />
+                                        <span style={{ fontWeight: 500, color: task.status !== 'pending' ? '#000' : getTaskAgeColor(task.createdAt) }}>
+                                            Created: {new Date(task.createdAt).toLocaleDateString('en-US', { 
+                                                year: 'numeric', 
+                                                month: 'short', 
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+                            {task.decisionDate && (
+                                <>
+                                    <div style={{ width: 1, height: 16, backgroundColor: '#D1D5DB' }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        {task.status === 'approved' ? (
+                                            <CheckCircle2 size={16} style={{ color: '#22c55e' }} />
+                                        ) : (
+                                            <XCircle size={16} style={{ color: '#ef4444' }} />
+                                        )}
+                                        <span style={{ fontWeight: 500, color: '#000' }}>
+                                            {task.status === 'approved' ? 'Approved' : 'Rejected'}: {new Date(task.decisionDate).toLocaleDateString('en-US', { 
+                                                year: 'numeric', 
+                                                month: 'short', 
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

@@ -178,9 +178,7 @@ async def get_submission_detail(
         # Extract module results from analytics_results
         module_results = []
         for result in submission.analytics_results:
-            # Include the module's individual status in the result data
             module_data = result.analysis_data.copy()
-            module_data['status'] = result.status  # Add individual module status
             module_results.append(module_data)
         
         return {
@@ -263,7 +261,6 @@ async def update_module_status(
         return {
             "submission_id": submission_id,
             "tum_module_nr": tum_module_nr,
-            "status": updated_module.status,
             "message": f"Module {tum_module_nr} status updated to {status}"
         }
     except HTTPException:

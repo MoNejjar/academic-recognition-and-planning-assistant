@@ -256,9 +256,6 @@ class AnalyticsResult(Base):
     overall_score = Column(Float, nullable=False)
     decision_hint = Column(String(50), nullable=False)  # highly_equivalent, partial, insufficient
     
-    # Individual module status (independent of submission status)
-    status = Column(String(50), default="pending", nullable=False)  # pending, approved, rejected
-    
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     

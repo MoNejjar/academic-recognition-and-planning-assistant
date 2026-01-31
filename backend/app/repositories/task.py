@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy import desc, select
@@ -68,12 +69,20 @@ class TaskRepository:
         return len(list(self.db.scalars(stmt).all()))
 
     def update_status(self, task_id: str, status: str) -> Optional[Task]:
-        """Update task status."""
+        """Update task status and set decision_date if approved/rejected."""
         task = self.get_by_id(task_id)
 
         if task:
             logger.info(f"Updating task {task_id} status: {task.status} -> {status}")
             task.status = status
+            
+            # Set decision_date when status changes to approved or rejected
+            if status in ["approved", "rejected"]:
+                task.decision_date = datetime.utcnow()
+            elif status == "pending":
+                # Clear decision_date if status reverts to pending
+                task.decision_date = None
+                
             self.db.flush()
 
         return task

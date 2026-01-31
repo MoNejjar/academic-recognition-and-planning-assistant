@@ -31,6 +31,7 @@ class Task(Base):
     submission_date = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    decision_date = Column(DateTime, nullable=True)  # Set when status changes to approved/rejected
     
     # Relationships - fetch data via joins instead of denormalization
     submission = relationship("StudentSubmission", foreign_keys=[submission_id])
