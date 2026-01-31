@@ -163,6 +163,7 @@ export default function ArchivePage() {
     const filteredSubmissions = allSubmissions.filter(submission => {
         // Search filter
         const matchesSearch =
+            submission.submission_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             submission.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             submission.tum_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             submission.previous_university.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -307,7 +308,7 @@ export default function ArchivePage() {
                                 <Search size={20} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
                                 <input
                                     type="text"
-                                    placeholder={viewMode === 'tasks' ? "Search student, module, or university..." : "Search student, email, university, or country..."}
+                                    placeholder={viewMode === 'tasks' ? "Search student, module, or university..." : "Search submission ID, student, email, university, or country..."}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     style={{
