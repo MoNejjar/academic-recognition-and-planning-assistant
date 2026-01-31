@@ -20,6 +20,7 @@ export interface TaskItem {
     submissionId?: string;
     submissionDate?: string;
     createdAt?: string;
+    decisionDate?: string; // Date when task was approved/rejected
 }
 
 const STORAGE_KEY = 'tum_assistant_custom_tasks';

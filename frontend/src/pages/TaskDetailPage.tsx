@@ -129,9 +129,30 @@ export default function TaskDetailPage() {
                                 <>
                                     <div style={{ width: 1, height: 16, backgroundColor: '#D1D5DB' }} />
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <Clock size={16} style={{ color: getTaskAgeColor(task.createdAt) }} />
-                                        <span style={{ fontWeight: 500, color: getTaskAgeColor(task.createdAt) }}>
+                                        <Clock size={16} style={{ color: task.status !== 'pending' ? '#000' : getTaskAgeColor(task.createdAt) }} />
+                                        <span style={{ fontWeight: 500, color: task.status !== 'pending' ? '#000' : getTaskAgeColor(task.createdAt) }}>
                                             Created: {new Date(task.createdAt).toLocaleDateString('en-US', { 
+                                                year: 'numeric', 
+                                                month: 'short', 
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+                            {task.decisionDate && (
+                                <>
+                                    <div style={{ width: 1, height: 16, backgroundColor: '#D1D5DB' }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        {task.status === 'approved' ? (
+                                            <CheckCircle2 size={16} style={{ color: '#22c55e' }} />
+                                        ) : (
+                                            <XCircle size={16} style={{ color: '#ef4444' }} />
+                                        )}
+                                        <span style={{ fontWeight: 500, color: '#000' }}>
+                                            {task.status === 'approved' ? 'Approved' : 'Rejected'}: {new Date(task.decisionDate).toLocaleDateString('en-US', { 
                                                 year: 'numeric', 
                                                 month: 'short', 
                                                 day: 'numeric',
