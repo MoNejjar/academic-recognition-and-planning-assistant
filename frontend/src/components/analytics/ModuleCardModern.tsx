@@ -21,6 +21,7 @@ import {
     TrendingUp,
     Layers,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 import { ModuleAnalysisResult } from '../../types/analyticsTypes';
 import { TUM_COLORS } from '../../styles/tumStyles';
@@ -659,9 +660,26 @@ export default function ModuleCardModern({ result }: ModuleCardModernProps) {
                             fontSize: 14,
                             color: TUM_COLORS.gray80,
                             lineHeight: 1.7,
-                            whiteSpace: 'pre-wrap',
-                        }}>
-                            {result.detailedReasoning}
+                        }}
+                        className="prose prose-sm max-w-none"
+                        >
+                            <ReactMarkdown
+                                components={{
+                                    h1: ({ children }) => <h1 style={{ fontSize: 20, fontWeight: 700, marginTop: 16, marginBottom: 8, color: TUM_COLORS.blueDark }}>{children}</h1>,
+                                    h2: ({ children }) => <h2 style={{ fontSize: 18, fontWeight: 600, marginTop: 14, marginBottom: 6, color: TUM_COLORS.blueDark }}>{children}</h2>,
+                                    h3: ({ children }) => <h3 style={{ fontSize: 16, fontWeight: 600, marginTop: 12, marginBottom: 4, color: TUM_COLORS.gray80 }}>{children}</h3>,
+                                    p: ({ children }) => <p style={{ marginBottom: 10 }}>{children}</p>,
+                                    ul: ({ children }) => <ul style={{ marginLeft: 20, marginBottom: 10, listStyleType: 'disc' }}>{children}</ul>,
+                                    ol: ({ children }) => <ol style={{ marginLeft: 20, marginBottom: 10, listStyleType: 'decimal' }}>{children}</ol>,
+                                    li: ({ children }) => <li style={{ marginBottom: 4 }}>{children}</li>,
+                                    strong: ({ children }) => <strong style={{ fontWeight: 600, color: TUM_COLORS.gray80 }}>{children}</strong>,
+                                    em: ({ children }) => <em style={{ fontStyle: 'italic' }}>{children}</em>,
+                                    code: ({ children }) => <code style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: 4, fontSize: 13 }}>{children}</code>,
+                                    blockquote: ({ children }) => <blockquote style={{ borderLeft: `3px solid ${TUM_COLORS.primary}`, paddingLeft: 12, marginLeft: 0, marginBottom: 10, color: TUM_COLORS.gray50, fontStyle: 'italic' }}>{children}</blockquote>,
+                                }}
+                            >
+                                {result.detailedReasoning}
+                            </ReactMarkdown>
                         </div>
                     </CollapsibleSection>
                 )}
