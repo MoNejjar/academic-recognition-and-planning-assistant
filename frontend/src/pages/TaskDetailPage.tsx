@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, User, GraduationCap, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { getTaskDetail, TaskItem } from '../data/taskManager';
 import ModuleCard from '../components/analytics/ModuleCard';
 import { TUM_COLORS } from '../styles/tumStyles';
@@ -17,6 +17,20 @@ export default function TaskDetailPage() {
     // Determine where the user came from
     const from = (location.state as any)?.from || 'tasks';
     const submissionId = (location.state as any)?.submissionId;
+
+    // Get color based on task age
+    const getTaskAgeColor = (createdAt: string | undefined) => {
+        if (!createdAt) return '#6B7280';
+        
+        const now = new Date();
+        const created = new Date(createdAt);
+        const diffMs = now.getTime() - created.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        
+        if (diffDays <= 7) return '#22c55e'; // Green - up to 1 week
+        if (diffDays <= 30) return '#f59e0b'; // Orange - up to 1 month
+        return '#ef4444'; // Red - over 1 month
+    };
 
     useEffect(() => {
         loadTask();
@@ -114,7 +128,7 @@ export default function TaskDetailPage() {
                         <h1 style={{ fontSize: 24, fontWeight: 700, color: TUM_COLORS.gray80, marginBottom: 8 }}>
                             Verify Module Recognition
                         </h1>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, color: TUM_COLORS.gray50, fontSize: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, color: TUM_COLORS.gray50, fontSize: 14, flexWrap: 'wrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <User size={16} />
                                 <span style={{ fontWeight: 500, color: TUM_COLORS.gray80 }}>{task.studentName}</span>
@@ -124,6 +138,23 @@ export default function TaskDetailPage() {
                                 <GraduationCap size={16} />
                                 <span>{task.university}</span>
                             </div>
+                            {task.createdAt && (
+                                <>
+                                    <div style={{ width: 1, height: 16, backgroundColor: '#D1D5DB' }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <Clock size={16} style={{ color: getTaskAgeColor(task.createdAt) }} />
+                                        <span style={{ fontWeight: 500, color: getTaskAgeColor(task.createdAt) }}>
+                                            Created: {new Date(task.createdAt).toLocaleDateString('en-US', { 
+                                                year: 'numeric', 
+                                                month: 'short', 
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

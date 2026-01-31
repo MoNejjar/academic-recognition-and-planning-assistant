@@ -19,6 +19,7 @@ export interface TaskItem {
     // For real submissions
     submissionId?: string;
     submissionDate?: string;
+    createdAt?: string;
 }
 
 const STORAGE_KEY = 'tum_assistant_custom_tasks';

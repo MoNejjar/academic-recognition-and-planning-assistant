@@ -12,6 +12,20 @@ export default function TasksPage() {
     const [allTasks, setAllTasks] = useState<TaskItem[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Get color based on task age
+    const getTaskAgeColor = (createdAt: string | undefined) => {
+        if (!createdAt) return '#6B7280';
+        
+        const now = new Date();
+        const created = new Date(createdAt);
+        const diffMs = now.getTime() - created.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        
+        if (diffDays <= 7) return '#22c55e'; // Green - up to 1 week
+        if (diffDays <= 30) return '#f59e0b'; // Orange - up to 1 month
+        return '#ef4444'; // Red - over 1 month
+    };
+
     // Fetch tasks on mount
     useEffect(() => {
         loadTasks();
@@ -29,8 +43,10 @@ export default function TasksPage() {
         }
     };
 
-    // Filter tasks
-    const filteredTasks = allTasks.filter(task => {
+    // Filter tasks - only show pending tasks
+    const pendingTasks = allTasks.filter(task => task.status === 'pending');
+    
+    const filteredTasks = pendingTasks.filter(task => {
         const matchesSearch =
             task.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.tumModuleTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,6 +147,7 @@ export default function TasksPage() {
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Student</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>AI Score</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
+                            <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Created</th>
                             <th style={{ padding: '12px 24px', fontSize: 12, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>Action</th>
                         </tr>
                     </thead>
@@ -171,6 +188,17 @@ export default function TasksPage() {
                                         {getDecisionBadge(task.decision)}
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
+                                        <div style={{ fontSize: 13, color: getTaskAgeColor(task.createdAt), fontWeight: 500 }}>
+                                            {task.createdAt ? new Date(task.createdAt).toLocaleDateString('en-US', { 
+                                                year: 'numeric', 
+                                                month: 'short', 
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            }) : 'N/A'}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '16px 24px' }}>
                                         <button style={{
                                             display: 'flex',
                                             alignItems: 'center',
@@ -192,8 +220,8 @@ export default function TasksPage() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={5} style={{ padding: 48, textAlign: 'center', color: '#6B7280' }}>
-                                    No modules found matching your filters.
+                                <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#6B7280' }}>
+                                    No pending tasks found matching your filters.
                                 </td>
                             </tr>
                         )}
