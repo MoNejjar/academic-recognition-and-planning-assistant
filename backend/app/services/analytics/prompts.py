@@ -265,12 +265,12 @@ Extended technical analysis for academic review:
 
 **Return your response as JSON**:
 {{
-  "overall_score": 78,
+  "overall_score": <CALCULATE: 0-100 based on weighted factors above>,
   "score_breakdown": {{
-    "learning_outcome_coverage": 82,
-    "cognitive_depth_alignment": 70,
-    "content_scope": 80,
-    "credit_workload": 75
+    "learning_outcome_coverage": <CALCULATE: 0-100>,
+    "cognitive_depth_alignment": <CALCULATE: 0-100>,
+    "content_scope": <CALCULATE: 0-100>,
+    "credit_workload": <CALCULATE: 0-100>
   }},
   "decision_hint": "partial" | "full" | "reject",
   "decision_hint_text": "Clear statement of recommendation",
@@ -298,16 +298,16 @@ Extended technical analysis for academic review:
   ],
   
   "coverage_metrics": {{
-    "tum_outcomes_covered_percent": 75,
-    "tum_outcomes_missing_percent": 25,
-    "external_outcomes_excess_percent": 10,
-    "total_tum_outcomes": 4,
-    "total_external_outcomes": 5,
-    "covered_count": 3,
-    "missing_count": 1,
-    "high_matches": 2,
-    "medium_matches": 1,
-    "low_matches": 0
+    "tum_outcomes_covered_percent": <CALCULATE: percentage of TUM outcomes covered>,
+    "tum_outcomes_missing_percent": <CALCULATE: percentage of TUM outcomes NOT covered>,
+    "external_outcomes_excess_percent": <CALCULATE: percentage of external outcomes not mapping to TUM>,
+    "total_tum_outcomes": <COUNT: actual number from TUM module>,
+    "total_external_outcomes": <COUNT: actual number from external course>,
+    "covered_count": <COUNT: TUM outcomes with HIGH or MEDIUM matches>,
+    "missing_count": <COUNT: TUM outcomes with LOW or NONE matches>,
+    "high_matches": <COUNT>,
+    "medium_matches": <COUNT>,
+    "low_matches": <COUNT>
   }},
   
   "depth_analysis": [
@@ -321,7 +321,7 @@ Extended technical analysis for academic review:
     }}
   ],
   
-  "explanation": "This course achieves 78% equivalence with TUM's module. The external course strongly covers core programming concepts (3 of 4 learning outcomes matched at HIGH level) and includes comparable practical assignments. However, a critical gap exists in formal algorithm analysis – the TUM module requires students to prove algorithmic correctness, which the external course does not address. Credit hours are equivalent (6 ECTS each). Recommend partial recognition with a supplementary assessment on formal verification methods.",
+  "explanation": "<GENERATE: 3-4 sentence explanation stating the calculated overall_score, main evidence for that score, key strengths, key gaps, and actionable recommendation. Be specific about the actual courses being compared.>",
   
   "key_strengths": [
     "Strong coverage of object-oriented design patterns with comparable project work",
@@ -354,14 +354,14 @@ Extended technical analysis for academic review:
   ],
   
   "confidence": {{
-    "overall_confidence": 0.82,
+    "overall_confidence": <CALCULATE: 0.0-1.0 based on input quality and analysis certainty>,
     "input_quality": "good" | "adequate" | "limited",
-    "input_quality_details": "External course description provides clear learning outcomes but limited assessment details",
-    "uncertainty_areas": ["External assessment methods not fully specified", "Practical project scope unclear"],
-    "llm_reasoning_notes": "Analysis based on explicit learning outcome statements; some inference required for depth assessment"
+    "input_quality_details": "<ASSESS: quality of provided course descriptions and learning outcomes>",
+    "uncertainty_areas": [<LIST: specific areas where analysis has uncertainty>],
+    "llm_reasoning_notes": "<EXPLAIN: basis for the analysis and any assumptions made>"
   }},
   
-  "detailed_reasoning": "**For Academic Review**:\\n\\nThis equivalence assessment is based on systematic comparison of stated learning outcomes and course content. The external course from [University] demonstrates strong pedagogical alignment in core areas...\\n\\n**Outcome Mapping Analysis**: Of the 4 TUM learning outcomes, 3 show direct correspondence with external outcomes at HIGH match level...\\n\\n**Cognitive Level Assessment**: Using Bloom's taxonomy as a framework, the external course primarily operates at the APPLICATION level, while TUM expectations include ANALYSIS level competencies...\\n\\n**Recommendation Rationale**: Partial recognition is appropriate because...",
+  "detailed_reasoning": "<GENERATE: Detailed academic review explaining the equivalence assessment, outcome mapping analysis, cognitive level assessment, and recommendation rationale specific to THIS comparison>",
   
   "ambiguity_notes": [
     "Term 'advanced algorithms' in external LO #3 is subjective - interpreted as intermediate level",
@@ -405,7 +405,9 @@ GENERATE_EXPLANATION_PROMPT = """You are writing a clear, professional summary f
 - Avoid hedging language ("might", "could", "somewhat")
 
 **Example Good Explanation**:
-"This application achieves 78% equivalence and is recommended for partial recognition. The external course strongly covers 3 of 4 required learning outcomes, including practical programming skills comparable to TUM's requirements. However, formal algorithm verification (TUM LO #4) is not addressed. Recommend approval with a supplementary oral exam on algorithmic correctness proofs."
+"This application achieves [X]% equivalence and is recommended for [full/partial] recognition. The external course [specific strength with evidence]. However, [specific gap if any]. [Clear recommendation with any conditions]."
+
+**IMPORTANT**: Use the actual calculated score, not example values. Each analysis must reflect the specific courses being compared.
 """
 
 # ============================================
