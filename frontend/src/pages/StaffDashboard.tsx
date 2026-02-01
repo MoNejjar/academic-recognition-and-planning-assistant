@@ -9,10 +9,12 @@ import SubmissionDetailPage from "./SubmissionDetailPage";
 import { useState, useEffect } from "react";
 import { getTaskDetail } from "../data/taskManager";
 
+import { AnalyticsResponse } from "../types/analyticsTypes";
+
 // Wrapper to inject data based on task ID
 const TaskAnalyticsDetail = () => {
     const { taskId } = useParams();
-    const [data, setData] = useState(null);
+    const [data, setData] = useState<AnalyticsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -22,14 +24,14 @@ const TaskAnalyticsDetail = () => {
                 if (task?.result) {
                     // Convert task result to analytics format
                     setData({
-                        moduleAnalyses: [task.result],
-                        summary: {
-                            totalModules: 1,
-                            highlyEquivalent: task.result.decisionHint === 'highly_equivalent' ? 1 : 0,
-                            partiallyEquivalent: task.result.decisionHint === 'partial' ? 1 : 0,
-                            insufficient: task.result.decisionHint === 'insufficient' ? 1 : 0,
-                            averageScore: task.result.overallScore
-                        }
+                        moduleResults: [task.result],
+                        totalModulesAnalyzed: 1,
+                        modulesHighlyEquivalent: task.result.decisionHint === 'highly_equivalent' ? 1 : 0,
+                        modulesPartial: task.result.decisionHint === 'partial' ? 1 : 0,
+                        modulesInsufficient: task.result.decisionHint === 'insufficient' ? 1 : 0,
+                        averageScore: task.result.overallScore,
+                        analysisTimestamp: new Date().toISOString(),
+                        llmModelUsed: "AI Assistant"
                     });
                 }
                 setIsLoading(false);
@@ -54,7 +56,7 @@ export default function StaffDashboard() {
 
             {/* Archive - searchable list of tasks and submissions */}
             <Route path="archive" element={<ArchivePage />} />
-            
+
             {/* Submission details - view individual submission with all modules */}
             <Route path="submissions/:submissionId" element={<SubmissionDetailPage />} />
 
