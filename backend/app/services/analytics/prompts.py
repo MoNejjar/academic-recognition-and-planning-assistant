@@ -187,15 +187,31 @@ Conduct a rigorous analysis addressing each area below:
 
 ### 1. OVERALL EQUIVALENCE SCORE (0-100)
 
-Calculate based on weighted factors:
-- Learning outcome coverage (40% weight)
-- Cognitive depth alignment (25% weight)
-- Content scope and topics (20% weight)
-- Credit hours / workload comparison (15% weight)
+**CRITICAL: All scores must be mathematically consistent. Show your work.**
+
+Calculate the overall score using these EXACT weighted factors:
+- Learning outcome coverage score (40% weight)
+- Cognitive depth alignment score (25% weight)  
+- Content scope and topics score (20% weight)
+- Credit hours / workload comparison score (15% weight)
+
+**Formula**: overall_score = (LO_coverage × 0.40) + (depth_alignment × 0.25) + (content_scope × 0.20) + (credit_workload × 0.15)
+
+**Learning Outcome Coverage Score Calculation**:
+- Count TUM learning outcomes with HIGH matches → full credit (100%)
+- Count TUM learning outcomes with MEDIUM matches → partial credit (60%)
+- Count TUM learning outcomes with LOW matches → minimal credit (20%)
+- Count TUM learning outcomes with NO match → zero credit (0%)
+- Formula: LO_coverage = ((high_count × 1.0) + (medium_count × 0.6) + (low_count × 0.2)) / total_tum_outcomes × 100
+
+**Example**: If TUM has 8 LOs and external covers 2 at HIGH, 1 at MEDIUM, 1 at LOW, 4 unmatched:
+- LO_coverage = ((2 × 1.0) + (1 × 0.6) + (1 × 0.2) + (4 × 0)) / 8 × 100 = 2.8 / 8 × 100 = 35%
+- covered_count = 3 (HIGH + MEDIUM only), missing_count = 5 (LOW + NONE)
+- tum_outcomes_covered_percent = 3/8 × 100 = 37.5%
 
 **Score Interpretation**:
-- **85-100**: Strong equivalence – Recognition recommended
-- **70-84**: Substantial equivalence – Recognition recommended with minor considerations
+- **85-100**: Strong equivalence – Full recognition recommended
+- **70-84**: Substantial equivalence – Recognition recommended with minor considerations  
 - **55-69**: Partial equivalence – Manual review required, possible conditional recognition
 - **40-54**: Limited equivalence – Significant gaps, supplementary requirements likely
 - **0-39**: Insufficient equivalence – Recognition not recommended
@@ -265,13 +281,14 @@ Extended technical analysis for academic review:
 
 **Return your response as JSON**:
 {{
-  "overall_score": <CALCULATE: 0-100 based on weighted factors above>,
+  "overall_score": <CALCULATE using formula: (LO_coverage × 0.40) + (depth × 0.25) + (content × 0.20) + (credit × 0.15)>,
   "score_breakdown": {{
-    "learning_outcome_coverage": <CALCULATE: 0-100>,
-    "cognitive_depth_alignment": <CALCULATE: 0-100>,
-    "content_scope": <CALCULATE: 0-100>,
-    "credit_workload": <CALCULATE: 0-100>
+    "learning_outcome_coverage": <CALCULATE: weighted LO score as described above, 0-100>,
+    "cognitive_depth_alignment": <CALCULATE: average alignment across matched outcomes, 0-100>,
+    "content_scope": <CALCULATE: topic coverage breadth, 0-100>,
+    "credit_workload": <CALCULATE: min(external_ects/tum_ects, 1.0) × 100>
   }},
+  "score_calculation_notes": "Show the math: overall = (X × 0.40) + (Y × 0.25) + (Z × 0.20) + (W × 0.15) = [result]",
   "decision_hint": "partial" | "full" | "reject",
   "decision_hint_text": "Clear statement of recommendation",
   
@@ -298,16 +315,21 @@ Extended technical analysis for academic review:
   ],
   
   "coverage_metrics": {{
-    "tum_outcomes_covered_percent": <CALCULATE: percentage of TUM outcomes covered>,
-    "tum_outcomes_missing_percent": <CALCULATE: percentage of TUM outcomes NOT covered>,
-    "external_outcomes_excess_percent": <CALCULATE: percentage of external outcomes not mapping to TUM>,
-    "total_tum_outcomes": <COUNT: actual number from TUM module>,
-    "total_external_outcomes": <COUNT: actual number from external course>,
-    "covered_count": <COUNT: TUM outcomes with HIGH or MEDIUM matches>,
-    "missing_count": <COUNT: TUM outcomes with LOW or NONE matches>,
-    "high_matches": <COUNT>,
-    "medium_matches": <COUNT>,
-    "low_matches": <COUNT>
+    "tum_outcomes_covered_percent": <CALCULATE: (high_matches + medium_matches) / total_tum_outcomes × 100, must match counts below>,
+    "tum_outcomes_missing_percent": <CALCULATE: (low_matches + none_matches) / total_tum_outcomes × 100, must equal 100 - covered_percent>,
+    "external_outcomes_excess_percent": <CALCULATE: external outcomes with no TUM match / total_external_outcomes × 100>,
+    "total_tum_outcomes": <COUNT: exact number of TUM learning outcomes listed above>,
+    "total_external_outcomes": <COUNT: exact number of external learning outcomes>,
+    "covered_count": <MUST EQUAL: high_matches + medium_matches>,
+    "missing_count": <MUST EQUAL: total_tum_outcomes - covered_count>,
+    "high_matches": <COUNT: TUM outcomes matched at HIGH level>,
+    "medium_matches": <COUNT: TUM outcomes matched at MEDIUM level>,
+    "low_matches": <COUNT: TUM outcomes matched at LOW level>
+  }},
+  
+  "consistency_check": {{
+    "total_tum_lo_accounted": <MUST EQUAL total_tum_outcomes: high_matches + medium_matches + low_matches + unmatched_count>,
+    "coverage_calc_verified": "(high_matches + medium_matches) / total_tum_outcomes × 100 = tum_outcomes_covered_percent"
   }},
   
   "depth_analysis": [
