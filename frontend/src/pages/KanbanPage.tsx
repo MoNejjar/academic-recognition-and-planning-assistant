@@ -5,7 +5,19 @@ import { BookOpen, Calendar, MoreHorizontal } from 'lucide-react';
 import { TUM_COLORS } from '../styles/tumStyles';
 
 // Kanban Column Component for Tasks
-const KanbanColumn = ({ title, tasks, color, navigate }: { title: string, tasks: TaskItem[], color: string, navigate: any }) => {
+const KanbanColumn = ({
+    title,
+    tasks,
+    color,
+    navigate,
+    compact
+}: {
+    title: string,
+    tasks: TaskItem[],
+    color: string,
+    navigate: any,
+    compact?: boolean
+}) => {
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 280 }}>
             {/* Header */}
@@ -40,7 +52,7 @@ const KanbanColumn = ({ title, tasks, color, navigate }: { title: string, tasks:
                             onClick={() => navigate(`/staff/tasks/${task.id}`, { state: { from: 'kanban' } })}
                             style={{
                                 backgroundColor: 'white',
-                                padding: 16,
+                                padding: compact ? '10px 12px' : 16,
                                 borderRadius: 8,
                                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                                 border: '1px solid #E5E7EB',
@@ -56,35 +68,62 @@ const KanbanColumn = ({ title, tasks, color, navigate }: { title: string, tasks:
                                 e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
                             }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                                <span style={{
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    color: color,
-                                    backgroundColor: `${color}15`,
-                                    padding: '4px 8px',
-                                    borderRadius: 4
-                                }}>
-                                    {task.score}% Match
-                                </span>
-                                <MoreHorizontal size={16} color={TUM_COLORS.gray20} />
-                            </div>
+                            {compact ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 24 }}>
+                                    <span style={{
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        color: color,
+                                        backgroundColor: `${color}15`,
+                                        padding: '2px 6px',
+                                        borderRadius: 4,
+                                        flexShrink: 0
+                                    }}>
+                                        {task.tumModuleNr}
+                                    </span>
+                                    <span style={{
+                                        fontSize: 13,
+                                        color: TUM_COLORS.gray80,
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis'
+                                    }}>
+                                        {task.tumModuleTitle}
+                                    </span>
+                                </div>
+                            ) : (
+                                <>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                                        <span style={{
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            color: color,
+                                            backgroundColor: `${color}15`,
+                                            padding: '4px 8px',
+                                            borderRadius: 4
+                                        }}>
+                                            {task.score}% Match
+                                        </span>
+                                        <MoreHorizontal size={16} color={TUM_COLORS.gray20} />
+                                    </div>
 
-                            <h4 style={{ fontSize: 15, fontWeight: 600, color: TUM_COLORS.gray80, marginBottom: 4 }}>
-                                {task.tumModuleNr}
-                            </h4>
-                            <div style={{ fontSize: 13, color: TUM_COLORS.gray50, marginBottom: 8 }}>
-                                {task.tumModuleTitle}
-                            </div>
-                            <div style={{ fontSize: 12, color: TUM_COLORS.gray50, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                                <BookOpen size={14} />
-                                {task.university}
-                            </div>
+                                    <h4 style={{ fontSize: 15, fontWeight: 600, color: TUM_COLORS.gray80, marginBottom: 4 }}>
+                                        {task.tumModuleNr}
+                                    </h4>
+                                    <div style={{ fontSize: 13, color: TUM_COLORS.gray50, marginBottom: 8 }}>
+                                        {task.tumModuleTitle}
+                                    </div>
+                                    <div style={{ fontSize: 12, color: TUM_COLORS.gray50, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                                        <BookOpen size={14} />
+                                        {task.university}
+                                    </div>
 
-                            <div style={{ paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#9CA3AF' }}>
-                                <Calendar size={14} />
-                                {task.tumEcts} ECTS • {task.decision}
-                            </div>
+                                    <div style={{ paddingTop: 12, borderTop: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#9CA3AF' }}>
+                                        <Calendar size={14} />
+                                        {task.tumEcts} ECTS • {task.decision}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     ))
                 ) : (
@@ -168,6 +207,7 @@ export default function KanbanPage() {
                         tasks={approvedTasks}
                         color="#22c55e"
                         navigate={navigate}
+                        compact
                     />
 
                     <KanbanColumn
@@ -175,6 +215,7 @@ export default function KanbanPage() {
                         tasks={rejectedTasks}
                         color="#ef4444"
                         navigate={navigate}
+                        compact
                     />
                 </div>
             )}
