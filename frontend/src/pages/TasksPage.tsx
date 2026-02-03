@@ -36,7 +36,8 @@ export default function TasksPage() {
         const matchesSearch =
             task.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             task.tumModuleTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            task.tumModuleNr.toLowerCase().includes(searchTerm.toLowerCase());
+            task.tumModuleNr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (task.matriculationNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
 
@@ -152,6 +153,11 @@ export default function TasksPage() {
                                             <div>
                                                 <div style={{ fontSize: 14, fontWeight: 500, color: TUM_COLORS.gray80 }}>{task.studentName}</div>
                                                 <div style={{ fontSize: 12, color: '#6B7280' }}>{task.university}</div>
+                                                {task.matriculationNumber && (
+                                                    <div style={{ fontSize: 12, color: '#6B7280' }}>
+                                                        {task.matriculationNumber}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </td>

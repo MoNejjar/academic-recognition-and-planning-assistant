@@ -479,6 +479,16 @@ function StudentInfoCard({ task }: StudentInfoProps) {
                         {task.university}
                     </div>
                 </div>
+                {task.matriculationNumber && (
+                    <div>
+                        <div style={{ fontSize: 11, color: TUM_COLORS.gray50, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                            Matriculation Number
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: TUM_COLORS.gray80 }}>
+                            {task.matriculationNumber}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

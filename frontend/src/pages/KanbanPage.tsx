@@ -69,28 +69,33 @@ const KanbanColumn = ({
                             }}
                         >
                             {compact ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 24 }}>
-                                    <span style={{
-                                        fontSize: 12,
-                                        fontWeight: 700,
-                                        color: color,
-                                        backgroundColor: `${color}15`,
-                                        padding: '2px 6px',
-                                        borderRadius: 4,
-                                        flexShrink: 0
-                                    }}>
-                                        {task.tumModuleNr}
-                                    </span>
-                                    <span style={{
-                                        fontSize: 13,
-                                        color: TUM_COLORS.gray80,
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis'
-                                    }}>
-                                        {task.tumModuleTitle}
-                                    </span>
-                                </div>
+                                <>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 24 }}>
+                                        <span style={{
+                                            fontSize: 12,
+                                            fontWeight: 700,
+                                            color: color,
+                                            backgroundColor: `${color}15`,
+                                            padding: '2px 6px',
+                                            borderRadius: 4,
+                                            flexShrink: 0
+                                        }}>
+                                            {task.tumModuleNr}
+                                        </span>
+                                        <span style={{
+                                            fontSize: 13,
+                                            color: TUM_COLORS.gray80,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }}>
+                                            {task.tumModuleTitle}
+                                        </span>
+                                    </div>
+                                    <div style={{ fontSize: 11, color: TUM_COLORS.gray50, marginTop: 4 }}>
+                                        {task.studentName}{task.matriculationNumber && ` • ${task.matriculationNumber}`}
+                                    </div>
+                                </>
                             ) : (
                                 <>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -112,6 +117,14 @@ const KanbanColumn = ({
                                     </h4>
                                     <div style={{ fontSize: 13, color: TUM_COLORS.gray50, marginBottom: 8 }}>
                                         {task.tumModuleTitle}
+                                    </div>
+                                    <div style={{ fontSize: 12, color: TUM_COLORS.gray50, marginBottom: 4 }}>
+                                        {task.studentName}
+                                        {task.matriculationNumber && (
+                                            <div style={{ fontSize: 11, color: TUM_COLORS.gray50 }}>
+                                                {task.matriculationNumber}
+                                            </div>
+                                        )}
                                     </div>
                                     <div style={{ fontSize: 12, color: TUM_COLORS.gray50, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
                                         <BookOpen size={14} />

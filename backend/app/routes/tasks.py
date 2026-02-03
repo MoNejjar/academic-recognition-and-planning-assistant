@@ -49,6 +49,7 @@ async def get_tasks(
                 {
                     "id": task.task_id,
                     "studentName": task.submission.student_name,
+                    "matriculationNumber": task.submission.personal_data.get("registration_number_at_tum"),
                     "university": task.submission.previous_university,
                     "tumModuleNr": task.analytics_result.tum_module_nr,
                     "tumModuleTitle": task.analytics_result.tum_module_title,
@@ -100,6 +101,7 @@ async def get_task_detail(
         return {
             "id": task.task_id,
             "studentName": task.submission.student_name,
+            "matriculationNumber": task.submission.personal_data.get("registration_number_at_tum"),
             "university": task.submission.previous_university,
             "tumModuleNr": task.analytics_result.tum_module_nr,
             "tumModuleTitle": task.analytics_result.tum_module_title,
