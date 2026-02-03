@@ -255,7 +255,6 @@ class AnalyticsResult(Base):
     # Quick access fields for filtering/sorting
     overall_score = Column(Float, nullable=False)
     decision_hint = Column(String(50), nullable=False)  # highly_equivalent, partial, insufficient
-    status = Column(String(50), default="pending", nullable=False)  # pending, approved, rejected
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

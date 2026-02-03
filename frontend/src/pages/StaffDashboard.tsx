@@ -56,7 +56,7 @@ export default function StaffDashboard() {
 
             {/* Archive - searchable list of tasks and submissions */}
             <Route path="archive" element={<ArchivePage />} />
-
+            
             {/* Submission details - view individual submission with all modules */}
             <Route path="submissions/:submissionId" element={<SubmissionDetailPage />} />
 

@@ -72,7 +72,6 @@ class SubmissionService:
                     analysis_data=result.dict(),
                     overall_score=result.overall_score,
                     decision_hint=result.decision_hint.value,
-                    status="pending",
                 )
                 self.analytics_repo.create(db_result)
 
