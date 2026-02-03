@@ -461,7 +461,7 @@ function StudentInfoCard({ task }: StudentInfoProps) {
                 <InfoTooltip text="Details about the student who submitted this recognition request" />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 <div>
                     <div style={{ fontSize: 11, color: TUM_COLORS.gray50, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
                         Student Name

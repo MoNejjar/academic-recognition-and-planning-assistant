@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
@@ -6,6 +6,14 @@ import Layout from "./components/layout/Layout";
 import { ErrorBoundary } from "./utils/debug";
 import FloatingChat from "./components/chatbot/FloatingChat";
 import { UserProvider } from "./context/UserContext";
+
+function ConditionalFloatingChat() {
+  const location = useLocation();
+  const isStudentPage = location.pathname.startsWith("/student");
+  
+  if (!isStudentPage) return null;
+  return <FloatingChat />;
+}
 
 export default function App() {
   return (
@@ -26,7 +34,7 @@ export default function App() {
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-          <FloatingChat />
+          <ConditionalFloatingChat />
         </BrowserRouter>
       </UserProvider>
     </ErrorBoundary>

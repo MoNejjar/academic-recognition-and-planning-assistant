@@ -1,9 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowRight } from 'lucide-react';
+import { Search, Filter, ArrowRight, MessageSquare } from 'lucide-react';
 import { getTasks, TaskItem } from '../data/taskManager';
 import { TUM_COLORS } from '../styles/tumStyles';
 import { getTaskAgeColor, formatDate } from '../utils/staffUtils';
+import { useUser } from '../context/UserContext';
+
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+
+// Helper to get seen comments from localStorage
+function getSeenCommentIds(taskId: string, userRole: string): Set<number> {
+    try {
+        const key = `seen_comments_${taskId}_${userRole}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            return new Set(JSON.parse(stored));
+        }
+    } catch (e) {
+        console.error('Failed to load seen comments from localStorage:', e);
+    }
+    return new Set();
+}
 
 export default function TasksPage() {
     const navigate = useNavigate();
@@ -11,6 +28,9 @@ export default function TasksPage() {
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [allTasks, setAllTasks] = useState<TaskItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+    const { userRole } = useUser();
+    const currentUserRole: 'professor' | 'staff' = userRole === 'professor' ? 'professor' : 'staff';
 
     // Fetch tasks on mount
     useEffect(() => {
@@ -22,11 +42,47 @@ export default function TasksPage() {
         try {
             const tasks = await getTasks();
             setAllTasks(tasks);
+            // Load unread counts for each task
+            await loadUnreadCounts(tasks);
         } catch (error) {
             console.error('Failed to load tasks:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadUnreadCounts = async (tasks: TaskItem[]) => {
+        const counts: Record<string, number> = {};
+        
+        await Promise.all(
+            tasks.map(async (task) => {
+                try {
+                    const response = await fetch(`${API_URL}/api/tasks/${task.id}/comments`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const allComments = data.comments || [];
+                        
+                        // Get seen comment IDs from localStorage
+                        const seenIds = getSeenCommentIds(task.id, currentUserRole);
+                        
+                        // Count comments from other role that haven't been seen
+                        const unreadCount = allComments.filter(
+                            (comment: any) => 
+                                comment.author_role !== currentUserRole && 
+                                !seenIds.has(comment.id)
+                        ).length;
+                        
+                        if (unreadCount > 0) {
+                            counts[task.id] = unreadCount;
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Failed to load comments for task ${task.id}:`, error);
+                }
+            })
+        );
+        
+        setUnreadCounts(counts);
     };
 
     // Filter tasks - show pending and on_hold tasks
@@ -185,6 +241,23 @@ export default function TasksPage() {
                                         <div style={{ fontSize: 13, color: getTaskAgeColor(task.createdAt), fontWeight: 500 }}>
                                             {task.createdAt ? formatDate(task.createdAt) : 'N/A'}
                                         </div>
+                                        {unreadCounts[task.id] && (
+                                            <div style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: 4,
+                                                marginTop: 6,
+                                                padding: '3px 8px',
+                                                backgroundColor: '#3b82f6',
+                                                borderRadius: 12,
+                                                fontSize: 11,
+                                                fontWeight: 600,
+                                                color: 'white',
+                                            }}>
+                                                <MessageSquare size={11} />
+                                                {unreadCounts[task.id]}
+                                            </div>
+                                        )}
                                     </td>
                                     <td style={{ padding: '16px 24px' }}>
                                         <div style={{

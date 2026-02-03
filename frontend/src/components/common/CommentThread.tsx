@@ -6,10 +6,12 @@
  * - Different visual styling for professor vs staff messages
  * - Final verdict comment pinned at top
  * - Real-time comment submission
+ * - Notification system for new messages from other role
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { Send, Crown, User, MessageSquare, AlertCircle, Pin } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { Send, Crown, User, MessageSquare, AlertCircle, Pin, Bell } from 'lucide-react';
 import { TUM_COLORS } from '../../styles/tumStyles';
 import { InfoTooltip } from './SharedComponents';
 
@@ -39,6 +41,29 @@ interface CommentThreadProps {
 // ============================================
 
 const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+
+// Helper to get/set seen comments from localStorage
+function getSeenCommentIds(taskId: string, userRole: string): Set<number> {
+    try {
+        const key = `seen_comments_${taskId}_${userRole}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            return new Set(JSON.parse(stored));
+        }
+    } catch (e) {
+        console.error('Failed to load seen comments from localStorage:', e);
+    }
+    return new Set();
+}
+
+function saveSeenCommentIds(taskId: string, userRole: string, seenIds: Set<number>): void {
+    try {
+        const key = `seen_comments_${taskId}_${userRole}`;
+        localStorage.setItem(key, JSON.stringify(Array.from(seenIds)));
+    } catch (e) {
+        console.error('Failed to save seen comments to localStorage:', e);
+    }
+}
 
 async function fetchComments(taskId: string): Promise<{ 
     final_verdict: Comment | null;
@@ -74,10 +99,34 @@ async function postComment(taskId: string, data: {
 interface CommentBubbleProps {
     comment: Comment;
     isPinned?: boolean;
+    isUnread?: boolean;
+    onVisible?: (commentId: number) => void;
 }
 
-function CommentBubble({ comment, isPinned = false }: CommentBubbleProps) {
+function CommentBubble({ comment, isPinned = false, isUnread = false, onVisible }: CommentBubbleProps) {
+    const bubbleRef = useRef<HTMLDivElement>(null);
     const isProfessor = comment.author_role === 'professor';
+    
+    // Use IntersectionObserver to detect when this comment becomes visible
+    useEffect(() => {
+        if (!isUnread || !onVisible || !bubbleRef.current) return;
+        
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        onVisible(comment.id);
+                        observer.disconnect();
+                    }
+                });
+            },
+            { threshold: 0.5 }
+        );
+        
+        observer.observe(bubbleRef.current);
+        
+        return () => observer.disconnect();
+    }, [isUnread, onVisible, comment.id]);
     
     // Different glow/styling for professor vs staff
     const bubbleStyle: React.CSSProperties = {
@@ -103,12 +152,31 @@ function CommentBubble({ comment, isPinned = false }: CommentBubbleProps) {
     };
 
     return (
-        <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            alignItems: isProfessor ? 'flex-end' : 'flex-start',
-            marginBottom: 16,
-        }}>
+        <div 
+            ref={bubbleRef}
+            style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: isProfessor ? 'flex-end' : 'flex-start',
+                marginBottom: 16,
+                position: 'relative',
+            }}
+        >
+            {/* Unread indicator */}
+            {isUnread && (
+                <div style={{
+                    position: 'absolute',
+                    left: isProfessor ? 'auto' : -8,
+                    right: isProfessor ? -8 : 'auto',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: '#3b82f6',
+                    boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)',
+                }} />
+            )}
             {/* Author info */}
             <div style={{ 
                 display: 'flex', 
@@ -196,16 +264,37 @@ export function CommentThread({
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const [unreadCommentIds, setUnreadCommentIds] = useState<Set<number>>(new Set());
 
     // Load comments
     useEffect(() => {
         loadComments();
     }, [taskId]);
 
-    // Scroll to bottom when new comments arrive
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [comments]);
+    // Mark a comment as read when it becomes visible
+    const handleCommentVisible = useCallback((commentId: number) => {
+        setUnreadCommentIds((prev: Set<number>) => {
+            const newSet = new Set(prev);
+            newSet.delete(commentId);
+            return newSet;
+        });
+        
+        // Persist to localStorage
+        const currentSeen = getSeenCommentIds(taskId, currentUserRole);
+        currentSeen.add(commentId);
+        saveSeenCommentIds(taskId, currentUserRole, currentSeen);
+    }, [taskId, currentUserRole]);
+
+    // Scroll to first unread message
+    const scrollToUnread = useCallback(() => {
+        if (messagesContainerRef.current && unreadCommentIds.size > 0) {
+            const unreadArray = Array.from(unreadCommentIds) as number[];
+            const firstUnreadId = Math.min(...unreadArray);
+            const element = messagesContainerRef.current.querySelector(`[data-comment-id="${firstUnreadId}"]`);
+            element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [unreadCommentIds]);
 
     const loadComments = async () => {
         try {
@@ -213,6 +302,18 @@ export function CommentThread({
             const data = await fetchComments(taskId);
             setFinalVerdict(data.final_verdict);
             setComments(data.comments);
+            
+            // Mark comments from the other role as unread (only ones not previously seen)
+            if (data.comments.length > 0) {
+                const currentSeenIds = getSeenCommentIds(taskId, currentUserRole);
+                const otherRoleComments = data.comments.filter(
+                    c => c.author_role !== currentUserRole && !currentSeenIds.has(c.id)
+                );
+                if (otherRoleComments.length > 0) {
+                    setUnreadCommentIds(new Set(otherRoleComments.map(c => c.id)));
+                }
+            }
+            
             setError(null);
         } catch (err) {
             setError('Failed to load comments');
@@ -251,6 +352,16 @@ export function CommentThread({
 
             setNewComment('');
             setIsFinalVerdict(false);
+            
+            // Mark our own comment as seen
+            const currentSeen = getSeenCommentIds(taskId, currentUserRole);
+            currentSeen.add(comment.id);
+            saveSeenCommentIds(taskId, currentUserRole, currentSeen);
+            
+            // Scroll to bottom after sending
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
         } catch (err: any) {
             setError(err.message || 'Failed to post comment');
         } finally {
@@ -271,6 +382,7 @@ export function CommentThread({
             border: `1px solid ${TUM_COLORS.gray20}`,
             borderRadius: 12,
             overflow: 'hidden',
+            position: 'relative',
         }}>
             {/* Header */}
             <div style={{
@@ -306,12 +418,16 @@ export function CommentThread({
             )}
 
             {/* Messages area */}
-            <div style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: 20,
-                backgroundColor: '#FAFAFA',
-            }}>
+            <div 
+                ref={messagesContainerRef}
+                style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    padding: 20,
+                    backgroundColor: '#FAFAFA',
+                    position: 'relative',
+                }}
+            >
                 {loading ? (
                     <div style={{ textAlign: 'center', color: TUM_COLORS.gray50, padding: 40 }}>
                         Loading comments...
@@ -330,11 +446,67 @@ export function CommentThread({
                     </div>
                 ) : (
                     comments.map(comment => (
-                        <CommentBubble key={comment.id} comment={comment} />
+                        <div key={comment.id} data-comment-id={comment.id}>
+                            <CommentBubble 
+                                comment={comment} 
+                                isUnread={unreadCommentIds.has(comment.id)}
+                                onVisible={handleCommentVisible}
+                            />
+                        </div>
                     ))
                 )}
                 <div ref={messagesEndRef} />
             </div>
+
+            {/* New messages notification - rendered via portal to body */}
+            {unreadCommentIds.size > 0 && createPortal(
+                <div style={{
+                    position: 'fixed',
+                    bottom: 24,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 9999,
+                    animation: 'notificationSlideUp 0.3s ease-out',
+                }}>
+                    <style>{`
+                        @keyframes notificationSlideUp {
+                            from {
+                                opacity: 0;
+                                transform: translateX(-50%) translateY(20px);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateX(-50%) translateY(0);
+                            }
+                        }
+                    `}</style>
+                    <button
+                        onClick={scrollToUnread}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '12px 20px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 24,
+                            boxShadow: '0 4px 20px rgba(59, 130, 246, 0.5)',
+                            cursor: 'pointer',
+                            fontSize: 14,
+                            fontWeight: 500,
+                        }}
+                    >
+                        <Bell size={16} />
+                        {unreadCommentIds.size} new message{unreadCommentIds.size !== 1 ? 's' : ''} from {
+                            comments.find(c => unreadCommentIds.has(c.id))?.author_role === 'professor' 
+                                ? 'Professor' 
+                                : 'Staff'
+                        }
+                    </button>
+                </div>,
+                document.body
+            )}
 
             {/* Error message */}
             {error && (
