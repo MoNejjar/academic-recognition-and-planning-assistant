@@ -35,3 +35,4 @@ class CourseContentResult(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Extraction timestamp"
     )
+    document_id: str | None = Field(default=None, description="ID of stored document for later retrieval")

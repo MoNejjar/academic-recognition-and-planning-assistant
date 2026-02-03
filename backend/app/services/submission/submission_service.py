@@ -57,6 +57,7 @@ class SubmissionService:
                 previous_country=submission_data.personal_data.country_of_previous_university,
                 personal_data=submission_data.personal_data.dict(),
                 mapping_file_name=submission_data.mapping_file,
+                catalogue_document_ids=submission_data.catalogue_document_ids,
             )
 
             self.submission_repo.create(db_submission)

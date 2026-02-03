@@ -93,6 +93,7 @@ async def extract_course_content(
     - module_content: All text about the course (description, outcomes, etc.)
     
     Handles both single-course syllabi and multi-course catalogs.
+    Returns document_id to allow frontend to associate file with submission.
     """
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
@@ -107,7 +108,7 @@ async def extract_course_content(
     
     # Create database record
     doc_repo = DocumentRepository(db)
-    doc_repo.create_document(
+    document = doc_repo.create_document(
         original_filename=file.filename,
         stored_filename=relative_path.split("/")[-1],
         relative_path=relative_path,
@@ -119,6 +120,8 @@ async def extract_course_content(
         llm_client = get_llm_client(use_case="vision")
         extractor = CourseContentExtractor(llm_client)
         result = await extractor.extract_from_bytes(pdf_bytes=content, filename=file.filename)
+        # Include document ID for tracking
+        result.document_id = document.id
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Extraction failed: {str(e)}")

@@ -86,6 +86,7 @@ async def get_task_detail(
     - Task metadata (student, module info, status)
     - Complete analytics result for the module
     - Submission metadata
+    - Catalogue documents uploaded with submission
     """
     try:
         submission_service = SubmissionService(db)
@@ -96,6 +97,12 @@ async def get_task_detail(
                 status_code=404,
                 detail=f"Task {task_id} not found"
             )
+        
+        # Get catalogue documents for this submission
+        from app.repositories.document import DocumentRepository
+        doc_repo = DocumentRepository(db)
+        catalogue_doc_ids = task.submission.catalogue_document_ids or []
+        catalogue_docs = doc_repo.get_by_ids(catalogue_doc_ids)
         
         # Analytics result and submission already loaded via relationships
         return {
@@ -117,7 +124,15 @@ async def get_task_detail(
             "result": task.analytics_result.analysis_data,
             "submission": {
                 "personalData": task.submission.personal_data,
-            }
+            },
+            "catalogueDocuments": [
+                {
+                    "id": doc.id,
+                    "filename": doc.original_filename,
+                    "sizeBytes": doc.size_bytes,
+                }
+                for doc in catalogue_docs
+            ],
         }
         
     except HTTPException:

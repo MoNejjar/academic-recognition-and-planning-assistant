@@ -15,6 +15,7 @@ export default function StudentDashboard() {
     const [personalData, setPersonalData] = useState<PersonalData>(emptyPersonalData);
     const [mappingFile, setMappingFile] = useState<File | null>(null);
     const [tumModules, setTumModules] = useState<TUMModuleMapping[]>([]);
+    const [catalogueDocumentIds, setCatalogueDocumentIds] = useState<string[]>([]);
 
     const handlePersonalDataConfirmed = (data: PersonalData) => {
         setPersonalData(data);
@@ -25,8 +26,9 @@ export default function StudentDashboard() {
         setTumModules(modules);
     };
 
-    const handleContentConfirmed = (updatedModules: TUMModuleMapping[]) => {
+    const handleContentConfirmed = (updatedModules: TUMModuleMapping[], documentIds: string[]) => {
         setTumModules(updatedModules);
+        setCatalogueDocumentIds(documentIds);
     };
 
     const handleSubmit = async () => {
@@ -47,7 +49,8 @@ export default function StudentDashboard() {
                     source_grade: sc.source_grade,
                     source_content: sc.source_content
                 }))
-            }))
+            })),
+            catalogueDocumentIds: catalogueDocumentIds
         };
 
         console.log('Submitting data:', JSON.stringify(submissionData, null, 2));
@@ -56,6 +59,7 @@ export default function StudentDashboard() {
         setPersonalData(emptyPersonalData);
         setMappingFile(null);
         setTumModules([]);
+        setCatalogueDocumentIds([]);
 
         // Navigate to submission status page which will handle the API call
         navigate('/student/submission-status', { state: { submissionData } });
@@ -108,6 +112,7 @@ export default function StudentDashboard() {
                                 <CatalogueUploadPage
                                     tumModules={tumModules}
                                     onContentConfirmed={handleContentConfirmed}
+                                    existingDocumentIds={catalogueDocumentIds}
                                 />
                             )
                         }

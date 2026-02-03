@@ -13,11 +13,11 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { 
-    ArrowLeft, 
-    User, 
-    CheckCircle2, 
-    XCircle, 
+import {
+    ArrowLeft,
+    User,
+    CheckCircle2,
+    XCircle,
     Clock,
     Building2,
     FileText,
@@ -26,6 +26,7 @@ import {
     Crown,
     Pin,
     X,
+    Download,
 } from 'lucide-react';
 import { getTaskDetail, TaskItem } from '../data/taskManager';
 import ModuleCardModern from '../components/analytics/ModuleCardModern';
@@ -46,9 +47,9 @@ function StatusBadge({ status }: { status: string }) {
         rejected: { label: 'Rejected', color: '#991B1B', bg: '#FEE2E2', icon: XCircle },
         on_hold: { label: 'On Hold', color: '#1E40AF', bg: '#DBEAFE', icon: Pause },
     };
-    
+
     const { label, color, bg, icon: Icon } = config[status] || config.pending;
-    
+
     return (
         <span style={{
             display: 'inline-flex',
@@ -83,7 +84,7 @@ interface FinalVerdictDisplayProps {
 
 function FinalVerdictDisplay({ verdict, status }: FinalVerdictDisplayProps) {
     const isApproved = status === 'approved';
-    
+
     return (
         <div style={{
             backgroundColor: isApproved ? '#F0FDF4' : '#FEF2F2',
@@ -92,16 +93,16 @@ function FinalVerdictDisplay({ verdict, status }: FinalVerdictDisplayProps) {
             padding: 20,
             marginBottom: 24,
         }}>
-            <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 8, 
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
                 marginBottom: 12,
             }}>
                 <Pin size={16} style={{ color: isApproved ? '#22c55e' : '#ef4444' }} />
-                <span style={{ 
-                    fontSize: 14, 
-                    fontWeight: 700, 
+                <span style={{
+                    fontSize: 14,
+                    fontWeight: 700,
                     color: isApproved ? '#166534' : '#991B1B',
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
@@ -109,20 +110,20 @@ function FinalVerdictDisplay({ verdict, status }: FinalVerdictDisplayProps) {
                     Final Decision: {isApproved ? 'Approved' : 'Rejected'}
                 </span>
             </div>
-            
-            <p style={{ 
-                margin: '0 0 12px 0', 
-                fontSize: 15, 
-                lineHeight: 1.6, 
+
+            <p style={{
+                margin: '0 0 12px 0',
+                fontSize: 15,
+                lineHeight: 1.6,
                 color: TUM_COLORS.gray80,
                 whiteSpace: 'pre-wrap',
             }}>
                 {verdict.content}
             </p>
-            
-            <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 8,
                 fontSize: 12,
                 color: TUM_COLORS.gray50,
@@ -130,9 +131,9 @@ function FinalVerdictDisplay({ verdict, status }: FinalVerdictDisplayProps) {
                 <Crown size={12} style={{ color: '#6366f1' }} />
                 <span style={{ fontWeight: 500 }}>{verdict.author_name}</span>
                 <span>•</span>
-                <span>{new Date(verdict.created_at).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'short', 
+                <span>{new Date(verdict.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
                     day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
@@ -156,18 +157,18 @@ interface FinalVerdictModalProps {
 
 function FinalVerdictModal({ isOpen, onClose, onSubmit, actionType, submitting }: FinalVerdictModalProps) {
     const [message, setMessage] = useState('');
-    
+
     if (!isOpen) return null;
-    
+
     const isApprove = actionType === 'approved';
-    
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (message.trim()) {
             onSubmit(message.trim());
         }
     };
-    
+
     return createPortal(
         <div style={{
             position: 'fixed',
@@ -205,17 +206,17 @@ function FinalVerdictModal({ isOpen, onClose, onSubmit, actionType, submitting }
                             <XCircle size={24} style={{ color: '#ef4444' }} />
                         )}
                         <div>
-                            <h2 style={{ 
-                                margin: 0, 
-                                fontSize: 18, 
-                                fontWeight: 700, 
+                            <h2 style={{
+                                margin: 0,
+                                fontSize: 18,
+                                fontWeight: 700,
                                 color: TUM_COLORS.gray80,
                             }}>
                                 {isApprove ? 'Approve Recognition' : 'Reject Recognition'}
                             </h2>
-                            <p style={{ 
-                                margin: 0, 
-                                fontSize: 13, 
+                            <p style={{
+                                margin: 0,
+                                fontSize: 13,
                                 color: TUM_COLORS.gray50,
                             }}>
                                 Provide your final verdict message
@@ -237,7 +238,7 @@ function FinalVerdictModal({ isOpen, onClose, onSubmit, actionType, submitting }
                         <X size={20} />
                     </button>
                 </div>
-                
+
                 {/* Content */}
                 <form onSubmit={handleSubmit} style={{ padding: 24 }}>
                     <label style={{
@@ -259,7 +260,7 @@ function FinalVerdictModal({ isOpen, onClose, onSubmit, actionType, submitting }
                     <textarea
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        placeholder={isApprove 
+                        placeholder={isApprove
                             ? "e.g., The submitted course demonstrates sufficient equivalence to the TUM module. Full credit recognition is granted..."
                             : "e.g., The submitted course does not meet the required learning outcomes. The following gaps were identified..."
                         }
@@ -280,11 +281,11 @@ function FinalVerdictModal({ isOpen, onClose, onSubmit, actionType, submitting }
                         onBlur={(e) => e.target.style.borderColor = TUM_COLORS.gray20}
                         autoFocus
                     />
-                    
+
                     {/* Actions */}
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'flex-end', 
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
                         gap: 12,
                         marginTop: 20,
                     }}>
@@ -310,8 +311,8 @@ function FinalVerdictModal({ isOpen, onClose, onSubmit, actionType, submitting }
                             disabled={!message.trim() || submitting}
                             style={{
                                 padding: '10px 24px',
-                                backgroundColor: !message.trim() || submitting 
-                                    ? '#9ca3af' 
+                                backgroundColor: !message.trim() || submitting
+                                    ? '#9ca3af'
                                     : isApprove ? '#22c55e' : '#ef4444',
                                 color: 'white',
                                 border: 'none',
@@ -365,7 +366,7 @@ interface ActionButtonsProps {
 function ActionButtons({ updating, onApprove, onReject, onHold }: ActionButtonsProps) {
     return (
         <div style={{ display: 'flex', gap: 10 }}>
-            <button 
+            <button
                 onClick={onApprove}
                 disabled={updating}
                 style={{
@@ -386,7 +387,7 @@ function ActionButtons({ updating, onApprove, onReject, onHold }: ActionButtonsP
                 <CheckCircle2 size={18} />
                 Approve
             </button>
-            <button 
+            <button
                 onClick={onReject}
                 disabled={updating}
                 style={{
@@ -407,7 +408,7 @@ function ActionButtons({ updating, onApprove, onReject, onHold }: ActionButtonsP
                 <XCircle size={18} />
                 Reject
             </button>
-            <button 
+            <button
                 onClick={onHold}
                 disabled={updating}
                 style={{
@@ -449,10 +450,10 @@ function StudentInfoCard({ task }: StudentInfoProps) {
             padding: 20,
             marginBottom: 24,
         }}>
-            <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 8, 
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
                 marginBottom: 16,
                 color: TUM_COLORS.gray80,
             }}>
@@ -460,7 +461,7 @@ function StudentInfoCard({ task }: StudentInfoProps) {
                 <span style={{ fontSize: 14, fontWeight: 600 }}>Student Information</span>
                 <InfoTooltip text="Details about the student who submitted this recognition request" />
             </div>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 <div>
                     <div style={{ fontSize: 11, color: TUM_COLORS.gray50, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
@@ -495,6 +496,103 @@ function StudentInfoCard({ task }: StudentInfoProps) {
 }
 
 // ============================================
+// Catalogue Documents Card
+// ============================================
+
+interface CatalogueDocument {
+    id: string;
+    filename: string;
+    sizeBytes: number;
+}
+
+function CatalogueDocumentsCard({ documents }: { documents?: CatalogueDocument[] }) {
+    if (!documents || documents.length === 0) {
+        return null;
+    }
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const handleDownload = (docId: string) => {
+        const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+        // Open in new tab to trigger download
+        window.open(`${API_URL}/api/documents/${docId}/download`, '_blank');
+    };
+
+    return (
+        <div style={{
+            backgroundColor: TUM_COLORS.white,
+            border: `1px solid ${TUM_COLORS.gray20}`,
+            borderRadius: 12,
+            padding: 20,
+        }}>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 16,
+                color: TUM_COLORS.gray80,
+            }}>
+                <FileText size={18} />
+                <span style={{ fontSize: 14, fontWeight: 600 }}>Catalogue Files</span>
+                <InfoTooltip text="PDF catalogue files that were uploaded by the student during their submission" />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {documents.map((doc) => (
+                    <div
+                        key={doc.id}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 14px',
+                            backgroundColor: '#F9FAFB',
+                            borderRadius: 8,
+                            border: `1px solid ${TUM_COLORS.gray20}`,
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <FileText size={16} style={{ color: TUM_COLORS.gray50 }} />
+                            <div>
+                                <div style={{ fontSize: 14, fontWeight: 500, color: TUM_COLORS.gray80 }}>
+                                    {doc.filename}
+                                </div>
+                                <div style={{ fontSize: 12, color: TUM_COLORS.gray50 }}>
+                                    {formatFileSize(doc.sizeBytes)}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => handleDownload(doc.id)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                padding: '6px 12px',
+                                backgroundColor: TUM_COLORS.blue,
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 6,
+                                fontSize: 13,
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <Download size={14} />
+                            Download
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ============================================
 // Main TaskDetailPage Component
 // ============================================
 
@@ -513,15 +611,15 @@ export default function TaskDetailPage() {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [finalVerdict, setFinalVerdict] = useState<FinalVerdict | null>(null);
-    
+
     // Modal state
     const [showVerdictModal, setShowVerdictModal] = useState(false);
     const [pendingAction, setPendingAction] = useState<'approved' | 'rejected'>('approved');
-    
+
     // Determine navigation context
     const from = (location.state as any)?.from || 'tasks';
     const submissionId = (location.state as any)?.submissionId;
-    
+
     // Get user role from context (set when logging in from landing page)
     const { userRole, userName } = useUser();
     const currentUserRole: 'professor' | 'staff' = userRole === 'professor' ? 'professor' : 'staff';
@@ -575,7 +673,7 @@ export default function TaskDetailPage() {
         setUpdating(true);
         try {
             const API_URL = getApiUrl();
-            
+
             // First, post the final verdict comment
             const commentResponse = await fetch(`${API_URL}/api/tasks/${task.id}/comments`, {
                 method: 'POST',
@@ -594,7 +692,7 @@ export default function TaskDetailPage() {
 
             const newVerdict = await commentResponse.json();
             setFinalVerdict(newVerdict);
-            
+
             // Then update the status
             const statusResponse = await fetch(
                 `${API_URL}/api/tasks/tasks/${task.id}/status?status=${pendingAction}`,
@@ -617,7 +715,7 @@ export default function TaskDetailPage() {
 
     const handleHoldStatus = async () => {
         if (!task) return;
-        
+
         if (!confirm('Put this task on hold? You can return to it later.')) return;
 
         setUpdating(true);
@@ -644,17 +742,17 @@ export default function TaskDetailPage() {
     // Loading state
     if (loading) {
         return (
-            <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 minHeight: '60vh',
                 color: TUM_COLORS.gray50,
             }}>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ 
-                        width: 40, 
-                        height: 40, 
+                    <div style={{
+                        width: 40,
+                        height: 40,
                         border: `3px solid ${TUM_COLORS.gray20}`,
                         borderTopColor: TUM_COLORS.blue,
                         borderRadius: '50%',
@@ -672,10 +770,10 @@ export default function TaskDetailPage() {
     // Not found state
     if (!task || !moduleResult) {
         return (
-            <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 minHeight: '60vh',
             }}>
                 <div style={{ textAlign: 'center' }}>
@@ -707,10 +805,10 @@ export default function TaskDetailPage() {
     const isDecided = task.status === 'approved' || task.status === 'rejected';
 
     return (
-        <div style={{ 
-            maxWidth: 1200, 
-            margin: '0 auto', 
-            padding: 32, 
+        <div style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: 32,
             fontFamily: "'Inter', Arial, sans-serif",
             backgroundColor: TUM_COLORS.grayBg,
             minHeight: '100vh',
@@ -742,9 +840,9 @@ export default function TaskDetailPage() {
                 }}
             >
                 <ArrowLeft size={16} />
-                {from === 'submission' ? 'Back to Submission' : 
-                 from === 'archive' ? 'Back to Archive' :
-                 from === 'kanban' ? 'Back to Kanban' : 'Back to Tasks'}
+                {from === 'submission' ? 'Back to Submission' :
+                    from === 'archive' ? 'Back to Archive' :
+                        from === 'kanban' ? 'Back to Kanban' : 'Back to Tasks'}
             </button>
 
             {/* Page Header */}
@@ -758,57 +856,57 @@ export default function TaskDetailPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                            <h1 style={{ 
-                                fontSize: 22, 
-                                fontWeight: 700, 
-                                color: TUM_COLORS.gray80, 
+                            <h1 style={{
+                                fontSize: 22,
+                                fontWeight: 700,
+                                color: TUM_COLORS.gray80,
                                 margin: 0,
                             }}>
                                 Module Recognition Review
                             </h1>
                             <StatusBadge status={task.status} />
                         </div>
-                        
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: 20, 
-                            color: TUM_COLORS.gray50, 
+
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 20,
+                            color: TUM_COLORS.gray50,
                             fontSize: 14,
                             flexWrap: 'wrap',
                         }}>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <FileText size={14} />
-                                Task ID: <code style={{ 
-                                    fontSize: 12, 
-                                    backgroundColor: '#F3F4F6', 
-                                    padding: '2px 6px', 
+                                Task ID: <code style={{
+                                    fontSize: 12,
+                                    backgroundColor: '#F3F4F6',
+                                    padding: '2px 6px',
                                     borderRadius: 4,
                                 }}>{task.id}</code>
                             </span>
-                            
+
                             {task.createdAt && (
                                 <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                     <Clock size={14} style={{ color: task.status === 'pending' ? getTaskAgeColor(task.createdAt) : undefined }} />
-                                    Submitted: {new Date(task.createdAt).toLocaleDateString('en-US', { 
-                                        year: 'numeric', 
-                                        month: 'short', 
+                                    Submitted: {new Date(task.createdAt).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
                                         day: 'numeric',
                                     })}
                                 </span>
                             )}
-                            
+
                             {task.decisionDate && (
-                                <span style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                                <span style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     gap: 6,
                                     color: task.status === 'approved' ? '#166534' : '#991B1B',
                                 }}>
                                     {task.status === 'approved' ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                                    Decision: {new Date(task.decisionDate).toLocaleDateString('en-US', { 
-                                        year: 'numeric', 
-                                        month: 'short', 
+                                    Decision: {new Date(task.decisionDate).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
                                         day: 'numeric',
                                     })}
                                 </span>
@@ -825,7 +923,7 @@ export default function TaskDetailPage() {
                             onHold={handleHoldStatus}
                         />
                     )}
-                    
+
                     {!isRealSubmission && (
                         <Badge label="Test Task - No Actions Available" variant="neutral" />
                     )}
@@ -841,10 +939,13 @@ export default function TaskDetailPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 {/* Student Information */}
                 <StudentInfoCard task={task} />
-                
+
+                {/* Catalogue Documents (if any) */}
+                <CatalogueDocumentsCard documents={(task as any).catalogueDocuments} />
+
                 {/* Module Recognition Analysis */}
                 <ModuleCardModern result={moduleResult} />
-                
+
                 {/* Discussion Thread - Below Module Overview */}
                 <CommentThread
                     taskId={task.id}

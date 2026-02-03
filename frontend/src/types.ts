@@ -120,6 +120,7 @@ export interface CourseContentResult {
   filename: string;
   courses: CourseContent[];
   extracted_at: string;
+  document_id?: string; // ID of stored document for later retrieval
 }
 
 // ============================================
