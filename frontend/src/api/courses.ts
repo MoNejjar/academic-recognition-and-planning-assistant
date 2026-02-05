@@ -135,3 +135,21 @@ export async function lookupTUMModule(moduleCode: string): Promise<TUMModuleLook
     };
   }
 }
+
+// ============================================
+// Demo Content
+// ============================================
+
+/**
+ * Provision demo documents from the backend.
+ * Returns the list of created documents with IDs.
+ */
+export async function provisionDemoDocuments(): Promise<{ id: string }[]> {
+  try {
+    const res = await apiClient.post("/documents/demo");
+    return res.data;
+  } catch (error: any) {
+    console.error("❌ Error provisioning demo documents:", error);
+    throw error;
+  }
+}

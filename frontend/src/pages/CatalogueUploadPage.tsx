@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { extractCatalogueContent, lookupTUMModule } from "../api/courses";
+import { extractCatalogueContent, lookupTUMModule, provisionDemoDocuments } from "../api/courses";
 import { TUMModuleMapping, CourseContent } from "../types";
 import { Upload, FileText, ArrowLeft, ArrowRight, BookOpen, Loader2, ChevronDown, ChevronRight, AlertTriangle, Wand2 } from "lucide-react";
 import { TUM_COLORS } from "../styles/tumStyles";
@@ -156,32 +156,47 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed, ex
     };
 
 
-    const handleFillDemoContent = () => {
-        // Merge existing modules with demo content
-        // We match by module NR to be safe, or just use the demo data if it matches
-        const modulesToUse = updatedModules.length > 0 ? updatedModules : tumModules;
+    const handleFillDemoContent = async () => {
+        setLoading(true); // Re-use loading state or add a specific one
+        try {
+            // Provision demo documents
+            const demoDocs = await provisionDemoDocuments();
+            const demoDocIds = demoDocs.map(d => d.id);
 
-        const demoFilled = modulesToUse.map(mod => {
-            const demoMatch = mockTUMModules.find(dm => dm.tum_module_nr === mod.tum_module_nr);
-            if (demoMatch) {
-                return {
-                    ...mod,
-                    tum_content: demoMatch.tum_content,
-                    tum_outcome: demoMatch.tum_outcome,
-                    source_courses: mod.source_courses.map((sc, idx) => {
-                        const demoSc = demoMatch.source_courses[idx];
-                        return {
-                            ...sc,
-                            source_content: demoSc ? demoSc.source_content : sc.source_content
-                        }
-                    })
-                };
-            }
-            return mod;
-        });
+            // Update document IDs
+            setDocumentIds(prev => [...new Set([...prev, ...demoDocIds])]);
 
-        setUpdatedModules(demoFilled);
-        setShowReview(true);
+            // Merge existing modules with demo content
+            // We match by module NR to be safe, or just use the demo data if it matches
+            const modulesToUse = updatedModules.length > 0 ? updatedModules : tumModules;
+
+            const demoFilled = modulesToUse.map(mod => {
+                const demoMatch = mockTUMModules.find(dm => dm.tum_module_nr === mod.tum_module_nr);
+                if (demoMatch) {
+                    return {
+                        ...mod,
+                        tum_content: demoMatch.tum_content,
+                        tum_outcome: demoMatch.tum_outcome,
+                        source_courses: mod.source_courses.map((sc, idx) => {
+                            const demoSc = demoMatch.source_courses[idx];
+                            return {
+                                ...sc,
+                                source_content: demoSc ? demoSc.source_content : sc.source_content
+                            }
+                        })
+                    };
+                }
+                return mod;
+            });
+
+            setUpdatedModules(demoFilled);
+            setShowReview(true);
+        } catch (error) {
+            console.error("Failed to provision demo content:", error);
+            setError("Failed to load demo content. Is the backend running?");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDrag = (e: React.DragEvent) => {

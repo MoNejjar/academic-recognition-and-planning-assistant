@@ -448,7 +448,6 @@ function StudentInfoCard({ task }: StudentInfoProps) {
             border: `1px solid ${TUM_COLORS.gray20}`,
             borderRadius: 12,
             padding: 20,
-            marginBottom: 24,
         }}>
             <div style={{
                 display: 'flex',
