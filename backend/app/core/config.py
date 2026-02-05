@@ -4,17 +4,22 @@ Application Configuration
 Environment variables and settings
 """
 
+from pathlib import Path
 from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Get the backend directory (where this file lives: backend/app/core/config.py)
+BACKEND_DIR = Path(__file__).parent.parent.parent
 
 
 class Settings(BaseSettings):
     """Application settings"""
 
     # .env is used in local testing and development
+    # Use absolute path to ensure .env is found regardless of cwd
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=BACKEND_DIR / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )

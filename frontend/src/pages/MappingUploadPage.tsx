@@ -363,81 +363,145 @@ export default function MappingUploadPage({ onMappingsConfirmed, existingModules
         <div style={styles.container}>
             <div style={styles.header}>
                 <h1 style={styles.title}>
-                    <Upload size={28} color={TUM_COLORS.blue} />
-                    Upload Mapping Table
+                    <BookOpen size={28} color={TUM_COLORS.blue} />
+                    Create Module Mappings
                 </h1>
                 <p style={styles.subtitle}>
-                    Upload your course recognition PDF to extract TUM module mappings.
+                    Choose how you want to enter your TUM module mappings. You can either upload an existing PDF document for automatic extraction or create them manually.
                 </p>
             </div>
 
             {error && <div style={styles.errorBox}>{error}</div>}
 
-            <div
-                style={{
-                    ...styles.dropzone,
-                    borderColor: dragActive ? TUM_COLORS.blue : file ? TUM_COLORS.green : TUM_COLORS.gray20,
-                    background: dragActive ? "rgba(0, 101, 189, 0.05)" : file ? "rgba(162, 173, 0, 0.05)" : TUM_COLORS.white,
-                }}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-            >
-                {file ? (
-                    <>
-                        <FileText size={48} color={TUM_COLORS.green} />
-                        <div style={styles.fileName}>{file.name}</div>
-                        <div style={styles.fileSize}>{(file.size / 1024).toFixed(1)} KB</div>
-                    </>
-                ) : (
-                    <>
-                        <Upload size={48} color={TUM_COLORS.gray50} />
-                        <div style={styles.dropText}>Drag & drop your PDF here</div>
-                        <div style={styles.dropSubtext}>or click to browse</div>
-                    </>
-                )}
-                <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileSelect}
-                    style={styles.fileInput}
-                />
+            {/* Two equal option cards */}
+            <div style={styles.optionsContainer}>
+                {/* PDF Upload Option */}
+                <div
+                    style={{
+                        ...styles.optionCard,
+                        borderColor: dragActive ? TUM_COLORS.blue : file ? TUM_COLORS.green : TUM_COLORS.gray20,
+                        background: dragActive ? "rgba(0, 101, 189, 0.05)" : file ? "rgba(162, 173, 0, 0.05)" : TUM_COLORS.white,
+                    }}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                >
+                    <div style={styles.optionIcon}>
+                        {file ? (
+                            <FileText size={48} color={TUM_COLORS.green} />
+                        ) : (
+                            <Upload size={48} color={TUM_COLORS.blue} />
+                        )}
+                    </div>
+                    <h2 style={styles.optionTitle}>Upload PDF</h2>
+                    <p style={styles.optionDescription}>
+                        {file
+                            ? `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`
+                            : "Upload your course recognition PDF to automatically extract mappings"
+                        }
+                    </p>
+
+                    <div style={styles.optionDropzone}>
+                        {file ? (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFile(null);
+                                }}
+                                style={styles.changeFileBtn}
+                            >
+                                <X size={14} />
+                                Remove File
+                            </button>
+                        ) : (
+                            <>
+                                <div style={styles.dropText}>Drag & drop PDF</div>
+                                <div style={styles.dropSubtext}>or click to browse</div>
+                            </>
+                        )}
+                        <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={handleFileSelect}
+                            style={styles.fileInput}
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleExtract}
+                        disabled={!file || loading}
+                        style={{
+                            ...styles.optionBtn,
+                            background: TUM_COLORS.blue,
+                            color: TUM_COLORS.white,
+                            opacity: !file || loading ? 0.5 : 1,
+                            cursor: !file || loading ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                                Extracting...
+                            </>
+                        ) : (
+                            <>
+                                Extract Mappings
+                                <ArrowRight size={16} />
+                            </>
+                        )}
+                    </button>
+                </div>
+
+                {/* Divider */}
+                <div style={styles.divider}>
+                    <span style={styles.dividerText}>OR</span>
+                </div>
+
+                {/* Manual Entry Option */}
+                <div style={styles.optionCard}>
+                    <div style={styles.optionIcon}>
+                        <PenLine size={48} color={TUM_COLORS.blue} />
+                    </div>
+                    <h2 style={styles.optionTitle}>Manual Entry</h2>
+                    <p style={styles.optionDescription}>
+                        Create your module mappings manually by entering the details yourself
+                    </p>
+
+                    <div style={styles.optionFeatures}>
+                        <div style={styles.featureItem}>✓ Full control over entries</div>
+                        <div style={styles.featureItem}>✓ No document required</div>
+                        <div style={styles.featureItem}>✓ Add/edit anytime</div>
+                    </div>
+
+                    <button
+                        onClick={handleSkipToManual}
+                        style={{
+                            ...styles.optionBtn,
+                            background: TUM_COLORS.blue,
+                            color: TUM_COLORS.white,
+                        }}
+                    >
+                        Start Manual Entry
+                        <ArrowRight size={16} />
+                    </button>
+                </div>
             </div>
 
-            <div style={styles.actions}>
+            {/* Demo button at bottom */}
+            <div style={styles.demoSection}>
+                <button onClick={handleFillDemoData} style={styles.demoBtn}>
+                    <BookOpen size={16} />
+                    Try Demo Data
+                </button>
+                <span style={styles.demoText}>See how it works with sample data</span>
+            </div>
+
+            {/* Back button */}
+            <div style={styles.backSection}>
                 <button onClick={() => navigate("/student")} style={styles.secondaryBtn}>
                     <ArrowLeft size={16} />
-                    Back
-                </button>
-                <button onClick={handleSkipToManual} style={styles.secondaryBtn}>
-                    <PenLine size={16} />
-                    Manual
-                </button>
-                <button onClick={handleFillDemoData} style={{ ...styles.secondaryBtn, borderColor: TUM_COLORS.orange, color: TUM_COLORS.orange }}>
-                    <BookOpen size={16} />
-                    Demo Fill
-                </button>
-                <button
-                    onClick={handleExtract}
-                    disabled={!file || loading}
-                    style={{
-                        ...styles.primaryBtn,
-                        opacity: !file || loading ? 0.5 : 1,
-                        cursor: !file || loading ? "not-allowed" : "pointer",
-                    }}
-                >
-                    {loading ? (
-                        <>
-                            <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
-                            Extracting...
-                        </>
-                    ) : (
-                        <>
-                            Extract Mappings
-                            <ArrowRight size={16} />
-                        </>
-                    )}
+                    Back to Dashboard
                 </button>
             </div>
 
@@ -687,5 +751,144 @@ const styles: { [key: string]: React.CSSProperties } = {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 12,
+    },
+
+    // Options layout
+    optionsContainer: {
+        display: 'flex',
+        gap: 24,
+        marginBottom: 32,
+        alignItems: 'stretch',
+    },
+    optionCard: {
+        flex: 1,
+        background: TUM_COLORS.white,
+        border: `2px solid ${TUM_COLORS.gray20}`,
+        borderRadius: 12,
+        padding: 32,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        textAlign: 'center' as const,
+        transition: 'all 0.2s ease',
+        position: 'relative' as const,
+    },
+    optionIcon: {
+        marginBottom: 16,
+    },
+    optionTitle: {
+        fontSize: 20,
+        fontWeight: 600,
+        color: '#1e293b',
+        marginBottom: 8,
+        margin: 0,
+    },
+    optionDescription: {
+        fontSize: 14,
+        color: '#64748b',
+        marginBottom: 24,
+        lineHeight: 1.5,
+        minHeight: 42,
+    },
+    optionDropzone: {
+        width: '100%',
+        padding: 24,
+        border: `2px dashed ${TUM_COLORS.gray20}`,
+        borderRadius: 8,
+        marginBottom: 24,
+        cursor: 'pointer',
+        position: 'relative' as const,
+        minHeight: 80,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    optionBtn: {
+        padding: '14px 28px',
+        border: 'none',
+        borderRadius: 8,
+        fontSize: 15,
+        fontWeight: 600,
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+        marginTop: 'auto',
+    },
+    changeFileBtn: {
+        padding: '8px 16px',
+        background: 'rgba(239, 68, 68, 0.1)',
+        border: 'none',
+        borderRadius: 6,
+        color: TUM_COLORS.error,
+        cursor: 'pointer',
+        fontSize: 13,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    divider: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 8px',
+    },
+    dividerText: {
+        padding: '12px 16px',
+        background: TUM_COLORS.grayBg,
+        borderRadius: 20,
+        color: TUM_COLORS.gray50,
+        fontSize: 13,
+        fontWeight: 600,
+    },
+    optionFeatures: {
+        width: '100%',
+        padding: 24,
+        background: TUM_COLORS.grayBg,
+        borderRadius: 8,
+        marginBottom: 24,
+        minHeight: 80,
+    },
+    featureItem: {
+        fontSize: 14,
+        color: '#475569',
+        marginBottom: 8,
+        textAlign: 'left' as const,
+    },
+    demoSection: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+        marginBottom: 24,
+        padding: 16,
+        background: 'rgba(255, 152, 0, 0.05)',
+        borderRadius: 8,
+        border: `1px solid rgba(255, 152, 0, 0.2)`,
+    },
+    demoBtn: {
+        padding: '10px 20px',
+        background: TUM_COLORS.white,
+        color: TUM_COLORS.orange,
+        border: `1px solid ${TUM_COLORS.orange}`,
+        borderRadius: 8,
+        cursor: 'pointer',
+        fontSize: 14,
+        fontWeight: 500,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        fontFamily: "Arial, 'Helvetica Neue', sans-serif",
+    },
+    demoText: {
+        fontSize: 13,
+        color: TUM_COLORS.gray50,
+    },
+    backSection: {
+        display: 'flex',
+        justifyContent: 'flex-start',
     },
 };

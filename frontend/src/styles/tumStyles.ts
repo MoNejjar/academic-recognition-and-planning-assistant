@@ -1,3 +1,5 @@
+import React from 'react';
+
 // TUM Corporate Design Constants
 // Official TUM color palette and shared styles
 
@@ -13,12 +15,16 @@ export const TUM_COLORS = {
 
     // Grays
     gray80: '#333333',
+    gray70: '#4D4D4D',
+    gray60: '#666666',
     gray50: '#808080',
+    gray30: '#B3B3B3',
     gray20: '#CCCCCC',
     grayLight: '#DAD7CB',
     grayBg: '#F5F5F5',
 
     // Accent Colors
+    primary: '#0065BD',
     orange: '#E37222',
     green: '#A2AD00',
     lightBlue1: '#98C6EA',

@@ -49,6 +49,7 @@ async def get_tasks(
                 {
                     "id": task.task_id,
                     "studentName": task.submission.student_name,
+                    "matriculationNumber": task.submission.personal_data.get("registration_number_at_tum"),
                     "university": task.submission.previous_university,
                     "tumModuleNr": task.analytics_result.tum_module_nr,
                     "tumModuleTitle": task.analytics_result.tum_module_title,
@@ -85,6 +86,7 @@ async def get_task_detail(
     - Task metadata (student, module info, status)
     - Complete analytics result for the module
     - Submission metadata
+    - Catalogue documents uploaded with submission
     """
     try:
         submission_service = SubmissionService(db)
@@ -96,10 +98,17 @@ async def get_task_detail(
                 detail=f"Task {task_id} not found"
             )
         
+        # Get catalogue documents for this submission
+        from app.repositories.document import DocumentRepository
+        doc_repo = DocumentRepository(db)
+        catalogue_doc_ids = task.submission.catalogue_document_ids or []
+        catalogue_docs = doc_repo.get_by_ids(catalogue_doc_ids)
+        
         # Analytics result and submission already loaded via relationships
         return {
             "id": task.task_id,
             "studentName": task.submission.student_name,
+            "matriculationNumber": task.submission.personal_data.get("registration_number_at_tum"),
             "university": task.submission.previous_university,
             "tumModuleNr": task.analytics_result.tum_module_nr,
             "tumModuleTitle": task.analytics_result.tum_module_title,
@@ -115,7 +124,15 @@ async def get_task_detail(
             "result": task.analytics_result.analysis_data,
             "submission": {
                 "personalData": task.submission.personal_data,
-            }
+            },
+            "catalogueDocuments": [
+                {
+                    "id": doc.id,
+                    "filename": doc.original_filename,
+                    "sizeBytes": doc.size_bytes,
+                }
+                for doc in catalogue_docs
+            ],
         }
         
     except HTTPException:
@@ -174,4 +191,34 @@ async def update_task_status(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to update task status: {str(e)}"
+        )
+
+
+@router.delete("/clear-all")
+async def clear_all_database(
+    db: Session = Depends(get_db)
+):
+    """
+    Clear ALL data from the database.
+    
+    ⚠️ WARNING: This deletes all submissions, analytics results, and tasks.
+    This is intended for testing/development only.
+    """
+    try:
+        submission_service = SubmissionService(db)
+        deleted_count = submission_service.clear_all_data()
+        
+        logger.warning(f"Database cleared: {deleted_count['total']} records deleted")
+        
+        return {
+            "status": "success",
+            "message": "All database entries cleared successfully",
+            "deleted": deleted_count
+        }
+        
+    except Exception as e:
+        logger.exception("Failed to clear database")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to clear database: {str(e)}"
         )

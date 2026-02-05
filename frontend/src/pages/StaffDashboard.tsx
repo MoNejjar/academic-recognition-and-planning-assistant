@@ -1,19 +1,45 @@
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import AnalyticsPage from "./AnalyticsPage";
 import TasksPage from "./TasksPage";
-import TaskDetailPage from "./TaskDetailPage";
+import TaskDetailPageModern from "./TaskDetailPageModern";
 import KanbanPage from "./KanbanPage";
 import TestingPage from "./TestingPage";
 import ArchivePage from "./ArchivePage";
 import SubmissionDetailPage from "./SubmissionDetailPage";
-import { mockAnalyticsData } from "../data/mockAnalyticsData";
+import { useState, useEffect } from "react";
+import { getTaskDetail } from "../data/taskManager";
+
+import { AnalyticsResponse } from "../types/analyticsTypes";
 
 // Wrapper to inject data based on task ID
 const TaskAnalyticsDetail = () => {
-    const { } = useParams();
-    // In a real app, fetch analytics by task ID
-    // For now, use default mock data
-    return <AnalyticsPage data={mockAnalyticsData} isLoading={false} />;
+    const { taskId } = useParams();
+    const [data, setData] = useState<AnalyticsResponse | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (taskId) {
+            setIsLoading(true);
+            getTaskDetail(taskId).then(task => {
+                if (task?.result) {
+                    // Convert task result to analytics format
+                    setData({
+                        moduleResults: [task.result],
+                        totalModulesAnalyzed: 1,
+                        modulesHighlyEquivalent: task.result.decisionHint === 'highly_equivalent' ? 1 : 0,
+                        modulesPartial: task.result.decisionHint === 'partial' ? 1 : 0,
+                        modulesInsufficient: task.result.decisionHint === 'insufficient' ? 1 : 0,
+                        averageScore: task.result.overallScore,
+                        analysisTimestamp: new Date().toISOString(),
+                        llmModelUsed: "AI Assistant"
+                    });
+                }
+                setIsLoading(false);
+            });
+        }
+    }, [taskId]);
+
+    return <AnalyticsPage data={data} isLoading={isLoading} />;
 };
 
 export default function StaffDashboard() {
@@ -25,7 +51,7 @@ export default function StaffDashboard() {
 
             {/* Task management - shows both submissions and manual tests */}
             <Route path="tasks" element={<TasksPage />} />
-            <Route path="tasks/:taskId" element={<TaskDetailPage />} />
+            <Route path="tasks/:taskId" element={<TaskDetailPageModern />} />
             <Route path="tasks/:taskId/analytics" element={<TaskAnalyticsDetail />} />
 
             {/* Archive - searchable list of tasks and submissions */}

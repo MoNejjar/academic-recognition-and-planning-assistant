@@ -57,6 +57,7 @@ class SubmissionService:
                 previous_country=submission_data.personal_data.country_of_previous_university,
                 personal_data=submission_data.personal_data.dict(),
                 mapping_file_name=submission_data.mapping_file,
+                catalogue_document_ids=submission_data.catalogue_document_ids,
             )
 
             self.submission_repo.create(db_submission)
@@ -245,5 +246,41 @@ class SubmissionService:
             return task
         except Exception as e:
             logger.exception(f"Failed to update task status for {task_id}")
+            self.db.rollback()
+            raise
+
+    def clear_all_data(self) -> dict:
+        """
+        Clear ALL data from the database (submissions, analytics, tasks).
+        
+        ⚠️ WARNING: This is a destructive operation intended for testing/development only.
+        
+        Returns:
+            Dictionary with count of deleted records by type
+        """
+        try:
+            # Delete in reverse dependency order: tasks -> analytics -> submissions
+            tasks_deleted = self.db.query(Task).delete()
+            analytics_deleted = self.db.query(AnalyticsResult).delete()
+            submissions_deleted = self.db.query(StudentSubmission).delete()
+            
+            self.db.commit()
+            
+            total_deleted = tasks_deleted + analytics_deleted + submissions_deleted
+            
+            logger.warning(
+                f"Database cleared: {submissions_deleted} submissions, "
+                f"{analytics_deleted} analytics, {tasks_deleted} tasks"
+            )
+            
+            return {
+                "submissions": submissions_deleted,
+                "analytics": analytics_deleted,
+                "tasks": tasks_deleted,
+                "total": total_deleted
+            }
+            
+        except Exception as e:
+            logger.exception("Failed to clear database")
             self.db.rollback()
             raise

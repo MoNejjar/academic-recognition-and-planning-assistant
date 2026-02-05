@@ -66,6 +66,7 @@ class SubmissionData(BaseModel):
     personal_data: PersonalData = Field(..., alias="personalData")
     mapping_file: Optional[str] = Field(None, alias="mappingFile")
     tum_modules: List[TUMModuleSubmission] = Field(..., alias="tumModules")
+    catalogue_document_ids: List[str] = Field(default_factory=list, alias="catalogueDocumentIds")
 
     class Config:
         populate_by_name = True
@@ -92,6 +93,9 @@ class StudentSubmission(Base):
     
     # Store mapping file name if provided
     mapping_file_name = Column(String(255))
+    
+    # Store catalogue document IDs as JSON array
+    catalogue_document_ids = Column(JSON, default=list)
     
     # Relationships
     analytics_results = relationship("AnalyticsResult", back_populates="submission", cascade="all, delete-orphan")

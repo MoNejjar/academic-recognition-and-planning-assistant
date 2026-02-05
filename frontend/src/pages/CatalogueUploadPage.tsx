@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { extractCatalogueContent, lookupTUMModule } from "../api/courses";
 import { TUMModuleMapping, CourseContent } from "../types";
-import { Upload, FileText, ArrowLeft, ArrowRight, BookOpen, Loader2, PenLine, ChevronDown, ChevronRight, AlertTriangle, Wand2 } from "lucide-react";
+import { Upload, FileText, ArrowLeft, ArrowRight, BookOpen, Loader2, ChevronDown, ChevronRight, AlertTriangle, Wand2 } from "lucide-react";
 import { TUM_COLORS } from "../styles/tumStyles";
 import { mockTUMModules } from "../data/mockTUMModules";
 
 type Props = {
     tumModules: TUMModuleMapping[];
-    onContentConfirmed: (updatedModules: TUMModuleMapping[]) => void;
+    onContentConfirmed: (updatedModules: TUMModuleMapping[], documentIds: string[]) => void;
+    existingDocumentIds?: string[];
 };
 
-export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: Props) {
+export default function CatalogueUploadPage({ tumModules, onContentConfirmed, existingDocumentIds }: Props) {
     const [files, setFiles] = useState<File[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -21,6 +22,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
     const [loadingTumContent, setLoadingTumContent] = useState(false);
     const [tumLookupDone, setTumLookupDone] = useState(false);
     const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+    const [documentIds, setDocumentIds] = useState<string[]>(existingDocumentIds || []);
     const navigate = useNavigate();
 
     const toggleModuleExpand = (moduleId: string) => {
@@ -98,13 +100,21 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 
         try {
             const allExtracted: CourseContent[] = [];
+            const newDocumentIds: string[] = [];
 
             for (const file of files) {
                 const result = await extractCatalogueContent(file);
                 if (result.courses) {
                     allExtracted.push(...result.courses);
                 }
+                // Track document ID from extraction response
+                if (result.document_id) {
+                    newDocumentIds.push(result.document_id);
+                }
             }
+
+            // Merge with existing document IDs (avoiding duplicates)
+            setDocumentIds(prev => [...new Set([...prev, ...newDocumentIds])]);
 
             const matched = matchCourses(allExtracted, updatedModules.length > 0 ? updatedModules : tumModules);
             setUpdatedModules(matched);
@@ -141,15 +151,10 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
             alert(`Please fill in content for all source courses. ${missingContentCourses.length} course(s) are missing content.`);
             return;
         }
-        onContentConfirmed(updatedModules);
+        onContentConfirmed(updatedModules, documentIds);
         navigate("/student/review");
     };
 
-    const handleSkipToManual = () => {
-        const modulesToUse = updatedModules.length > 0 ? updatedModules : tumModules;
-        setUpdatedModules(modulesToUse);
-        setShowReview(true);
-    };
 
     const handleFillDemoContent = () => {
         // Merge existing modules with demo content
@@ -241,17 +246,35 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
 
                                 {mod.source_courses.map((sc) => (
                                     <div key={sc.id} style={{ marginBottom: 16, paddingLeft: 12, borderLeft: `3px solid ${TUM_COLORS.blue}` }}>
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: TUM_COLORS.gray80, marginBottom: 6 }}>
-                                            {sc.source_course_no} - {sc.source_course_name}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                            <div style={{ fontSize: 13, fontWeight: 600, color: TUM_COLORS.gray80 }}>
+                                                {sc.source_course_no} - {sc.source_course_name}
+                                            </div>
+                                            {sc.source_content && (
+                                                <span style={{
+                                                    fontSize: 11,
+                                                    color: TUM_COLORS.blue,
+                                                    background: '#e3f2fd',
+                                                    padding: '2px 8px',
+                                                    borderRadius: 4,
+                                                    fontWeight: 600
+                                                }}>
+                                                    AI Extracted
+                                                </span>
+                                            )}
                                         </div>
                                         <textarea
                                             value={sc.source_content || ""}
                                             onChange={(e) => handleSourceContentChange(mod.id, sc.id, e.target.value)}
-                                            placeholder={`Enter content/outcomes for ${sc.source_course_name}...`}
+                                            placeholder="Upload catalogue PDF files to automatically extract content"
+                                            disabled={true}
                                             style={{
                                                 ...styles.textarea,
                                                 minHeight: 100,
-                                                borderColor: sc.source_content ? TUM_COLORS.gray20 : TUM_COLORS.orange,
+                                                borderColor: TUM_COLORS.gray20,
+                                                backgroundColor: '#f9fafb',
+                                                cursor: 'not-allowed',
+                                                color: TUM_COLORS.gray60,
                                             }}
                                         />
                                     </div>
@@ -284,7 +307,7 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                     Upload Course Catalogues
                 </h1>
                 <p style={styles.subtitle}>
-                    Upload catalogue PDFs to auto-match content to your TUM modules.
+                    Upload catalogue PDFs containing descriptions of the content and learning outcomes of all courses that are relevant to this application. These must be official catalogues from your previous university.
                 </p>
             </div>
 
@@ -394,10 +417,6 @@ export default function CatalogueUploadPage({ tumModules, onContentConfirmed }: 
                 <button onClick={() => navigate("/student/mapping")} style={styles.secondaryBtn}>
                     <ArrowLeft size={16} />
                     Back
-                </button>
-                <button onClick={handleSkipToManual} style={styles.secondaryBtn}>
-                    <PenLine size={16} />
-                    Manual
                 </button>
                 <button onClick={handleFillDemoContent} style={{ ...styles.secondaryBtn, borderColor: TUM_COLORS.orange, color: TUM_COLORS.orange }}>
                     <Wand2 size={16} />

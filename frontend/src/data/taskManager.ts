@@ -6,6 +6,7 @@ import { snakeToCamel } from '../utils/caseConversion';
 export interface TaskItem {
     id: string; // unique task identifier
     studentName: string;
+    matriculationNumber: string;
     university: string;
     tumModuleNr: string;
     tumModuleTitle: string;
@@ -118,6 +119,7 @@ export const addManualTask = (result: ModuleAnalysisResult) => {
     const newTask: TaskItem = {
         id: newId,
         studentName: "Test User",
+        matriculationNumber: "N/A",
         university: "Testing Playground",
         tumModuleNr: result.tumModuleNr,
         tumModuleTitle: result.tumModuleTitle,

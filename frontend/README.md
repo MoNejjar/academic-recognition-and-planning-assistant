@@ -2,9 +2,10 @@
 
 ## Overview
 
-React + TypeScript + Vite application with dual interfaces:
-1. **Student Portal** (`/student/*`): 4-step submission wizard (personal data → mapping upload → content entry → review/submit)
-2. **Staff Dashboard** (`/staff/*`): Task list + detail view with AI analytics
+React + TypeScript + Vite application with three role-based interfaces:
+1. **Landing Page** (`/`): Role selection portal (Student, Staff, Professor)
+2. **Student Portal** (`/student/*`): 4-step submission wizard
+3. **Staff/Professor Dashboard** (`/staff/*`): Task management with AI analytics
 
 **Stack**: React 18.3 | Vite 5.4 | TypeScript 5.6 | React Router 6.30 | Tailwind CSS 3.4 | Radix UI
 
@@ -12,22 +13,24 @@ React + TypeScript + Vite application with dual interfaces:
 
 ### State Management
 - **No Redux/Zustand** - uses React's built-in state
-- **Local state** (`useState`) for most components
+- **UserContext** - tracks user role from landing page selection
+- **Local state** (`useState`) for component-level state
 - **Lifted state** in `StudentDashboard` manages wizard flow
-- **Context** (`CourseMatchingContext`) exists but minimally used
 
 ### Routing
 Nested routing with React Router 6:
 ```
-/ (LandingPage)
+/ (LandingPage - Role Selection)
 /student/* (StudentDashboard)
   /student/ (PersonalDataPage)
   /student/mapping (MappingUploadPage)
   /student/catalogue (CatalogueUploadPage)
   /student/review (FinalReviewPage)
 /staff/* (Layout with sidebar)
-  /staff/tasks (TasksPage)
-  /staff/tasks/:id (TaskDetailPage)
+  /staff/kanban (KanbanPage - Overview)
+  /staff/tasks (TasksPage - List)
+  /staff/tasks/:id (TaskDetailPageModern)
+  /staff/archive (ArchivePage)
   /staff/testing (TestingPage)
 ```
 
@@ -35,59 +38,65 @@ Nested routing with React Router 6:
 
 **`src/`**
 - **`main.tsx`** - Vite entry
-- **`App.tsx`** - Root router (LandingPage, StudentDashboard, StaffDashboard w/ Layout)
-- **`types.ts`** - Shared TypeScript interfaces (PersonalData, TUMModuleMapping, SourceCourse)
+- **`App.tsx`** - Root router with UserProvider
+- **`types.ts`** - Shared TypeScript interfaces
 
 **Pages**:
 - **`pages/`**
-  - Student: `StudentDashboard.tsx` (router + state), `PersonalDataPage`, `MappingUploadPage`, `CatalogueUploadPage`, `FinalReviewPage`
-  - Staff: `StaffDashboard.tsx` (router), `TasksPage` (list), `TaskDetailPage`, `AnalyticsPage`, `KanbanPage`, `TestingPage`
-  - `LandingPage.tsx` (home)
+  - `LandingPage.tsx` - Role selection with TUM branding
+  - Student: `StudentDashboard.tsx`, `PersonalDataPage`, `MappingUploadPage`, `CatalogueUploadPage`, `FinalReviewPage`
+  - Staff: `StaffDashboard.tsx`, `TasksPage`, `TaskDetailPageModern`, `KanbanPage`, `ArchivePage`, `AnalyticsPage`
 
 **Components**:
 - **`components/`**
-  - `layout/` - Layout (staff sidebar), SideMenuLayout
-  - `SideMenu.tsx` - Student wizard navigation
-  - `HealthCheck.tsx` - Backend health indicator
-  - `common/` - Shared UI (Button, Card, Input, etc.)
-  - `chatbot/` - FloatingChat, ChatWindow
-  - `analytics/` - AnalyticsDashboard, LearningOutcomeCard
-  - `course-matching/`, `reporting/`, `ui/` (Radix wrappers)
+  - `layout/Layout.tsx` - Staff sidebar with TUM logo
+  - `common/SharedComponents.tsx` - Tooltip, CollapsibleSection, Badge, etc.
+  - `common/CommentThread.tsx` - Professor-Staff discussion
+  - `common/StatusBadges.tsx` - Task status indicators
+  - `analytics/ModuleCardModern.tsx` - AI analysis display
+  - `chatbot/FloatingChat.tsx` - Chatbot widget
+  - `ui/` - Radix UI component wrappers
 
-**Services & Data**:
-- **`services/`** - API calls (analyticsApi.ts, chatbot/, courseMatching/, reporting/)
-- **`data/`** - taskManager.ts (fetch + localStorage), mockAnalyticsData, mockTUMModules
-- **`context/`** - CourseMatchingContext (mostly unused)
-- **`hooks/`** - useChat.ts
-- **`utils/`** - caseConversion.ts (snake↔camel), debug.ts
-- **`styles/`** - tumStyles.ts (color constants)
-- **`constants/`** - App constants
+**Context & Services**:
+- **`context/UserContext.tsx`** - User role management
+- **`services/`** - API calls (analyticsApi, chatbot, courseMatching, reporting)
+- **`data/taskManager.ts`** - Task fetching and caching
+- **`styles/tumStyles.ts`** - TUM color constants
+- **`assets/tum-logo.svg`** - Official TUM logo
 
 
 ## Core Workflows
 
 ### Student Submission
 ```
+LandingPage → Select "Student" → setUserRole('student')
+  ↓
 StudentDashboard mounts
   ↓
 PersonalDataPage → setPersonalData() → navigate('/student/mapping')
   ↓
-MappingUploadPage → Upload PDF → POST /api/course-matching/extract-mapping → setTumModules() → navigate('/student/catalogue')
+MappingUploadPage → Upload PDF → POST /api/course-matching/extract-mapping → navigate('/student/catalogue')
   ↓
-CatalogueUploadPage → Fetch TUM content → Edit courses → onContentConfirmed() → navigate('/student/review')
+CatalogueUploadPage → Edit courses → navigate('/student/review')
   ↓
-FinalReviewPage → Display all → Submit → POST /api/submissions/submit → Success → navigate('/student')
+FinalReviewPage → POST /api/submissions/submit → Success
 ```
 
-### Staff Task Management
+### Staff/Professor Task Review
 ```
-TasksPage → useEffect(loadTasks) → GET /api/tasks/tasks → Display list + filters (client-side)
+LandingPage → Select "Staff" or "Professor" → setUserRole()
+  ↓
+TasksPage → GET /api/tasks/tasks → Display list
   ↓
 Click task → navigate(`/staff/tasks/${taskId}`)
   ↓
-TaskDetailPage → useEffect(loadTaskDetail) → GET /api/tasks/{id} → Display analytics
+TaskDetailPageModern:
+  - Loads task + final verdict (if exists)
+  - Displays ModuleCardModern with AI analysis
+  - CommentThread for discussion
+  - Action buttons (Approve/Reject/Hold)
   ↓
-Approve/Reject → PATCH /api/tasks/{id}/status → Update → Navigate back
+Approve/Reject → FinalVerdictModal → POST comment + PATCH status
 ```
 
 ## Quick Reference
@@ -177,15 +186,20 @@ export interface NewType {
 
 | Task | Location |
 |------|----------|
+| Modify role selection | `pages/LandingPage.tsx` |
+| Change user role logic | `context/UserContext.tsx` |
 | Modify student wizard flow | `pages/StudentDashboard.tsx` (state management) |
 | Change wizard steps | `pages/PersonalDataPage`, `MappingUploadPage`, etc. |
 | Modify task list | `pages/TasksPage.tsx` |
-| Change task detail view | `pages/TaskDetailPage.tsx` |
-| Add analytics visualization | `components/analytics/` |
+| Change task detail view | `pages/TaskDetailPageModern.tsx` |
+| Modify AI analysis display | `components/analytics/ModuleCardModern.tsx` |
+| Edit discussion feature | `components/common/CommentThread.tsx` |
 | Modify API calls | `data/taskManager.ts`, `services/` |
 | Change types | `types.ts` |
-| Add UI component | `components/common/` or `components/ui/` |
+| Add reusable UI | `components/common/SharedComponents.tsx` |
+| Add Radix component | `components/ui/` |
 | Modify colors | `styles/tumStyles.ts` |
+| Update TUM logo | `assets/tum-logo.svg` |
 | Configure build | `vite.config.ts`, `tailwind.config.js` |
 
 ## Troubleshooting

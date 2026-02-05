@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Loader2, Plus, Trash2, BookOpen } from 'lucide-react';
 import { TUM_COLORS } from '../styles/tumStyles';
-import { addManualTask } from '../data/taskManager';
+import { addManualTask, clearCustomTasks } from '../data/taskManager';
 import { analyzeModules } from '../services/analyticsApi';
 
 
@@ -16,6 +16,35 @@ export default function TestingPage() {
     // Form inputs
     const [sourceModules, setSourceModules] = useState([{ name: '', description: '', outcomes: '' }]);
     const [targetModule, setTargetModule] = useState({ name: '', code: 'INxxxx', description: '', outcomes: '' });
+
+    const handleClearDummyData = () => {
+        if (confirm('Are you sure you want to clear all manual test tasks from localStorage?')) {
+            clearCustomTasks();
+            alert('Manual test tasks cleared!');
+        }
+    };
+
+    const handleClearDatabase = async () => {
+        if (confirm('⚠️ WARNING: This will delete ALL submissions and tasks from the database. This cannot be undone!\n\nAre you sure you want to continue?')) {
+            try {
+                const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${API_URL}/api/tasks/clear-all`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('✅ All database entries cleared successfully!');
+                    window.location.reload(); // Reload to refresh the task list
+                } else {
+                    const error = await response.json();
+                    alert(`Failed to clear database: ${error.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Failed to clear database:', error);
+                alert('Failed to clear database. Make sure the backend is running.');
+            }
+        }
+    };
 
     const handleAddSource = () => {
         setSourceModules([...sourceModules, { name: '', description: '', outcomes: '' }]);
@@ -83,13 +112,55 @@ export default function TestingPage() {
 
     return (
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: 32, fontFamily: 'Arial, sans-serif' }}>
-            <div style={{ marginBottom: 32 }}>
-                <h1 style={{ fontSize: 24, fontWeight: 700, color: TUM_COLORS.gray80, marginBottom: 8 }}>
-                    LLM Recognition Playground
-                </h1>
-                <p style={{ color: TUM_COLORS.gray50 }}>
-                    Manually test the recognition capability by entering module data directly.
-                </p>
+            <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                    <h1 style={{ fontSize: 24, fontWeight: 700, color: TUM_COLORS.gray80, marginBottom: 8 }}>
+                        LLM Recognition Playground
+                    </h1>
+                    <p style={{ color: TUM_COLORS.gray50 }}>
+                        Manually test the recognition capability by entering module data directly.
+                    </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <button
+                        onClick={handleClearDummyData}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '10px 16px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 14,
+                            fontWeight: 500,
+                        }}
+                    >
+                        <Trash2 size={16} />
+                        Clear Test Data
+                    </button>
+                    <button
+                        onClick={handleClearDatabase}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '10px 16px',
+                            backgroundColor: '#dc2626',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 14,
+                            fontWeight: 500,
+                        }}
+                    >
+                        <Trash2 size={16} />
+                        Clear Database
+                    </button>
+                </div>
             </div>
 
             {/* Content Area */}

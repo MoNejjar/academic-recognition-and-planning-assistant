@@ -7,7 +7,6 @@ import MappingUploadPage from "./MappingUploadPage";
 import CatalogueUploadPage from "./CatalogueUploadPage";
 import FinalReviewPage from "./FinalReviewPage";
 import SubmissionStatusPage from "./SubmissionStatusPage";
-import HealthCheck from "../components/HealthCheck";
 import { useState } from "react";
 import { TUMModuleMapping, PersonalData, emptyPersonalData } from "../types";
 
@@ -16,6 +15,7 @@ export default function StudentDashboard() {
     const [personalData, setPersonalData] = useState<PersonalData>(emptyPersonalData);
     const [mappingFile, setMappingFile] = useState<File | null>(null);
     const [tumModules, setTumModules] = useState<TUMModuleMapping[]>([]);
+    const [catalogueDocumentIds, setCatalogueDocumentIds] = useState<string[]>([]);
 
     const handlePersonalDataConfirmed = (data: PersonalData) => {
         setPersonalData(data);
@@ -26,8 +26,9 @@ export default function StudentDashboard() {
         setTumModules(modules);
     };
 
-    const handleContentConfirmed = (updatedModules: TUMModuleMapping[]) => {
+    const handleContentConfirmed = (updatedModules: TUMModuleMapping[], documentIds: string[]) => {
         setTumModules(updatedModules);
+        setCatalogueDocumentIds(documentIds);
     };
 
     const handleSubmit = async () => {
@@ -48,7 +49,8 @@ export default function StudentDashboard() {
                     source_grade: sc.source_grade,
                     source_content: sc.source_content
                 }))
-            }))
+            })),
+            catalogueDocumentIds: catalogueDocumentIds
         };
 
         console.log('Submitting data:', JSON.stringify(submissionData, null, 2));
@@ -57,6 +59,7 @@ export default function StudentDashboard() {
         setPersonalData(emptyPersonalData);
         setMappingFile(null);
         setTumModules([]);
+        setCatalogueDocumentIds([]);
 
         // Navigate to submission status page which will handle the API call
         navigate('/student/submission-status', { state: { submissionData } });
@@ -67,7 +70,7 @@ export default function StudentDashboard() {
     // Calculate progress for SideMenu
     const progress = {
         personalData: true, // Always open
-        mapping: !!personalData.firstName, // Completed Personal Data
+        mapping: !!personalData.registrationNumberAtTUM, // Completed Personal Data (has matriculation number)
         catalogue: tumModules.length > 0, // Completed Mapping (at least has modules)
         review: tumModules.length > 0 && tumModules.some(m => !!m.tum_content || m.source_courses.some(sc => !!sc.source_content)) // Has some content
     };
@@ -89,32 +92,45 @@ export default function StudentDashboard() {
                     <Route
                         path="/mapping"
                         element={
-                            <MappingUploadPage
-                                onMappingsConfirmed={handleMappingsConfirmed}
-                                existingModules={tumModules}
-                                existingFile={mappingFile}
-                            />
+                            !personalData.registrationNumberAtTUM ? (
+                                <Navigate to="/student" replace />
+                            ) : (
+                                <MappingUploadPage
+                                    onMappingsConfirmed={handleMappingsConfirmed}
+                                    existingModules={tumModules}
+                                    existingFile={mappingFile}
+                                />
+                            )
                         }
                     />
                     <Route
                         path="/catalogue"
                         element={
-                            <CatalogueUploadPage
-                                tumModules={tumModules}
-                                onContentConfirmed={handleContentConfirmed}
-                            />
+                            tumModules.length === 0 ? (
+                                <Navigate to="/student/mapping" replace />
+                            ) : (
+                                <CatalogueUploadPage
+                                    tumModules={tumModules}
+                                    onContentConfirmed={handleContentConfirmed}
+                                    existingDocumentIds={catalogueDocumentIds}
+                                />
+                            )
                         }
                     />
                     <Route
                         path="/review"
                         element={
-                            <FinalReviewPage
-                                personalData={personalData}
-                                onPersonalDataChange={setPersonalData}
-                                mappingFile={mappingFile}
-                                tumModules={tumModules}
-                                onSubmit={handleSubmit}
-                            />
+                            !personalData.registrationNumberAtTUM ? (
+                                <Navigate to="/student" replace />
+                            ) : (
+                                <FinalReviewPage
+                                    personalData={personalData}
+                                    onPersonalDataChange={setPersonalData}
+                                    mappingFile={mappingFile}
+                                    tumModules={tumModules}
+                                    onSubmit={handleSubmit}
+                                />
+                            )
                         }
                     />
                     <Route
@@ -125,7 +141,6 @@ export default function StudentDashboard() {
                     <Route path="*" element={<Navigate to="/student" replace />} />
                 </Routes>
             </div>
-            <HealthCheck />
         </div>
     );
 }

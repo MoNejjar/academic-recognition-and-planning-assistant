@@ -53,6 +53,13 @@ class DocumentRepository:
         stmt = select(Document).order_by(Document.created_at.desc())
         return self.db.scalars(stmt).all()
 
+    def get_by_ids(self, document_ids: list[str]) -> list[Document]:
+        """Get multiple documents by their IDs."""
+        if not document_ids:
+            return []
+        stmt = select(Document).where(Document.id.in_(document_ids))
+        return list(self.db.scalars(stmt).all())
+
     def delete(self, document_id: str) -> bool:
         """Delete a document by ID. Returns True if deleted, False if not found."""
         document = self.get(document_id)

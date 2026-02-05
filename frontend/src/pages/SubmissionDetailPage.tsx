@@ -231,6 +231,16 @@ export default function SubmissionDetailPage() {
                         </div>
                     </div>
 
+                    <div style={{ display: 'flex', alignItems: 'start', gap: 12 }}>
+                        <User size={20} color={TUM_COLORS.blue} style={{ marginTop: 2 }} />
+                        <div>
+                            <div style={{ fontSize: 12, color: TUM_COLORS.gray50, marginBottom: 4 }}>Matriculation Number</div>
+                            <div style={{ fontSize: 15, fontWeight: 500, color: TUM_COLORS.gray80 }}>
+                                {(submission.personal_data as any).registration_number_at_tum || 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+
                     {submission.mapping_file_name && (
                         <div style={{ display: 'flex', alignItems: 'start', gap: 12 }}>
                             <FileText size={20} color={TUM_COLORS.blue} style={{ marginTop: 2 }} />
