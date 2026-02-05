@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
     CheckSquare,
     LayoutDashboard,
-    FlaskConical,
     Archive,
     LogOut
 } from 'lucide-react';
@@ -55,8 +54,7 @@ export default function Layout() {
     const menuItems = [
         { icon: LayoutDashboard, label: 'Overview', path: '/staff/kanban' },
         { icon: CheckSquare, label: 'Tasks', path: '/staff/tasks' },
-        { icon: Archive, label: 'Archive', path: '/staff/archive' },
-        { icon: FlaskConical, label: 'Testing', path: '/staff/testing' },
+        { icon: Archive, label: 'Archive', path: '/staff/archive' }
     ];
 
     return (
@@ -75,10 +73,10 @@ export default function Layout() {
                 {/* Logo Area */}
                 <div style={{ padding: '24px 24px 12px', borderBottom: '1px solid #334155' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                        <img 
-                            src={tumLogo} 
-                            alt="TUM Logo" 
-                            style={{ height: 28, filter: 'brightness(0) invert(1)' }} 
+                        <img
+                            src={tumLogo}
+                            alt="TUM Logo"
+                            style={{ height: 28, filter: 'brightness(0) invert(1)' }}
                         />
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.3px', lineHeight: 1.3 }}>
