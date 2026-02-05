@@ -3,7 +3,6 @@ import AnalyticsPage from "./AnalyticsPage";
 import TasksPage from "./TasksPage";
 import TaskDetailPageModern from "./TaskDetailPageModern";
 import KanbanPage from "./KanbanPage";
-import TestingPage from "./TestingPage";
 import ArchivePage from "./ArchivePage";
 import SubmissionDetailPage from "./SubmissionDetailPage";
 import { useState, useEffect } from "react";
@@ -56,13 +55,12 @@ export default function StaffDashboard() {
 
             {/* Archive - searchable list of tasks and submissions */}
             <Route path="archive" element={<ArchivePage />} />
-            
+
             {/* Submission details - view individual submission with all modules */}
             <Route path="submissions/:submissionId" element={<SubmissionDetailPage />} />
 
             {/* Other dashboard views */}
             <Route path="kanban" element={<KanbanPage />} />
-            <Route path="testing" element={<TestingPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="tasks" replace />} />
