@@ -11,7 +11,7 @@ This guide helps you use ARIP (Academic Recognition Intelligence Platform) based
 |------|-------------|-------|
 | 🎓 **Student** | Submit course recognition applications | [Student Guide](#-student-guide) |
 | 👔 **Staff** | Review and manage all student applications | [Staff Guide](#-staff-guide) |
-| 👨‍🏫 **Professor** | Evaluate courses for modules you teach | [Professor Guide](#-professor-guide) |
+| 👨‍🏫 **Professor** | Decide on recognition applications for modules you teach | [Professor Guide](#-professor-guide) |
 
 ![Landing Page - Select your portal](images/01_landing_page_1770565514840.png)
 
@@ -91,10 +91,7 @@ After submission, track your application status.
 | Status | Meaning |
 |--------|---------|
 | **Processing** | AI is analyzing your application |
-| **Pending Review** | Awaiting staff review |
-| **On Hold** | Additional info requested |
-| **Approved** | Recognition granted ✅ |
-| **Rejected** | Recognition denied ❌ |
+| **Application Submitted Successfully** | Application was submitted and will be reviewed in due time |
 
 ---
 
@@ -171,7 +168,7 @@ The AI analysis is divided into **5 expandable sections** to help you make an in
 > You can always download the **original PDF documents** from the "Catalogue Files" card to verify the content manually.
 
 #### 1. Analysis Overview (Default View)
-- **Score Ring**: Instant 0-100% equivalence rating.
+- **Scoring**: Instant 0-100% equivalence rating.
 - **Key Strengths/Gaps**: Bullet points highlighting covered vs. missing topics.
 
 #### 2. Assessment Quality
@@ -216,9 +213,9 @@ Professors and staff can discuss modules before making decisions.
 *Example: Professor Schmidt recommends approval with a note about a supplementary seminar.*
 
 **How to use Discussion:**
-1. Professor reviews the AI analysis
-2. Professor posts recommendation with reasoning
-3. Staff reviews professor input before final decision
+1. Staff reviews formal requirements and sends messages about concerns
+1. Professor communicates with staff and views AI analysis and original documents
+3. Professor makes final decision with reasoning
 
 ---
 
@@ -242,7 +239,7 @@ Access historical records of all processed applications.
 
 # 👨‍🏫 Professor Guide
 
-As a professor, you **evaluate and make decisions** on course equivalencies for **modules of your chair**.
+As a professor, you **evaluate and make decisions** on course recognition for **modules of your chair**.
 
 ## How It Differs from Staff View
 
